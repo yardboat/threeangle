@@ -1,0 +1,37 @@
+{
+  "version": "refined-24-v1",
+  "source_commit": "24b3b669711eef8241d5a352258a3597db9b9182",
+  "count": 24,
+  "podcast_corners": 23,
+  "legacy_album_exceptions": [
+    "Ghosteen"
+  ],
+  "excluded": "Retired 100/107 catalog",
+  "sha256": "b1b5e94a65d6ceb196c7ca25140dc1b36db8dc27d01ed91220ac5af919373ab4",
+  "reference_ids": [
+    "whitewater-big-egos-a-dying-river",
+    "kooks-locals-the-perfect-wave",
+    "a-border-is-not-a-line",
+    "yes-chef-but-at-what-cost",
+    "the-seduction-of-belonging",
+    "a-dance-floor-of-your-own",
+    "grief-doesn-t-follow-the-itinerary",
+    "new-york-before-the-rent-won",
+    "a-skateboard-is-a-way-out",
+    "space-is-not-a-blank-canvas",
+    "the-machines-want-to-be-loved",
+    "the-company-is-your-family",
+    "nuclear-waste-deep-time",
+    "architecture-hidden-trust",
+    "disability-access-design",
+    "fungi-forest-economies",
+    "octopus-other-minds",
+    "memory-love-editing",
+    "mortgages-financial-crash",
+    "money-politics-access",
+    "housing-belonging-holdouts",
+    "abandoned-houses-private-lives",
+    "animal-language-contact",
+    "originality-art-copying"
+  ]
+}

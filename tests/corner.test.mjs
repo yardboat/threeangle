@@ -19,6 +19,7 @@ async function harness(key=true){
  synthetic('@/db/crate',{crateDb:()=>db});synthetic('@/lib/session',{sessionIdentity:r=>r.headers.get('test-session'),ensureSession:(r,response)=>response});synthetic('zod',zod);synthetic('@/lib/stories',{topicIds:['river']});
  async function load(name,parent=root+'/x.ts'){
  if(cache.has(name))return cache.get(name);
+ if(name.endsWith('.json')){const file=resolve(parent,'..',name);return synthetic(file,{default:JSON.parse(readFileSync(file,'utf8'))});}
  const file=name.startsWith('@/')?resolve(root,name.slice(2)+'.ts'):name.startsWith('.')?resolve(parent,'..',name+'.ts'):name;
  if(cache.has(file))return cache.get(file);
  const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
@@ -48,4 +49,20 @@ test('out-of-range research references fail without a confirmed draft',async()=>
 });
 test('daily quota is atomic and stops before another provider request',async()=>{
  const h=await harness();const day=new Date().toISOString().slice(0,10);h.sql.prepare('INSERT INTO corner_usage(scope,count) VALUES (?,?)').run(`lookup:alice:${day}`,10);assert.equal((await h.api.POST(h.request({action:'lookup',title:'Another book'}))).status,429);assert.equal(h.calls,0);
+});
+test('research limitation is surfaced without persisting a fabricated triangle',async()=>{
+ const h=await harness();h.responses.push(response('Seed research.',true),response({matches:[seed]}));
+ const lookup=await(await h.api.POST(h.request({action:'lookup',title:seed.title}))).json();
+ h.responses.push(response('needs_more_research: no supported episode.',true),response({status:'needs_more_research',reason:'I could not verify an episode that adds a distinct perspective.'}));
+ const events=(await(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''}))).text()).trim().split('\n').map(JSON.parse);
+ assert.ok(events.some(e=>e.type==='error'&&e.error.includes('verify an episode')));assert.ok(!events.some(e=>e.type==='result'));
+ assert.equal(h.sql.prepare('SELECT result FROM corner_draft WHERE id=?').get(lookup.id).result,null);
+});
+test('a same-title work with a changed creator is rejected rather than relabeled',async()=>{
+ const h=await harness();h.responses.push(response('Seed research.',true),response({matches:[seed]}));
+ const lookup=await(await h.api.POST(h.request({action:'lookup',title:seed.title}))).json();
+ const changed=structuredClone(output);changed.works[0].creator='A different author';
+ h.responses.push(response('Selection research.',true),response(changed));
+ const events=(await(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''}))).text()).trim().split('\n').map(JSON.parse);
+ assert.ok(events.some(e=>e.type==='error'));assert.ok(!events.some(e=>e.type==='result'));
 });
