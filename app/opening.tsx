@@ -1,0 +1,15 @@
+'use client';
+import {useEffect,useRef,useState,type CSSProperties} from 'react';
+import {ArrowRight,Pause,Play} from 'lucide-react';
+function Sigil(){return <svg viewBox="0 0 72 68" aria-hidden="true"><path d="M36 6 65 57H7Z M36 6v32L7 57m29-19 29 19" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round"/></svg>}
+export default function Opening({onEnter}:{onEnter:()=>void}){
+ const [paused,setPaused]=useState(false);const space=useRef<HTMLDivElement>(null);
+ useEffect(()=>{function key(e:KeyboardEvent){if(e.key==='Escape')onEnter()}window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[onEnter]);
+ function tilt(x:number,y:number){space.current?.style.setProperty('--look-x',`${x}deg`);space.current?.style.setProperty('--look-y',`${y}deg`)}
+ return <main className={`opening beat-0 ${paused?'motion-paused':''}`} id="main" onPointerMove={e=>{if(e.pointerType!=='mouse'||paused||matchMedia('(prefers-reduced-motion: reduce)').matches)return;tilt((e.clientY/window.innerHeight-.5)*-12,(e.clientX/window.innerWidth-.5)*16)}} onPointerLeave={()=>tilt(0,0)}>
+ <header className="opening-header"><button className="opening-brand" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} aria-label="threeangle home"><Sigil/><span>threeangle<sup>/02</sup></span></button><span>READ. WATCH. LISTEN.</span><button className="opening-skip" onClick={onEnter}>Browse topics <ArrowRight size={17}/></button></header>
+ <div className="opening-body"><section className="opening-copy"><p className="opening-description">Your fascination gets deeper when what you read, what you watch, and what you hear all shine their light on the same thing.</p><h1><span>Meet threeangle.</span></h1></section>
+ <div className="triangle-space" ref={space} aria-hidden="true"><div className="triangle-aura"/><div className="triangle-tilt"><div className="triangle-object">{Array.from({length:11},(_,i)=><svg key={i} className="depth-ring" style={{'--depth':i} as CSSProperties} viewBox="0 0 400 360"><path d="M200 18 382 333H18Z" fill="none" stroke="currentColor" strokeWidth={i===10?4:1.2}/>{i===10&&<path d="M200 18v210L18 333m182-105 182 105" fill="none" stroke="currentColor" strokeWidth="2"/>}</svg>)}{['READ','WATCH','LISTEN'].map((label,i)=><div key={label} className={`angle-plane plane-${i}`}><svg viewBox="0 0 400 360"><path d={['M200 18 200 228 18 333Z','M200 18 382 333 200 228Z','M18 333 200 228 382 333Z'][i]} fill="currentColor" fillOpacity=".11" stroke="currentColor" strokeWidth="1.5"/></svg><span>{label}</span></div>)}</div></div></div></div>
+ <footer className="opening-controls"><div className="opening-actions"><button className="motion-toggle" aria-label={paused?'Resume decorative motion':'Pause decorative motion'} aria-pressed={paused} onClick={()=>setPaused(p=>!p)}>{paused?<Play size={17}/>:<Pause size={17}/>}</button><button className="opening-next" onClick={onEnter}><span>Explore the topics</span><ArrowRight size={20}/></button></div></footer>
+ </main>
+}

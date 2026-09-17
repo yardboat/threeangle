@@ -1,0 +1,426 @@
+[
+  {
+    "index": 1,
+    "id": "whitewater-big-egos-a-dying-river",
+    "category": "Outside",
+    "title": "Whitewater, big egos & a dying river",
+    "hook": "Come for the rapids. Stay for the fight over who gets the water.",
+    "thesis": "Fedarko makes you fall in love with a river behaving outrageously. DamNation widens the frame: who decided rivers should behave at all? Parched brings that romantic rebellion into the deeply unromantic business of sharing water. By the end, a dam is no longer just scenery. It's a choice with a constituency.",
+    "works": [
+      {
+        "title": "The Emerald Mile",
+        "creator": "Kevin Fedarko",
+        "format": "Book",
+        "pitch": "A wooden boat, an extraordinary flood, and three men who decide that the sensible thing is to go faster. The river is the main character; human ambition is its spectacularly unreliable supporting cast.",
+        "url": "https://www.simonandschuster.com/books/The-Emerald-Mile/Kevin-Fedarko/9781439159866"
+      },
+      {
+        "title": "DamNation",
+        "creator": "Ben Knight & Travis Rummel",
+        "format": "Documentary",
+        "pitch": "A dam-removal film that feels like a jailbreak. After Fedarko's intimate portrait of one canyon, this opens up the national argument about what we sacrifice when we make a river useful.",
+        "url": "https://www.patagonia.com/stories/damnation/video-79847.html"
+      },
+      {
+        "title": "7 States, 1 River and an Agonizing Choice",
+        "creator": "The Daily · The New York Times · January 31, 2023",
+        "format": "Podcast episode",
+        "url": "https://podcasts.apple.com/us/podcast/7-states-1-river-and-an-agonizing-choice/id1200361736?i=1000597391888",
+        "pitch": "A sharp, single-episode account of the Colorado River shortage and the states facing cuts. Listen after the exhilaration of the book and the dam-removal argument of the film. The river you love is also a resource millions depend on. This is reporting from 2023, not a current water-status update."
+      },
+      {
+        "title": "A Walk in the Park",
+        "creator": "Kevin Fedarko",
+        "format": "Book",
+        "pitch": "The bonus changes your speed: trade the boat for blistered feet and discover how much of the canyon you missed while chasing the record."
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "id": "kooks-locals-the-perfect-wave",
+    "category": "Outside",
+    "title": "Kooks, locals & the perfect wave",
+    "hook": "The most laid-back people alive have some extremely strict rules.",
+    "thesis": "Barbarian Days gets you inside surfing's exquisite obsession. Bustin' Down the Door shows what happens when personal freedom collides with a fiercely defended place. Dick Dale supplies the electric fantasy that sold the whole thing to outsiders. Listen again after the other two: that innocent beach-party sound has acquired territorial waters.",
+    "works": [
+      {
+        "title": "Barbarian Days",
+        "creator": "William Finnegan",
+        "format": "Memoir",
+        "pitch": "A life organized around waves, written with enough precision to make obsession sound entirely reasonable. Watch for the gap between the freedom surfing promises and the discipline it demands.",
+        "url": "https://www.penguinrandomhouse.com/books/292954/barbarian-days-by-william-finnegan/"
+      },
+      {
+        "title": "Bustin' Down the Door",
+        "creator": "Jeremy Gosch",
+        "format": "Documentary",
+        "pitch": "Young Australian and South African surfers arrive in 1970s Hawaii and help remake the sport. Progress, bravado, and local resentment share a very small stretch of beach."
+      },
+      {
+        "title": "Soundings: William Finnegan",
+        "creator": "The Surfer’s Journal · Jamie Brisick · Episode 48",
+        "format": "Podcast episode",
+        "url": "https://www.surfersjournal.com/editorial/soundings-william-finnegan/",
+        "pitch": "Finnegan talks with Jamie Brisick about surfing, conflict reporting, Bali, and the spread of surf culture. The memoir gives you the immersion; this conversation lets its author step back and question the life he has made."
+      },
+      {
+        "title": "Surfers’ Choice",
+        "creator": "Dick Dale and His Del-Tones",
+        "format": "Album",
+        "pitch": "The surf fantasy in glorious reverb. Now that you have questioned the culture, hear the joyous, simplified invitation that helped carry it outward."
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "id": "a-border-is-not-a-line",
+    "category": "On the edge",
+    "title": "A border is not a line",
+    "hook": "What it takes to leave. What it costs to arrive.",
+    "thesis": "Luiselli exposes the absurdity of reducing a child's life to a questionnaire. Sin Nombre gives the journey a body and a pulse. The Out Crowd takes you into the machinery of waiting. These are different lives, not interchangeable migration stories; together they make the distance between crossing a border and finding safety impossible to ignore.",
+    "works": [
+      {
+        "title": "Tell Me How It Ends",
+        "creator": "Valeria Luiselli",
+        "format": "Essay / book",
+        "pitch": "Forty questions from the immigration intake process become a devastating measure of how badly institutions can misunderstand the people they claim to assess."
+      },
+      {
+        "title": "Sin Nombre",
+        "creator": "Cary Joji Fukunaga",
+        "format": "Film",
+        "pitch": "A young Honduran migrant and a fleeing gang member travel north through Mexico. The film makes movement frighteningly physical, with tenderness that never erases the danger."
+      },
+      {
+        "title": "The Out Crowd",
+        "creator": "This American Life · Episode 688",
+        "format": "Podcast episode",
+        "pitch": "Reporting from the 2019 Remain in Mexico policy puts asylum seekers and the officials processing them in the same audio frame. The suspense is no longer the journey; it is whether anyone will let the journey end.",
+        "url": "https://www.thisamericanlife.org/688/the-out-crowd"
+      },
+      {
+        "title": "The Devil's Highway",
+        "creator": "Luis Alberto Urrea",
+        "format": "Book",
+        "pitch": "A fiercely reported account of a deadly desert crossing. Urrea restores individuality to people too often flattened into a number."
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "id": "yes-chef-but-at-what-cost",
+    "category": "Made by humans",
+    "title": "Yes, chef. But at what cost?",
+    "hook": "Dinner is lovely. The people making it are falling apart.",
+    "thesis": "Bourdain gives you the seductive mythology of the kitchen pirate. The Bear asks what that mythology does to a nervous system. The Sporkful's pasta experiment lets craft remain thrilling without requiring a tyrant. Together, they separate taking food seriously from treating people terribly.",
+    "works": [
+      {
+        "title": "Kitchen Confidential",
+        "creator": "Anthony Bourdain",
+        "format": "Memoir",
+        "pitch": "The swagger is irresistible, but read past it: this is also a book about labor, loyalty, and an industry that teaches people to confuse damage with dedication."
+      },
+      {
+        "title": "The Bear",
+        "creator": "Christopher Storer",
+        "format": "TV series",
+        "pitch": "Start with season one. A sandwich shop becomes a pressure chamber for grief, ambition, and inherited habits. Every shouted instruction has a family history attached."
+      },
+      {
+        "title": "24 Hours at the Golden Apple",
+        "creator": "This American Life · Episode 172",
+        "format": "Podcast episode",
+        "url": "https://www.thisamericanlife.org/172/24-hours-at-the-golden-apple",
+        "pitch": "Spend a full day inside a Chicago diner with the people who work and eat there. After Bourdain’s kitchen mythology and The Bear’s pressure, this episode redirects your attention to what a restaurant does for the lives around it."
+      },
+      {
+        "title": "Heat",
+        "creator": "Bill Buford",
+        "format": "Book",
+        "pitch": "An amateur steps into professional kitchens and finds that apprenticeship is equal parts humiliation, repetition, and revelation. Deliciously obsessive."
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "id": "the-seduction-of-belonging",
+    "category": "Inner worlds",
+    "title": "The seduction of belonging",
+    "hook": "Nobody joins a cult because they think it's a cult.",
+    "thesis": "The Girls understands the hunger that precedes belief. Wild Wild Country scales that hunger into a city with its own rules. Heaven's Gate gives followers their voices and histories back. The connection isn't that all these groups are the same. It's that belonging can arrive before the ideology—and make leaving far harder than entering.",
+    "works": [
+      {
+        "title": "The Girls",
+        "creator": "Emma Cline",
+        "format": "Novel",
+        "pitch": "A teenager's longing to be seen becomes the opening through which a dangerous world enters. Cline is superb on the ordinary emotional needs behind apparently inexplicable choices."
+      },
+      {
+        "title": "Wild Wild Country",
+        "creator": "Chapman Way & Maclain Way",
+        "format": "Documentary series",
+        "pitch": "A spiritual community in Oregon becomes a spectacular conflict over power, land, and loyalty. The archival footage makes certainty look both intoxicating and alarmingly theatrical.",
+        "url": "https://www.netflix.com/title/80145240"
+      },
+      {
+        "title": "Notes on Camp",
+        "creator": "This American Life · Episode 109",
+        "format": "Podcast episode",
+        "url": "https://www.thisamericanlife.org/109/notes-on-camp",
+        "pitch": "A surprisingly useful detour: summer-camp rituals, intense loyalties, and the feeling that outsiders cannot possibly understand. This is not an equation of camps with cults. It reveals ordinary pleasures of belonging that help you understand why a group can feel indispensable."
+      },
+      {
+        "title": "Going Clear",
+        "creator": "Lawrence Wright",
+        "format": "Book",
+        "pitch": "An exacting account of Scientology extends the question: what happens when an institution can turn your most private disclosures into leverage?"
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "id": "a-dance-floor-of-your-own",
+    "category": "After hours",
+    "title": "A dance floor of your own",
+    "hook": "The party is political. The bass is excellent.",
+    "thesis": "Lawrence reconstructs the social worlds that built disco. Paris Is Burning shows another form of nightlife where identity becomes collective invention. Finally lets you hear club culture become a glorious public declaration. None is a substitute for the others: history explains the room, film reveals its stakes, music asks you to enter.",
+    "works": [
+      {
+        "title": "Love Saves the Day",
+        "creator": "Tim Lawrence",
+        "format": "Book",
+        "pitch": "New York dance culture in the 1970s, reconstructed through the people and places that made it. The DJ booth starts to look less like a pedestal and more like a civic institution."
+      },
+      {
+        "title": "Paris Is Burning",
+        "creator": "Jennie Livingston",
+        "format": "Documentary",
+        "pitch": "New York ballroom performers turn exclusion into wit, spectacle, and chosen kinship. Keep the film's questions of class, authorship, and who gets to look in the picture too.",
+        "url": "https://www.criterion.com/films/29647-paris-is-burning"
+      },
+      {
+        "title": "Meet Me at Riis",
+        "creator": "99% Invisible · Episode 602",
+        "format": "Podcast episode",
+        "url": "https://99percentinvisible.org/episode/602-meet-me-at-riis/",
+        "pitch": "Leave the dance floor for a queer beach in New York. This episode follows the history of Riis and the demolition of the building that helped shelter it. The connection is physical: freedom needs somewhere to gather, and that somewhere can disappear."
+      },
+      {
+        "title": "The Queen",
+        "creator": "Frank Simon",
+        "format": "Documentary",
+        "pitch": "A 1967 drag pageant offers an earlier, pricklier look at performance, recognition, and who gets crowned. A short, astonishing expansion of the frame."
+      }
+    ]
+  },
+  {
+    "index": 57,
+    "id": "grief-doesn-t-follow-the-itinerary",
+    "category": "Inner worlds",
+    "title": "Grief doesn't follow the itinerary",
+    "hook": "There is no correct order for missing someone.",
+    "thesis": "Didion records the mind's strange bargaining, A Ghost Story makes time almost tactile, and Cave lets mourning coexist with beauty. The works give each other permission to be nonlinear, repetitive, and unresolved.",
+    "works": [
+      {
+        "title": "The Year of Magical Thinking",
+        "creator": "Joan Didion",
+        "format": "Memoir",
+        "pitch": "Grief observed with extraordinary precision, including the thoughts reason cannot simply dismiss."
+      },
+      {
+        "title": "A Ghost Story",
+        "creator": "David Lowery",
+        "format": "Film",
+        "pitch": "A nearly wordless meditation on attachment and time. Stay with its deliberate slowness."
+      },
+      {
+        "title": "Ghosteen",
+        "creator": "Nick Cave & the Bad Seeds",
+        "format": "Album",
+        "pitch": "Loss becomes luminous, searching music that refuses a neat arrival at consolation."
+      },
+      {
+        "title": "A Grief Observed",
+        "creator": "C. S. Lewis",
+        "format": "Book",
+        "pitch": "Belief itself is put under pressure in an intimate record of bereavement."
+      }
+    ]
+  },
+  {
+    "index": 23,
+    "id": "new-york-before-the-rent-won",
+    "category": "After hours",
+    "title": "New York before the rent won",
+    "hook": "A broken city made room for astonishing things.",
+    "thesis": "Smith gives the intimate friendship, Downtown 81 the street-level drift, and Television the nervous electricity. The triangle catches the freedom and precarity behind the retrospective cool.",
+    "works": [
+      {
+        "title": "Just Kids",
+        "creator": "Patti Smith",
+        "format": "Memoir",
+        "pitch": "Artistic becoming through the friendship of Smith and Robert Mapplethorpe. Poverty is real even when the memories glow."
+      },
+      {
+        "title": "Downtown 81",
+        "creator": "Edo Bertoglio",
+        "format": "Film",
+        "pitch": "Jean-Michel Basquiat moves through a downtown scene that feels less like a brand than an unstable habitat."
+      },
+      {
+        "title": "The SoHo Effect",
+        "creator": "99% Invisible · Episode 204",
+        "format": "Podcast episode",
+        "url": "https://99percentinvisible.org/episode/the-soho-effect/",
+        "pitch": "The artist neighborhood becomes a selling point. This episode follows the transformation associated with SoHo and the way its name became a model. After the memoir and film, the question is personal: what happens when the scene helps make its own neighborhood unaffordable?"
+      },
+      {
+        "title": "Please Kill Me",
+        "creator": "Legs McNeil & Gillian McCain",
+        "format": "Oral history",
+        "pitch": "The punk version arrives louder, messier, and far less interested in behaving for posterity."
+      }
+    ]
+  },
+  {
+    "index": 40,
+    "id": "a-skateboard-is-a-way-out",
+    "category": "On the edge",
+    "title": "A skateboard is a way out",
+    "hook": "Four wheels. A whole theory of freedom.",
+    "thesis": "Hawk explains a life built through repetition, Minding the Gap exposes the homes behind the skate footage, and Fugazi supplies DIY's ethical muscle. The trick is visible; the social world making it necessary is the revelation.",
+    "works": [
+      {
+        "title": "Hawk: Occupation: Skateboarder",
+        "creator": "Tony Hawk & Sean Mortimer",
+        "format": "Memoir",
+        "pitch": "A skater's formation inside a culture that had to build much of its own infrastructure."
+      },
+      {
+        "title": "Minding the Gap",
+        "creator": "Bing Liu",
+        "format": "Documentary",
+        "pitch": "Skateboarding friendships open into a profound inquiry into violence, masculinity, and escape."
+      },
+      {
+        "title": "The Pool and the Stream",
+        "creator": "99% Invisible · Episode 265",
+        "format": "Podcast episode",
+        "url": "https://99percentinvisible.org/episode/the-pool-and-the-stream/",
+        "pitch": "A Finnish architect, California swimming pools, and skaters looking for somewhere to ride. Avery Trufelman follows an improbable design connection that gives the whole culture a new origin story. The place under the board matters as much as the person on it."
+      },
+      {
+        "title": "Dogtown and Z-Boys",
+        "creator": "Stacy Peralta",
+        "format": "Documentary",
+        "pitch": "The origin-myth energy is irresistible; watch it beside Liu's less triumphant account of belonging."
+      }
+    ]
+  },
+  {
+    "index": 99,
+    "id": "space-is-not-a-blank-canvas",
+    "category": "Power plays",
+    "title": "Space is not a blank canvas",
+    "hook": "The future has a funding model.",
+    "thesis": "Wolfe dissects astronaut heroism, For All Mankind imagines geopolitical alternatives, and 13 Minutes to the Moon reconstructs engineering under pressure. Romance becomes more interesting when institutions and practical judgment return to the picture.",
+    "works": [
+      {
+        "title": "The Right Stuff",
+        "creator": "Tom Wolfe",
+        "format": "Book",
+        "pitch": "Test pilots and astronauts reveal a highly specific culture beneath the universal language of exploration."
+      },
+      {
+        "title": "For All Mankind",
+        "creator": "Ronald D. Moore, Matt Wolpert & Ben Nedivi",
+        "format": "TV series",
+        "pitch": "An alternate space-race history makes technological futures visibly contingent."
+      },
+      {
+        "title": "Dark Side of the Earth",
+        "creator": "Radiolab",
+        "format": "Podcast episode",
+        "url": "https://radiolab.org/podcast/dark-side-earth",
+        "pitch": "An astronaut describes a spacewalk, a malfunctioning airlock, and the colleague beside him. After all the national mythology, this is space at human scale: beautiful, dangerous, and utterly dependent on cooperation."
+      },
+      {
+        "title": "Hidden Figures",
+        "creator": "Margot Lee Shetterly",
+        "format": "Book",
+        "pitch": "The workforce omitted from familiar heroic portraits changes the history's center of gravity."
+      }
+    ]
+  },
+  {
+    "index": 69,
+    "id": "the-machines-want-to-be-loved",
+    "category": "Inner worlds",
+    "title": "The machines want to be loved",
+    "hook": "Artificial intelligence makes a very human question awkward.",
+    "thesis": "Ishiguro gives artificial perception moral seriousness, Her makes technological intimacy tender and unstable, and Computer World sounds both delighted and apprehensive. The question is less whether a machine feels than what we are asking it to do for us.",
+    "works": [
+      {
+        "title": "Klara and the Sun",
+        "creator": "Kazuo Ishiguro",
+        "format": "Novel",
+        "pitch": "An artificial companion observes human arrangements with attention their participants rarely manage."
+      },
+      {
+        "title": "Her",
+        "creator": "Spike Jonze",
+        "format": "Film",
+        "pitch": "A relationship with an operating system exposes the expectations people bring to intimacy."
+      },
+      {
+        "title": "Talking to Machines",
+        "creator": "Radiolab · June 1, 2011",
+        "format": "Podcast episode",
+        "url": "https://radiolab.org/podcast/137407-talking-to-machines",
+        "pitch": "A man falls for a chatbot; a robot therapist unsettles its own inventor. This 2011 episode predates today’s generative AI, which is precisely why it belongs here. Our willingness to feel understood has a much longer history than the latest model."
+      },
+      {
+        "title": "Ex Machina",
+        "creator": "Alex Garland",
+        "format": "Film",
+        "pitch": "A darker chamber piece on observation, manipulation, and who controls the terms of the test."
+      }
+    ]
+  },
+  {
+    "index": 92,
+    "id": "the-company-is-your-family",
+    "category": "Power plays",
+    "title": "The company is your family",
+    "hook": "That's a very convenient thing for your employer to say.",
+    "thesis": "Graeber questions work's claimed necessity, Severance literalizes the divided self, and Dolly Parton makes exploitation immediately singable. The triangle tests the gap between organizational purpose and the person doing the job.",
+    "works": [
+      {
+        "title": "Bullshit Jobs",
+        "creator": "David Graeber",
+        "format": "Book",
+        "pitch": "A provocative argument about meaningless work, useful even where you disagree with its categories."
+      },
+      {
+        "title": "Severance",
+        "creator": "Dan Erickson",
+        "format": "TV series",
+        "pitch": "A workplace fantasy makes the demand to leave your self at the door horrifyingly literal."
+      },
+      {
+        "title": "Essential",
+        "creator": "This American Life · Episode 744",
+        "format": "Podcast episode",
+        "url": "https://www.thisamericanlife.org/744/essential",
+        "pitch": "Workers reassess what their jobs ask of them during the pandemic. The distance between being called essential and being treated as valuable becomes impossible to miss. After Graeber’s provocation and Severance’s fiction, listen to people making the calculation in their own lives."
+      },
+      {
+        "title": "Bartleby, the Scrivener",
+        "creator": "Herman Melville",
+        "format": "Short story",
+        "pitch": "One employee's refusal becomes a wonderfully unsettling limit case for the institution."
+      }
+    ]
+  }
+]

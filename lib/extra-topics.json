@@ -1,0 +1,778 @@
+[
+  {
+    "id": "nuclear-waste-deep-time",
+    "name": "After the warning.",
+    "title": "After the warning.",
+    "kicker": "NUCLEAR / MEMORY & DEEP TIME",
+    "color": "#b8e35c",
+    "hook": "How do you warn someone 10,000 years from now?",
+    "intro": "A disaster has witnesses. Waste outlives them. Follow the problem of telling the truth from one lifetime into an almost unimaginable future.",
+    "works": [
+      {
+        "title": "Voices from Chernobyl",
+        "creator": "Svetlana Alexievich",
+        "format": "Book",
+        "pitch": "An oral history that keeps returning to the people inside the disaster: their love, confusion, anger, and ordinary routines. The scale is enormous. The voices refuse to become statistics."
+      },
+      {
+        "title": "Chernobyl",
+        "creator": "Craig Mazin · HBO",
+        "format": "Limited series",
+        "pitch": "The catastrophe becomes a struggle over what an institution will admit. Watch how hierarchy shapes what can be said, then return to the eyewitnesses and notice the difference between testimony and dramatization.",
+        "url": "https://www.hbo.com/chernobyl"
+      },
+      {
+        "title": "Ten Thousand Years",
+        "creator": "99% Invisible · Episode 114",
+        "format": "Podcast episode",
+        "pitch": "How could a warning about radioactive waste survive languages and civilizations? An extraordinary design problem makes the future feel concrete. The problem of being believed turns into the problem of being understood at all.",
+        "url": "https://99percentinvisible.org/episode/ten-thousand-years/"
+      },
+      {
+        "title": "Into Eternity",
+        "creator": "Michael Madsen",
+        "format": "Documentary",
+        "pitch": "Visit a Finnish nuclear-waste repository and confront the uneasy ambition of building something meant to outlast us. The perfect final step from institutional memory into geological time."
+      }
+    ],
+    "heads": [
+      "Listen to the witnesses.",
+      "Watch the institution respond.",
+      "Send the warning into the future."
+    ],
+    "bridges": [
+      "Who gets to acknowledge what happened?",
+      "What happens when nobody remembers?",
+      "A warning needs a culture that can hear it."
+    ],
+    "shift": "The danger lasts longer than the story.",
+    "payoff": "The book preserves experience. The series examines the suppression of facts. The podcast asks how facts survive when their original audience is gone. Together they make remembering feel like infrastructure: something that must be built, maintained, and passed on.",
+    "question": "What makes a warning survive?",
+    "angles": [
+      "Witnesses",
+      "Institutions",
+      "Culture"
+    ],
+    "answers": [
+      "Someone has to record the experience without smoothing away the inconvenient details.",
+      "People must be allowed to acknowledge a problem before they can respond to it.",
+      "A symbol is not timeless. Even a warning needs people who understand how to read it."
+    ],
+    "bonus": "A building for the distant future.",
+    "index": 13,
+    "category": "NUCLEAR",
+    "thesis": "The book preserves experience. The series examines the suppression of facts. The podcast asks how facts survive when their original audience is gone. Together they make remembering feel like infrastructure: something that must be built, maintained, and passed on.",
+    "pilotIndex": 12
+  },
+  {
+    "id": "architecture-hidden-trust",
+    "name": "Trust the building.",
+    "title": "Trust the building.",
+    "kicker": "ARCHITECTURE / BEAUTY & RESPONSIBILITY",
+    "color": "#d6c2a0",
+    "hook": "That beautiful building is holding up a lot of trust.",
+    "intro": "The delight of a good building, the forces inside it, and the responsibility of the people who say it is safe.",
+    "works": [
+      {
+        "title": "Why Buildings Stand Up",
+        "creator": "Mario Salvadori",
+        "format": "Book",
+        "pitch": "An engineer makes the forces around us legible. Arches, towers, and bridges stop being mysterious objects and become solutions you can follow. You will look up differently.",
+        "url": "https://wwnorton.com/books/Why-Buildings-Stand-Up"
+      },
+      {
+        "title": "Columbus",
+        "creator": "Kogonada",
+        "format": "Film",
+        "pitch": "Two people walk and talk among modernist buildings in Indiana. The spaces quietly shape their attention and choices. A film about architecture that understands that buildings are places to live a life, not just admire."
+      },
+      {
+        "title": "Structural Integrity",
+        "creator": "99% Invisible · Episode 110",
+        "format": "Podcast episode",
+        "pitch": "The Citicorp Center crisis turns an elegant design into a story about risk, an overlooked student, and a secret repair. After learning how buildings stand, ask who gets to know when they might not.",
+        "url": "https://99percentinvisible.org/episode/structural-integrity/"
+      },
+      {
+        "title": "My Architect",
+        "creator": "Nathaniel Kahn",
+        "format": "Documentary",
+        "pitch": "A son searches for Louis Kahn through the buildings and relationships he left behind. Admiration becomes more demanding when you have to make room for the person."
+      }
+    ],
+    "heads": [
+      "Understand the forces.",
+      "Feel what a space can do.",
+      "Ask who carries the responsibility."
+    ],
+    "bridges": [
+      "A building is more than its structure.",
+      "Beauty does not settle the question of trust.",
+      "The people inside deserve a place in the story."
+    ],
+    "shift": "Beauty is only part of the brief.",
+    "payoff": "Salvadori explains the structure. Columbus gives it emotional life. Structural Integrity reveals the judgment behind our everyday trust. Together they turn a skyline into a set of human promises.",
+    "question": "What do you ask of a building?",
+    "angles": [
+      "Strength",
+      "Attention",
+      "Accountability"
+    ],
+    "answers": [
+      "The structure has to work even when its elegance distracts us from the forces it carries.",
+      "A space can change how people look, listen, and make room for one another.",
+      "Engineering decisions have an audience beyond the people who make them."
+    ],
+    "bonus": "Meet the person behind the monument.",
+    "index": 14,
+    "category": "ARCHITECTURE",
+    "thesis": "Salvadori explains the structure. Columbus gives it emotional life. Structural Integrity reveals the judgment behind our everyday trust. Together they turn a skyline into a set of human promises.",
+    "pilotIndex": 13
+  },
+  {
+    "id": "disability-access-design",
+    "name": "A way in.",
+    "title": "A way in.",
+    "kicker": "DISABILITY / ACCESS & COLLECTIVE POWER",
+    "color": "#edba67",
+    "hook": "A curb can decide who gets to participate.",
+    "intro": "An intimate life story, a joyful community, and a small change to the street. Rights become real when you can actually get through the door.",
+    "works": [
+      {
+        "title": "Being Heumann",
+        "creator": "Judith Heumann with Kristen Joiner",
+        "format": "Memoir",
+        "pitch": "Heumann tells a life of refusing exclusion and organizing with others. The appeal is in the voice: practical, funny, impatient with barriers that people insist are just how things are."
+      },
+      {
+        "title": "Crip Camp",
+        "creator": "Nicole Newnham & Jim LeBrecht",
+        "format": "Documentary",
+        "pitch": "A summer camp gives disabled teenagers room to be teenagers. The friendships become part of a movement. The joy matters as much as the protest: it shows what the fight is for.",
+        "url": "https://cripcamp.com/"
+      },
+      {
+        "title": "Curb Cuts",
+        "creator": "99% Invisible · Episode 308",
+        "format": "Podcast episode",
+        "pitch": "The lowered corner of a sidewalk contains a history of activism and design. This is what the memoir’s demands and the film’s collective energy look like when they reach the street.",
+        "url": "https://99percentinvisible.org/episode/308-curb-cuts/"
+      },
+      {
+        "title": "Disability Visibility",
+        "creator": "Edited by Alice Wong",
+        "format": "Essay collection",
+        "pitch": "A chorus of disabled writers broadens the frame beyond a single leader or campaign. Read for the range of voices, experiences, and disagreements."
+      }
+    ],
+    "heads": [
+      "Hear a leader tell her story.",
+      "See the community behind the movement.",
+      "Find the politics in the pavement."
+    ],
+    "bridges": [
+      "Where did the collective confidence come from?",
+      "What changes when the demand becomes a design?",
+      "Access is something people built."
+    ],
+    "shift": "Independence takes collective work.",
+    "payoff": "The memoir gives you agency. The film shows how a community makes that agency grow. The podcast makes the result visible in an everyday detail. Independence starts looking less like a personal achievement and more like a shared responsibility.",
+    "question": "Where does freedom become tangible?",
+    "angles": [
+      "In a voice",
+      "In a group",
+      "In a street"
+    ],
+    "answers": [
+      "Heumann refuses to let other people define the limits of her life.",
+      "Camp and organizing show what people can attempt once they stop facing barriers alone.",
+      "A small design change can alter who can move through a city without asking for help."
+    ],
+    "bonus": "Keep widening the conversation.",
+    "index": 15,
+    "category": "DISABILITY",
+    "thesis": "The memoir gives you agency. The film shows how a community makes that agency grow. The podcast makes the result visible in an everyday detail. Independence starts looking less like a personal achievement and more like a shared responsibility.",
+    "pilotIndex": 14
+  },
+  {
+    "id": "fungi-forest-economies",
+    "name": "Under your feet.",
+    "title": "Under your feet.",
+    "kicker": "FUNGI / FORESTS & HIDDEN EXCHANGE",
+    "color": "#92ba68",
+    "hook": "The quiet forest is doing business.",
+    "intro": "Fungi connect living things, reward patient searchers, and resist our neat categories. Follow the connections underground, then into a very human market.",
+    "works": [
+      {
+        "title": "Entangled Life",
+        "creator": "Merlin Sheldrake",
+        "format": "Book",
+        "pitch": "Fungi become a way to reconsider individuality, cooperation, and what counts as a living system. Sheldrake combines close scientific attention with a contagious appetite for strange possibilities.",
+        "url": "https://www.merlinsheldrake.com/entangled-life"
+      },
+      {
+        "title": "The Truffle Hunters",
+        "creator": "Michael Dweck & Gregory Kershaw",
+        "format": "Documentary",
+        "pitch": "Old men and their dogs search Italian woods while a luxury market waits beyond the trees. A wonderfully patient film about skill, secrecy, and a relationship with a place that cannot simply be scaled up.",
+        "url": "https://www.sonyclassics.com/film/thetrufflehunters/"
+      },
+      {
+        "title": "From Tree to Shining Tree",
+        "creator": "Radiolab",
+        "format": "Podcast episode",
+        "pitch": "A 2016 exploration of fungal networks beneath forests. Let it make the hidden relationships vivid, while remembering that its social metaphors are ways into the science, not proof that trees behave like people.",
+        "url": "https://radiolab.org/podcast/from-tree-to-shining-tree"
+      },
+      {
+        "title": "The Mushroom at the End of the World",
+        "creator": "Anna Lowenhaupt Tsing",
+        "format": "Book",
+        "pitch": "Matsutake mushrooms lead into precarious work and damaged landscapes. A demanding, rewarding extension of the question: what survives inside systems nobody fully controls?"
+      }
+    ],
+    "heads": [
+      "Meet a kingdom that resists categories.",
+      "Watch knowledge become a livelihood.",
+      "Listen beneath the forest floor."
+    ],
+    "bridges": [
+      "What happens when these relationships meet a market?",
+      "The exchanges started before the buyers arrived.",
+      "There is more than one economy in these woods."
+    ],
+    "shift": "A forest is a set of relationships.",
+    "payoff": "The book unsettles the idea of separate organisms. The film follows knowledge shared between people, dogs, and a place. The episode makes underground exchanges audible. Each shifts attention away from the isolated prize and toward the relationships that make it possible.",
+    "question": "What are you noticing now?",
+    "angles": [
+      "Interdependence",
+      "Local knowledge",
+      "Exchange"
+    ],
+    "answers": [
+      "Living things are entangled with other lives; their boundaries are not always obvious.",
+      "The hunters’ skill depends on time with particular dogs and particular woods.",
+      "Connections can involve competition as well as cooperation. The forest is not a simple moral fable."
+    ],
+    "bonus": "Follow the mushroom into global trade.",
+    "index": 16,
+    "category": "FUNGI",
+    "thesis": "The book unsettles the idea of separate organisms. The film follows knowledge shared between people, dogs, and a place. The episode makes underground exchanges audible. Each shifts attention away from the isolated prize and toward the relationships that make it possible.",
+    "pilotIndex": 15
+  },
+  {
+    "id": "octopus-other-minds",
+    "name": "Eight arms. Another mind.",
+    "title": "Eight arms. Another mind.",
+    "kicker": "OCTOPUSES / ATTENTION & OTHERNESS",
+    "color": "#69bec4",
+    "hook": "How close can you get to a mind unlike yours?",
+    "intro": "A philosopher goes diving, a filmmaker keeps returning, and scientists wait beside a mother on the seafloor. Understanding starts with sustained attention.",
+    "works": [
+      {
+        "title": "Other Minds",
+        "creator": "Peter Godfrey-Smith",
+        "format": "Book",
+        "pitch": "A philosopher and diver approaches consciousness through octopuses. The question is thrillingly physical: how does a mind work when its body and evolutionary history are so different from ours?",
+        "url": "https://us.macmillan.com/books/9780374537197/otherminds/"
+      },
+      {
+        "title": "My Octopus Teacher",
+        "creator": "Pippa Ehrlich & James Reed",
+        "format": "Documentary",
+        "pitch": "Daily visits to a kelp forest become an intimate portrait of one animal. Admire the attention, then ask how the human narrator’s need for a story shapes what we see."
+      },
+      {
+        "title": "Octomom",
+        "creator": "Radiolab",
+        "format": "Podcast episode",
+        "pitch": "A robot submarine finds an octopus brooding her eggs. Scientists return again and again. The patient observation makes an extraordinary life legible without requiring the animal to perform for us.",
+        "url": "https://radiolab.org/podcast/octomom"
+      },
+      {
+        "title": "Monterey Bay Aquarium live cams",
+        "creator": "Monterey Bay Aquarium",
+        "format": "Live cameras",
+        "pitch": "Spend a few unhurried minutes watching marine life without a plot. It is a useful test of the attention these three works have been teaching.",
+        "url": "https://www.montereybayaquarium.org/animals/live-cams"
+      }
+    ],
+    "heads": [
+      "Consider a different kind of mind.",
+      "Get to know one animal.",
+      "Stay long enough to notice."
+    ],
+    "bridges": [
+      "What changes when the question has an individual in it?",
+      "Attention can also mean leaving room for distance.",
+      "The animal’s life exceeds our story about it."
+    ],
+    "shift": "Understanding does not require sameness.",
+    "payoff": "The book makes otherness intellectually exciting. The film makes it emotionally immediate. The podcast models a different kind of patience. Together they ask you to care without making the animal a disguised version of yourself.",
+    "question": "What kind of attention helps?",
+    "angles": [
+      "Curiosity",
+      "Closeness",
+      "Patience"
+    ],
+    "answers": [
+      "Start by asking what this body and environment make possible.",
+      "Repeated encounters reveal details a quick visit misses, but intimacy can also invite projection.",
+      "Observation has its own drama when you let an animal set the timescale."
+    ],
+    "bonus": "Watch without a narrator.",
+    "index": 17,
+    "category": "OCTOPUSES",
+    "thesis": "The book makes otherness intellectually exciting. The film makes it emotionally immediate. The podcast models a different kind of patience. Together they ask you to care without making the animal a disguised version of yourself.",
+    "pilotIndex": 16
+  },
+  {
+    "id": "memory-love-editing",
+    "name": "Remember it differently.",
+    "title": "Remember it differently.",
+    "kicker": "MEMORY / LOVE & THE EDITED SELF",
+    "color": "#c4a1e0",
+    "hook": "What if your clearest memory is a revision?",
+    "intro": "The science of remembering, a romance about erasing, and the people whose lives expose the gap between memory and identity.",
+    "works": [
+      {
+        "title": "The Seven Sins of Memory",
+        "creator": "Daniel L. Schacter",
+        "format": "Book",
+        "pitch": "A clear account of the ways memory fails and why those failures are not random. It gives you a vocabulary for experiences you have probably mistaken for a perfectly reliable recording."
+      },
+      {
+        "title": "Eternal Sunshine of the Spotless Mind",
+        "creator": "Michel Gondry",
+        "format": "Film",
+        "pitch": "A breakup becomes a chase through disappearing memories. Its invention is dazzling, but the emotional question is simple: would you really want relief if it meant losing what mattered?"
+      },
+      {
+        "title": "Memory and Forgetting",
+        "creator": "Radiolab",
+        "format": "Podcast episode",
+        "pitch": "False memories, lost memories, and Oliver Sacks on a man whose attachment to music and his wife outlasts an astonishingly short memory. The episode complicates the idea that the remembered story is the whole self.",
+        "url": "https://radiolab.org/podcast/memory-and-forgetting"
+      },
+      {
+        "title": "The Man Who Mistook His Wife for a Hat",
+        "creator": "Oliver Sacks",
+        "format": "Book",
+        "pitch": "Sacks turns neurological case histories into encounters with people. The right extension when the mechanism has become interesting but the person must remain central."
+      }
+    ],
+    "heads": [
+      "Learn how remembering changes things.",
+      "Imagine choosing what to erase.",
+      "Meet the people beyond the mechanism."
+    ],
+    "bridges": [
+      "Would you choose to forget if you could?",
+      "What remains when memory cannot hold the story?",
+      "A person is more than an archive."
+    ],
+    "shift": "Remembering is an act, not a replay.",
+    "payoff": "Schacter explains the errors. Gondry makes their emotional stakes visible. Radiolab puts real lives beside the thought experiment. Together they ask whether a self can be more durable than its account of the past.",
+    "question": "What would you keep?",
+    "angles": [
+      "The facts",
+      "The feeling",
+      "The bond"
+    ],
+    "answers": [
+      "Accuracy matters, even when certainty is not evidence.",
+      "Painful memories can carry things we still value.",
+      "Some attachments may persist beyond the stories we can consciously retrieve."
+    ],
+    "bonus": "Keep the person in the picture.",
+    "index": 18,
+    "category": "MEMORY",
+    "thesis": "Schacter explains the errors. Gondry makes their emotional stakes visible. Radiolab puts real lives beside the thought experiment. Together they ask whether a self can be more durable than its account of the past.",
+    "pilotIndex": 17
+  },
+  {
+    "id": "mortgages-financial-crash",
+    "name": "Everyone got paid.",
+    "title": "Everyone got paid.",
+    "kicker": "WALL STREET / INCENTIVES & COLLAPSE",
+    "color": "#e88c66",
+    "hook": "How does a disaster look sensible from every desk?",
+    "intro": "A system full of clever people can still reward the wrong things. Follow the mortgage crisis from the trade to the meeting room to the borrower.",
+    "works": [
+      {
+        "title": "The Big Short",
+        "creator": "Michael Lewis",
+        "format": "Book",
+        "pitch": "Lewis follows the people who recognized a housing-market disaster and found a way to bet on it. The outsiders are entertaining; the unsettling part is how much the insiders preferred not to see."
+      },
+      {
+        "title": "Margin Call",
+        "creator": "J. C. Chandor",
+        "format": "Film",
+        "pitch": "One fictional investment bank realizes what it is holding. Over a long night, technical risk becomes a series of personal choices. Watch the language get smoother as the decisions get uglier."
+      },
+      {
+        "title": "The Giant Pool of Money",
+        "creator": "This American Life · Episode 355",
+        "format": "Podcast episode",
+        "pitch": "A remarkably clear account of how mortgages connect to global demand for investment products. The human chain makes the abstraction understandable. Listen to the incentives at each link.",
+        "url": "https://www.thisamericanlife.org/355/the-giant-pool-of-money"
+      },
+      {
+        "title": "Inside Job",
+        "creator": "Charles Ferguson",
+        "format": "Documentary",
+        "pitch": "A wider investigation of the crisis and its institutions. It adds the question of accountability after the machinery is clear."
+      }
+    ],
+    "heads": [
+      "Follow the people who saw it coming.",
+      "Watch a firm protect itself.",
+      "Trace the chain to the borrower."
+    ],
+    "bridges": [
+      "Knowing creates a choice.",
+      "Who is outside that meeting room?",
+      "The transaction has a human end."
+    ],
+    "shift": "The incentives were part of the problem.",
+    "payoff": "The book gives you the bet. The film gives you the decision. The episode gives you the chain connecting finance to housing. Together they make a systemic failure visible through individual actions, without pretending one villain explains the whole thing.",
+    "question": "Where did responsibility go?",
+    "angles": [
+      "Into the model",
+      "Around the table",
+      "Down the chain"
+    ],
+    "answers": [
+      "An impressive calculation can conceal assumptions people are paid not to question.",
+      "The fictional meeting room shows how institutions translate danger into self-preservation.",
+      "People far apart can participate in one harmful system without seeing its full shape."
+    ],
+    "bonus": "Ask who answered for it.",
+    "index": 19,
+    "category": "WALL STREET",
+    "thesis": "The book gives you the bet. The film gives you the decision. The episode gives you the chain connecting finance to housing. Together they make a systemic failure visible through individual actions, without pretending one villain explains the whole thing.",
+    "pilotIndex": 18
+  },
+  {
+    "id": "money-politics-access",
+    "name": "The price of a seat.",
+    "title": "The price of a seat.",
+    "kicker": "POLITICS / MONEY & ACCESS",
+    "color": "#b0a3ee",
+    "hook": "What does a campaign donation actually buy?",
+    "intro": "Follow ambition from the public speech into the private conversation. These works make power feel personal without making it small.",
+    "works": [
+      {
+        "title": "All the King’s Men",
+        "creator": "Robert Penn Warren",
+        "format": "Novel",
+        "pitch": "A political rise becomes a study of loyalty, compromise, and the stories people tell to excuse themselves. Warren makes the attraction of power as important as its corruption."
+      },
+      {
+        "title": "The War Room",
+        "creator": "D. A. Pennebaker & Chris Hegedus",
+        "format": "Documentary",
+        "pitch": "Inside the 1992 Clinton campaign, strategy becomes a form of performance. Watch the people building a public narrative while reacting to a world they cannot completely control."
+      },
+      {
+        "title": "Take the Money and Run for Office",
+        "creator": "This American Life · Episode 461",
+        "format": "Podcast episode",
+        "pitch": "A 2012 investigation goes into the rooms where political checks change hands. The lasting interest is the transaction: access, time, influence, and the difficulty of pinning down exactly what is being purchased.",
+        "url": "https://www.thisamericanlife.org/461/take-the-money-and-run-for-office"
+      },
+      {
+        "title": "The Candidate",
+        "creator": "Michael Ritchie",
+        "format": "Film",
+        "pitch": "A sharp campaign satire that asks what winning leaves a person prepared to do. The last question is worth the detour."
+      }
+    ],
+    "heads": [
+      "Understand the attraction of power.",
+      "See the message being made.",
+      "Follow the money into the room."
+    ],
+    "bridges": [
+      "The campaign needs a story people can repeat.",
+      "The public message has a private economy.",
+      "Getting elected is not the same as governing."
+    ],
+    "shift": "Access is a form of power.",
+    "payoff": "The novel explores compromise from within. The documentary shows the manufacture of a campaign. The episode examines the fundraising that consumes political time. The three make you listen differently to a speech: who helped put this person in the room?",
+    "question": "What is being exchanged?",
+    "angles": [
+      "Loyalty",
+      "Attention",
+      "Access"
+    ],
+    "answers": [
+      "Political belonging can make compromise feel like faithfulness to a cause.",
+      "A campaign works to decide which story the public notices.",
+      "Money can shape which conversations are possible, even when no simple purchase can be proved."
+    ],
+    "bonus": "Now imagine winning.",
+    "index": 20,
+    "category": "POLITICS",
+    "thesis": "The novel explores compromise from within. The documentary shows the manufacture of a campaign. The episode examines the fundraising that consumes political time. The three make you listen differently to a speech: who helped put this person in the room?",
+    "pilotIndex": 19
+  },
+  {
+    "id": "housing-belonging-holdouts",
+    "name": "This is still home.",
+    "title": "This is still home.",
+    "kicker": "HOUSING / BELONGING & OWNERSHIP",
+    "color": "#d49e7b",
+    "hook": "A house has a price. A home has a history.",
+    "intro": "The right to stay, the longing to return, and the strange power of refusing to leave.",
+    "works": [
+      {
+        "title": "Evicted",
+        "creator": "Matthew Desmond",
+        "format": "Book",
+        "pitch": "A close account of families and landlords in Milwaukee makes housing insecurity concrete. Read for the lives; stay with the structure that keeps turning ordinary setbacks into displacement."
+      },
+      {
+        "title": "The Last Black Man in San Francisco",
+        "creator": "Joe Talbot",
+        "format": "Film",
+        "pitch": "Jimmie Fails and his friend dream around a Victorian house in a changing city. The film is gorgeous, but its question is unsentimental: can a place belong to you if you cannot legally claim it?",
+        "url": "https://a24films.com/films/the-last-black-man-in-san-francisco"
+      },
+      {
+        "title": "Holdout",
+        "creator": "99% Invisible",
+        "format": "Podcast episode",
+        "pitch": "The story of a small house that remains while development grows around it. Listen for the difference between the symbol outsiders want and the life of the person whose home it actually is.",
+        "url": "https://99percentinvisible.org/episode/holdout/"
+      },
+      {
+        "title": "The Pruitt-Igoe Myth",
+        "creator": "Chad Freidrichs",
+        "format": "Documentary",
+        "pitch": "A housing project’s notorious demolition becomes the starting point for a harder look at its history. Buildings alone do not explain the fate of their residents."
+      }
+    ],
+    "heads": [
+      "Understand the cost of losing a home.",
+      "Feel the pull of a place.",
+      "Meet someone who stays."
+    ],
+    "bridges": [
+      "Legal possession is not the whole attachment.",
+      "A refusal can mean more than resistance.",
+      "The resident is more than a symbol."
+    ],
+    "shift": "Belonging and ownership are different claims.",
+    "payoff": "Desmond shows the force of housing insecurity. Talbot gives attachment a visual and emotional life. Holdout complicates the outsider’s appetite for a neat story. Together they ask you to see a resident before a property, a symbol, or an investment.",
+    "question": "What gives a place its claim on you?",
+    "angles": [
+      "Stability",
+      "Memory",
+      "Choice"
+    ],
+    "answers": [
+      "A reliable home makes other parts of life possible.",
+      "A place can hold a family story even when that story is complicated.",
+      "Staying matters most when it is a meaningful choice, rather than the absence of options."
+    ],
+    "bonus": "Revisit the story told about a building.",
+    "index": 21,
+    "category": "HOUSING",
+    "thesis": "Desmond shows the force of housing insecurity. Talbot gives attachment a visual and emotional life. Holdout complicates the outsider’s appetite for a neat story. Together they ask you to see a resident before a property, a symbol, or an investment.",
+    "pilotIndex": 20
+  },
+  {
+    "id": "abandoned-houses-private-lives",
+    "name": "Someone lived here.",
+    "title": "Someone lived here.",
+    "kicker": "MYSTERY / HOUSES & PRIVATE LIVES",
+    "color": "#8fb7c7",
+    "hook": "An empty house is full of someone else’s life.",
+    "intro": "The lure of entering a private world—and the responsibility that comes with wanting to know more.",
+    "works": [
+      {
+        "title": "The Likeness",
+        "creator": "Tana French",
+        "format": "Novel",
+        "pitch": "A detective steps into another woman’s identity and an intensely close household. The mystery is gripping; the deeper pull is the temptation to belong to the life you are investigating."
+      },
+      {
+        "title": "The Lives of Others",
+        "creator": "Florian Henckel von Donnersmarck",
+        "format": "Film",
+        "pitch": "A surveillance officer listens to a private life and finds his own position becoming less stable. The film makes attention morally complicated: listening closely is not the same as having the right to listen."
+      },
+      {
+        "title": "House on Loon Lake",
+        "creator": "This American Life · Episode 199",
+        "format": "Podcast episode",
+        "pitch": "A childhood encounter with an abandoned house becomes a years-long effort to understand the family who left it behind. Objects become clues; curiosity becomes a relationship with people the investigator never met.",
+        "url": "https://www.thisamericanlife.org/199/house-on-loon-lake"
+      },
+      {
+        "title": "The Secret History",
+        "creator": "Donna Tartt",
+        "format": "Novel",
+        "pitch": "Another compelling invitation into a closed circle. Read it to test how quickly fascination can become an excuse for overlooking what is in front of you."
+      }
+    ],
+    "heads": [
+      "Enter a life that is not yours.",
+      "Question the right to watch.",
+      "Follow a real trail of objects."
+    ],
+    "bridges": [
+      "Closeness can become a kind of trespass.",
+      "What changes when the people were real?",
+      "Curiosity is not the same as entitlement."
+    ],
+    "shift": "Every mystery belongs to someone.",
+    "payoff": "French makes infiltration seductive. The film asks what watching does to the watcher. The episode turns abandoned possessions back into traces of people. Together they complicate the pleasure of solving: an explanation does not make another life yours.",
+    "question": "What does curiosity owe its subject?",
+    "angles": [
+      "Distance",
+      "Humility",
+      "Care"
+    ],
+    "answers": [
+      "Being invited into a story is different from being entitled to every detail.",
+      "The picture you assemble may always be incomplete.",
+      "Clues are also pieces of lives, and the people matter more than the satisfying ending."
+    ],
+    "bonus": "Notice how much you want to get inside.",
+    "index": 22,
+    "category": "MYSTERY",
+    "thesis": "French makes infiltration seductive. The film asks what watching does to the watcher. The episode turns abandoned possessions back into traces of people. Together they complicate the pleasure of solving: an explanation does not make another life yours.",
+    "pilotIndex": 21
+  },
+  {
+    "id": "animal-language-contact",
+    "name": "Can you hear me?",
+    "title": "Can you hear me?",
+    "kicker": "ANIMAL MINDS / LANGUAGE & PROJECTION",
+    "color": "#6fc6af",
+    "hook": "We want animals to talk. Are we ready to listen?",
+    "intro": "A different sensory world, an unsettling experiment, and the human wish to find ourselves on the other side of a conversation.",
+    "works": [
+      {
+        "title": "An Immense World",
+        "creator": "Ed Yong",
+        "format": "Book",
+        "pitch": "Yong makes the sensory lives of other animals wonderfully strange. Our experience stops looking like the world itself and starts looking like one narrow way of receiving it."
+      },
+      {
+        "title": "Project Nim",
+        "creator": "James Marsh",
+        "format": "Documentary",
+        "pitch": "An effort to teach a chimpanzee human language becomes a story about the people controlling his life. The experiment’s ambition and the animal’s needs do not stay comfortably aligned."
+      },
+      {
+        "title": "Hello",
+        "creator": "Radiolab",
+        "format": "Podcast episode",
+        "pitch": "Attempts at human-dolphin communication move between unusual experiments and observation at sea. Hear the wish to make contact, then ask how much of the conversation has been arranged around human expectations.",
+        "url": "https://radiolab.org/podcast/hello"
+      },
+      {
+        "title": "Are We Smart Enough to Know How Smart Animals Are?",
+        "creator": "Frans de Waal",
+        "format": "Book",
+        "pitch": "A precise challenge to tests that mistake human convenience for a fair measure of another species. It makes the whole triangle’s central question explicit."
+      }
+    ],
+    "heads": [
+      "Start with another sensory world.",
+      "Watch the experiment acquire a cost.",
+      "Listen for our assumptions."
+    ],
+    "bridges": [
+      "What happens when we ask another animal to become like us?",
+      "Contact requires more than a shared vocabulary.",
+      "The test may reveal the tester."
+    ],
+    "shift": "A different mind deserves a different question.",
+    "payoff": "Yong expands the possible worlds an animal inhabits. Project Nim exposes the human power behind a language experiment. Hello captures the desire to bridge a gap. Together they make listening a question of design and humility.",
+    "question": "Who sets the terms?",
+    "angles": [
+      "The senses",
+      "The experiment",
+      "The listener"
+    ],
+    "answers": [
+      "An animal’s world is structured by abilities and needs we may not share.",
+      "The person designing the experiment also controls what will count as success.",
+      "Understanding may begin when we stop waiting for a human-shaped answer."
+    ],
+    "bonus": "Rethink the intelligence test.",
+    "index": 23,
+    "category": "ANIMAL MINDS",
+    "thesis": "Yong expands the possible worlds an animal inhabits. Project Nim exposes the human power behind a language experiment. Hello captures the desire to bridge a gap. Together they make listening a question of design and humility.",
+    "pilotIndex": 22
+  },
+  {
+    "id": "originality-art-copying",
+    "name": "Who made it first?",
+    "title": "Who made it first?",
+    "kicker": "ART / COPYING & CREDIT",
+    "color": "#f0a764",
+    "hook": "The origin story might be the best fiction of all.",
+    "intro": "A stolen idea, a convincing forgery, and a pop hook with a tangled past. Trace the gap between making something and getting the credit.",
+    "works": [
+      {
+        "title": "The Ecstasy of Influence",
+        "creator": "Jonathan Lethem",
+        "format": "Essay",
+        "pitch": "Lethem builds an argument about borrowing out of borrowed language. It is a delightful formal trick with a serious question inside: how much of creative work has ever happened alone?"
+      },
+      {
+        "title": "F for Fake",
+        "creator": "Orson Welles",
+        "format": "Film",
+        "pitch": "Welles turns forgery, expertise, and storytelling into a dazzling confidence game. Enjoy being led around, then notice how authority changes what you are willing to believe."
+      },
+      {
+        "title": "Whomst Among Us Let The Dogs Out",
+        "creator": "99% Invisible · Episode 389",
+        "format": "Podcast episode",
+        "pitch": "The search for the origin of a very familiar hook becomes much stranger than a simple credit line. A gloriously specific investigation of how culture travels and how hard it is to identify a clean beginning.",
+        "url": "https://99percentinvisible.org/episode/whomst-among-us-let-the-dogs-out/"
+      },
+      {
+        "title": "Exit Through the Gift Shop",
+        "creator": "Banksy",
+        "format": "Documentary",
+        "pitch": "A further tangle of authorship, hype, and the art market. Bring every question the first three works have raised, and enjoy how little settles neatly."
+      }
+    ],
+    "heads": [
+      "Read an argument built from borrowing.",
+      "Watch authority become a performance.",
+      "Trace one hook all the way back."
+    ],
+    "bridges": [
+      "Who gets to declare something authentic?",
+      "Try proving where a familiar idea began.",
+      "Credit is tidier than creation."
+    ],
+    "shift": "Originality has a crowded back room.",
+    "payoff": "The essay demonstrates borrowing. Welles plays with the authority that certifies originality. The podcast follows a real credit puzzle through popular culture. Together they make “who made it?” a more interesting question than it first appears.",
+    "question": "What are we rewarding?",
+    "angles": [
+      "Invention",
+      "Authority",
+      "Recognition"
+    ],
+    "answers": [
+      "A new work can emerge from an unusual arrangement of existing material.",
+      "Experts and storytellers help determine what audiences accept as authentic.",
+      "A familiar name on a work may conceal a much longer chain of contribution."
+    ],
+    "bonus": "Follow the argument into the art market.",
+    "index": 24,
+    "category": "ART",
+    "thesis": "The essay demonstrates borrowing. Welles plays with the authority that certifies originality. The podcast follows a real credit puzzle through popular culture. Together they make “who made it?” a more interesting question than it first appears.",
+    "pilotIndex": 23
+  }
+]
