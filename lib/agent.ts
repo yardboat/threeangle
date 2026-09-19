@@ -183,7 +183,8 @@ proposal=result.output;
 if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason||'We couldn’t support a full triangle for that title. Try adding its creator.',422)}
 const corners=proposal.corners||[];
 const cornerSlots=corners.map(c=>c.slot).sort().join();
-if(corners.length!==2||cornerSlots!==[...missing].sort().join()||!proposal.bonus){feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners for the missing slots and one bonus.';verdicts=[];continue}
+const FORMAT_OF:Record<string,string[]>={read:['Book','Article'],watch:['Movie','Documentary','Show'],listen:['Podcast episode']};
+if(corners.length!==2||cornerSlots!==[...missing].sort().join()||corners.some(c=>!FORMAT_OF[c.slot].includes(c.format))||!proposal.bonus){feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners, one per missing slot, with the right format (read: book or article; watch: movie, documentary or show; listen: one podcast episode) and one bonus.';verdicts=[];continue}
 const seen=urlsSeen(result.steps);
 verdicts=await verify([...corners.map(c=>({label:c.slot,title:c.title,url:c.url})),{label:'bonus',title:proposal.bonus.title,url:proposal.bonus.url}],seen);
 (trace.attempts as {verdicts?:Verdict[]}[])[attempt-1].verdicts=verdicts;
