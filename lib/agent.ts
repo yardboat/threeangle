@@ -163,7 +163,7 @@ for(attempt=1;attempt<=2;attempt++){
 let result;
 try{
 result=await generateText({
-model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(60000),
+model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(90000),providerOptions:{anthropic:{thinking:{type:'disabled'}}},
 output:Output.object({schema:proposalOut}),
 prompt:`${RESEARCH_BRIEF}
 REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
@@ -176,6 +176,7 @@ PROCESS: weigh candidates for each missing slot with the removal, substitution a
 });
 }catch(e){await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 proposal=result.output;
+console.log('agent pick done',Date.now()-started,JSON.stringify(result.usage));
 (trace.attempts as unknown[]).push({attempt,status:proposal.status,tools:toolCounts(result.steps),usage:result.usage});
 if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason||'We couldn’t support a full triangle for that title. Try adding its creator.',422)}
 const corners=(proposal.corners||[]).map(c=>({...c,format:normFormat(c.format)}));
@@ -196,7 +197,7 @@ const corners=(proposal.corners as z.infer<typeof cornerOut>[]).map(c=>({...c,fo
 let written;
 try{
 written=await generateText({
-model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(60000),output:Output.object({schema:writerOut}),
+model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(60000),providerOptions:{anthropic:{thinking:{type:'disabled'}}},output:Output.object({schema:writerOut}),
 prompt:`Write the finished threeangle as JSON using ONLY the verified works below. Add no works, facts or links beyond the evidence notes. Structuring must add nothing that was not researched.
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 VERIFIED CORNERS: ${JSON.stringify(corners)}
@@ -210,6 +211,7 @@ Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wond
 });
 }catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=written.output;
+console.log('agent write done',Date.now()-started,JSON.stringify(written.usage));
 
 // ---------- assemble: identities and links come from verified data, not from the writer ----------
 const sources=[...baseSources];
