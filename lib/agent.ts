@@ -191,6 +191,7 @@ const FORMAT_OF:Record<string,string[]>={read:['Book','Article'],watch:['Movie',
 if(corners.length!==2||cornerSlots!==[...missing].sort().join()||corners.some(c=>!FORMAT_OF[c.slot].includes(c.format))||!proposal.bonus){feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners, one per missing slot, with the right format (read: book or article; watch: movie, documentary or show; listen: one podcast episode) and one bonus.';verdicts=[];continue}
 const seen=urlsSeen(result.steps);
 verdicts=await verify([...corners.map(c=>({label:c.slot,title:c.title,url:c.url})),{label:'bonus',title:proposal.bonus.title,url:proposal.bonus.url}],seen);
+console.log('agent verdicts',JSON.stringify(verdicts.map(x=>({l:x.label,t:x.title.slice(0,60),u:x.url.slice(0,120),v:x.verdict,w:x.why}))));
 (trace.attempts as {verdicts?:Verdict[]}[])[attempt-1].verdicts=verdicts;
 const failed=verdicts.filter(v=>v.verdict==='failed');
 if(!failed.length||Date.now()-started>110000)break;
