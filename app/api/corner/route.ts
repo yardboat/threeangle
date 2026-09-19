@@ -11,6 +11,8 @@ export const maxDuration=300;
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store'}});
 function userOf(r:Request){return sessionIdentity(r)}
 async function quota(user:string,kind:string,limit:number){
+// Daily limit is off while the link is private. Set QUOTA_ENFORCED=1 to turn it back on before a public launch.
+if(process.env.QUOTA_ENFORCED!=='1')return;
  const day=new Date().toISOString().slice(0,10),db=crateDb();
  // Atomic per-scope reservations. Failed provider calls still consume a slot.
  for(const [scope,max] of [[`${kind}:${user}:${day}`,limit],[`${kind}:all:${day}`,limit*10]] as const){
