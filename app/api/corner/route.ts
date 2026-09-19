@@ -20,7 +20,7 @@ async function quota(user:string,kind:string,limit:number){
 }
 export async function GET(request:Request){
  const user=userOf(request);const id=new URL(request.url).searchParams.get('id');
- if(!id)return ensureSession(request,reply({ready:isGeminiReady()&&Boolean(process.env.DATABASE_URL??process.env.ThreeangleSto_DATABASE_URL),signedIn:true}));
+ if(!id)return ensureSession(request,reply({ready:isGeminiReady()&&Boolean(process.env.DATABASE_URL||process.env.ThreeangleSto_DATABASE_URL||process.env.ThreeangleSto_POSTGRES_URL||process.env.ThreeangleSto_POSTGRES_PRISMA_URL||process.env.ThreeangleSto_DATABASE_URL_UNPOOLED||process.env.ThreeangleSto_POSTGRES_URL_NON_POOLING),signedIn:true}));
  if(!user)return reply({error:'Open this triangle in the browser where you created it.'},401);
  try{const row=await crateDb().prepare('SELECT result,status FROM corner_draft WHERE id=? AND user_id=?').bind(id,user).first<{result:string|null;status:string}>();if(!row)return reply({error:'That custom triangle was not found.'},404);return reply({topic:row.result?JSON.parse(row.result):null,status:row.status});}catch{return reply({error:'Your triangle could not be loaded. Please try again.'},503)}
 }

@@ -1,6 +1,11 @@
 import {neon} from '@neondatabase/serverless';
 // All query text is server-owned. User values are always bound parameters.
-export const databaseUrl=()=>process.env.DATABASE_URL??process.env.ThreeangleSto_DATABASE_URL;
+export const databaseUrl=()=>process.env.DATABASE_URL
+ ||process.env.ThreeangleSto_DATABASE_URL
+ ||process.env.ThreeangleSto_POSTGRES_URL
+ ||process.env.ThreeangleSto_POSTGRES_PRISMA_URL
+ ||process.env.ThreeangleSto_DATABASE_URL_UNPOOLED
+ ||process.env.ThreeangleSto_POSTGRES_URL_NON_POOLING;
 let schemaReady:Promise<unknown>|undefined;
 export function crateDb(){
  const url=databaseUrl();

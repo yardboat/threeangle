@@ -1,5 +1,10 @@
 import {neon} from '@neondatabase/serverless';
-const databaseUrl=process.env.DATABASE_URL??process.env.ThreeangleSto_DATABASE_URL;
+const databaseUrl=process.env.DATABASE_URL
+ ||process.env.ThreeangleSto_DATABASE_URL
+ ||process.env.ThreeangleSto_POSTGRES_URL
+ ||process.env.ThreeangleSto_POSTGRES_PRISMA_URL
+ ||process.env.ThreeangleSto_DATABASE_URL_UNPOOLED
+ ||process.env.ThreeangleSto_POSTGRES_URL_NON_POOLING;
 if(!databaseUrl)throw new Error('Add DATABASE_URL before running migrations.');
 const sql=neon(databaseUrl);
 await sql.transaction([
