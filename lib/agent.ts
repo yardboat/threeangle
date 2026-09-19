@@ -1,4 +1,5 @@
 import {gateway,generateText,isStepCount,Output,tool} from 'ai';
+import {anthropic} from '@ai-sdk/anthropic';
 import {z} from 'zod';
 import {lookup as dnsLookup} from 'node:dns/promises';
 import {isIP} from 'node:net';
@@ -14,8 +15,10 @@ import {CornerError} from './gemini';
 
 const FORMATS=['Book','Article','Movie','Documentary','Show','Podcast episode'] as const;
 const SLOTS=['read','watch','listen'] as const;
-export const agentModel=()=>process.env.AGENT_MODEL||'anthropic/claude-haiku-4.5';
-export const isAgentReady=()=>Boolean(process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
+const direct=()=>Boolean(process.env.ANTHROPIC_API_KEY);
+export const agentModel=()=>process.env.AGENT_MODEL||(direct()?'claude-sonnet-5':'anthropic/claude-haiku-4.5');
+const languageModel=()=>direct()?anthropic(agentModel()):agentModel();
+export const isAgentReady=()=>Boolean(process.env.ANTHROPIC_API_KEY||process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
 
 // ---------- safe page access ----------
 type Page={ok:boolean;status:number;url:string;title:string;description:string;text:string;error?:string};
@@ -74,7 +77,7 @@ const hostOf=(u:string)=>{try{return new URL(u).hostname.replace(/^www\./,'')}ca
 const urlsSeen=(steps:{content:unknown}[])=>new Set((JSON.stringify(steps.map(s=>s.content))||'').match(/https:\/\/[^\s"'\\<>)\]]+/g)?.map(normUrl).filter(Boolean)||[]);
 
 // ---------- tools ----------
-const search=()=>gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
+const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:6}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
 const fetchPage=tool({
 description:'Open a public https web page and return its title, description and main text. Use it to confirm the exact title, creator and episode on an official page.',
 inputSchema:z.object({url:z.string().url()}),
@@ -106,7 +109,7 @@ const model=agentModel(),started=Date.now();
 let result;
 try{
 result=await generateText({
-model,system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
+model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
 prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.
 Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a one-sentence identifying description and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
@@ -166,7 +169,7 @@ for(attempt=1;attempt<=2;attempt++){
 let result;
 try{
 result=await generateText({
-model,system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(14),abortSignal:AbortSignal.timeout(130000),
+model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(14),abortSignal:AbortSignal.timeout(130000),
 output:Output.object({schema:proposalOut}),
 prompt:`${RESEARCH_BRIEF}
 REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
@@ -202,7 +205,7 @@ const corners=proposal.corners as z.infer<typeof cornerOut>[],bonus=proposal.bon
 let written;
 try{
 written=await generateText({
-model,system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(90000),output:Output.object({schema:writerOut}),
+model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(90000),output:Output.object({schema:writerOut}),
 prompt:`Write the finished threeangle as JSON using ONLY the verified works below. Add no works, facts or links beyond the evidence notes. Structuring must add nothing that was not researched.
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 VERIFIED CORNERS: ${JSON.stringify(corners)}
