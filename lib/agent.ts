@@ -137,7 +137,7 @@ corners:z.array(cornerOut).optional(),
 bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),addedValue:z.string().optional()}).optional()
 });
 const line=z.string().trim().min(1).max(1400);
-const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).length(3),bridges:z.array(line).length(3),shift:line,payoff:line,question:line,angles:z.array(line).length(3),answers:z.array(line).length(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).length(4)});
+const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).min(3),bridges:z.array(line).min(3),shift:line,payoff:line,question:line,angles:z.array(line).min(3),answers:z.array(line).min(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).min(4)});
 
 const normFormat=(f:string)=>{const x=f.toLowerCase();return x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')||x.includes('reported')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':''};
 const linkFor=(format:string,title:string,creator:string)=>{const q=encodeURIComponent((title+' '+creator).trim());const f=format.toLowerCase();return f.includes('podcast')?'https://podcasts.apple.com/us/search?term='+q:f.includes('book')?'https://openlibrary.org/search?q='+q:f.includes('movie')||f.includes('documentary')||f.includes('show')?'https://www.justwatch.com/us/search?q='+q:'https://www.google.com/search?q='+q};
@@ -206,7 +206,9 @@ REFERENCE TRIANGLES (voice only, never copy works or claims): ${references}
 Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker ("TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
 });
 }catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
-const out=written.output;
+const raw=written.output;
+const clean=(xs:string[],min:number)=>xs.filter(x=>x.length>=min&&!/placeholder|\\"/.test(x)).slice(0,3);
+const out={...raw,heads:clean(raw.heads,12),bridges:clean(raw.bridges,12),angles:clean(raw.angles,2),answers:clean(raw.answers,12),works:raw.works.slice(0,4)};
 console.log('agent write done',Date.now()-started,JSON.stringify(written.usage));
 
 // ---------- assemble: identities and links come from verified data, not from the writer ----------
