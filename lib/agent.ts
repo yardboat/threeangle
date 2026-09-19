@@ -78,7 +78,7 @@ const hostOf=(u:string)=>{try{return new URL(u).hostname.replace(/^www\./,'')}ca
 const urlsSeen=(steps:{content:unknown}[])=>new Set((JSON.stringify(steps.map(s=>s.content))||'').match(/https:\/\/[^\s"'\\<>)\]]+/g)?.map(normUrl).filter(Boolean)||[]);
 
 // ---------- tools ----------
-const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:6}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
+const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:5}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
 const fetchPage=tool({
 description:'Open a public https web page and return its title, description and main text. Use it to confirm the exact title, creator and episode on an official page.',
 inputSchema:z.object({url:z.string().url()}),
@@ -170,7 +170,7 @@ for(attempt=1;attempt<=2;attempt++){
 let result;
 try{
 result=await generateText({
-model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(14),abortSignal:AbortSignal.timeout(130000),
+model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(10),abortSignal:AbortSignal.timeout(200000),onStepFinish:st=>console.log('agent step',attempt,st.finishReason,st.toolCalls.map(c=>c.toolName).join('+')||'-',Date.now()-started),
 output:Output.object({schema:proposalOut}),
 prompt:`${RESEARCH_BRIEF}
 REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
@@ -193,7 +193,7 @@ const seen=urlsSeen(result.steps);
 verdicts=await verify([...corners.map(c=>({label:c.slot,title:c.title,url:c.url})),{label:'bonus',title:proposal.bonus.title,url:proposal.bonus.url}],seen);
 (trace.attempts as {verdicts?:Verdict[]}[])[attempt-1].verdicts=verdicts;
 const failed=verdicts.filter(v=>v.verdict==='failed');
-if(!failed.length)break;
+if(!failed.length||Date.now()-started>110000)break;
 feedback='\nVERIFICATION FAILED FOR YOUR PREVIOUS PICKS: '+failed.map(f=>`${f.label} "${f.title}" (${f.why})`).join('; ')+'. Keep any pick that was not listed, replace the listed ones with different works, and confirm each replacement on an official page.';
 }
 if(!proposal||proposal.status!=='ok'||!proposal.bonus||verdicts.length===0||verdicts.some(v=>v.verdict==='failed')){
@@ -206,7 +206,7 @@ const corners=proposal.corners as z.infer<typeof cornerOut>[],bonus=proposal.bon
 let written;
 try{
 written=await generateText({
-model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(90000),output:Output.object({schema:writerOut}),
+model:languageModel(),system:EDITORIAL_SYSTEM,abortSignal:AbortSignal.timeout(60000),output:Output.object({schema:writerOut}),
 prompt:`Write the finished threeangle as JSON using ONLY the verified works below. Add no works, facts or links beyond the evidence notes. Structuring must add nothing that was not researched.
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 VERIFIED CORNERS: ${JSON.stringify(corners)}
