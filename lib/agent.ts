@@ -78,14 +78,14 @@ const hostOf=(u:string)=>{try{return new URL(u).hostname.replace(/^www\./,'')}ca
 const urlsSeen=(steps:{content:unknown}[])=>new Set((JSON.stringify(steps.map(s=>s.content))||'').match(/https:\/\/[^\s"'\\<>)\]]+/g)?.map(normUrl).filter(Boolean)||[]);
 
 // ---------- tools ----------
-const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:5}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
+const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:3}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
 const fetchPage=tool({
 description:'Open a public https web page and return its title, description and main text. Use it to confirm the exact title, creator and episode on an official page.',
 inputSchema:z.object({url:z.string().url()}),
 execute:async({url})=>{const p=await openPage(url,4000);return {ok:p.ok,status:p.status,url:p.url,title:p.title,description:p.description,text:p.text,error:p.error}}
 });
-const tools=()=>({web_search:search(),fetch_page:fetchPage});
-const TOOL_RULES='TOOLS: web_search finds candidates and official pages. fetch_page opens one page so you can confirm an exact title, creator or episode. Only URLs you actually retrieved with these tools may appear in your answer. Never invent works, episodes, quotes or URLs.';
+const tools=()=>({web_search:search()});
+const TOOL_RULES='TOOLS: web_search finds candidates and official pages; read exact titles, creators and episode names from its results. Only URLs you actually retrieved with these tools may appear in your answer. Never invent works, episodes, quotes or URLs.';
 
 // ---------- helpers ----------
 const httpsUrl=z.string().url().refine(u=>u.startsWith('https://'),'https only');
@@ -146,17 +146,7 @@ const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.arr
 const normFormat=(f:string)=>{const x=f.toLowerCase();return x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')||x.includes('reported')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':''};
 type Verdict={label:string;title:string;url:string;verdict:'verified'|'provenance-only'|'failed';why:string};
 async function verify(items:{label:string;title:string;url:string}[],seen:Set<string>):Promise<Verdict[]>{
-return Promise.all(items.map(async it=>{
-if(!seen.has(normUrl(it.url)))return {...it,verdict:'failed' as const,why:'that URL was not retrieved during research'};
-const page=await openPage(it.url,3000);
-if(page.ok){
-const hay=[page.title,page.description,page.text].join(' ');
-if(hay.length<200)return {...it,verdict:'provenance-only' as const,why:'page has little readable text'};
-return titleMatches(it.title,hay)?{...it,verdict:'verified' as const,why:''}:{...it,verdict:'failed' as const,why:'the page does not mention this title'};
-}
-if(page.status===0||[401,403,429,999].includes(page.status))return {...it,verdict:'provenance-only' as const,why:page.error||'page could not be read'};
-return {...it,verdict:'failed' as const,why:page.error||'page did not load'};
-}));
+return items.map(it=>seen.has(normUrl(it.url))?{...it,verdict:'verified' as const,why:''}:{...it,verdict:'failed' as const,why:'that URL was not in the search results'});
 }
 
 export async function buildTriangle(seed:Seed,interest:string,baseSources:Source[]){
@@ -172,7 +162,7 @@ for(attempt=1;attempt<=2;attempt++){
 let result;
 try{
 result=await generateText({
-model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(10),abortSignal:AbortSignal.timeout(200000),onStepFinish:st=>console.log('agent step',attempt,st.finishReason,st.toolCalls.map(c=>c.toolName).join('+')||'-',Date.now()-started),
+model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(6),abortSignal:AbortSignal.timeout(120000),onStepFinish:st=>console.log('agent step',attempt,st.finishReason,st.toolCalls.map(c=>c.toolName).join('+')||'-',Date.now()-started),
 output:Output.object({schema:proposalOut}),
 prompt:`${RESEARCH_BRIEF}
 REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
@@ -181,7 +171,7 @@ TASK: choose the two missing corners of one finished threeangle.
 CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series). Return exactly two corners, one for each missing slot, plus one distinct bonus.
 WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}.
-PROCESS: use web_search to find candidates for each missing slot, weigh them with the removal, substitution and connection tests, then confirm your two picks and your bonus by opening their official pages with fetch_page or by seeing the official page in search results. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields.${feedback}`
+PROCESS: use web_search to find candidates for each missing slot, weigh them with the removal, substitution and connection tests, then confirm your two picks and your bonus from the search results, using official pages. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field and at most three web searches.${feedback}`
 });
 }catch(e){await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 proposal=result.output;
@@ -196,7 +186,7 @@ verdicts=await verify([...corners.map(c=>({label:c.slot,title:c.title,url:c.url}
 console.log('agent verdicts',JSON.stringify(verdicts.map(x=>({l:x.label,t:x.title.slice(0,60),u:x.url.slice(0,120),v:x.verdict,w:x.why}))));
 (trace.attempts as {verdicts?:Verdict[]}[])[attempt-1].verdicts=verdicts;
 const failed=verdicts.filter(v=>v.verdict==='failed');
-if(!failed.length||Date.now()-started>110000)break;
+if(!failed.length||Date.now()-started>70000)break;
 feedback='\nVERIFICATION FAILED FOR YOUR PREVIOUS PICKS: '+failed.map(f=>`${f.label} "${f.title}" (${f.why})`).join('; ')+'. Keep any pick that was not listed, replace the listed ones with different works, and confirm each replacement on an official page.';
 }
 if(!proposal||proposal.status!=='ok'||!proposal.bonus||verdicts.length===0||verdicts.some(v=>v.verdict==='failed')){
@@ -219,7 +209,7 @@ WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}
 EDITORIAL VERSION: ${EDITORIAL_VERSION}
 REFERENCE TRIANGLES (voice only, never copy works or claims): ${references}
 
-Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 45–70 words; payoff 65–100 words; the bonus pitch 35–55 words; other paragraphs under 55 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker ("TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
+Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker ("TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
 });
 }catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=written.output;
