@@ -14,7 +14,7 @@ async function quota(user:string,kind:string,limit:number){
  const day=new Date().toISOString().slice(0,10),db=crateDb();
  // Atomic per-scope reservations. Failed provider calls still consume a slot.
  for(const [scope,max] of [[`${kind}:${user}:${day}`,limit],[`${kind}:all:${day}`,limit*10]] as const){
- const r=await db.prepare('INSERT INTO corner_usage (scope,count) VALUES (?,1) ON CONFLICT(scope) DO UPDATE SET count=count+1 WHERE count < ? RETURNING count').bind(scope,max).first();
+ const r=await db.prepare('INSERT INTO corner_usage (scope,count) VALUES (?,1) ON CONFLICT(scope) DO UPDATE SET count=corner_usage.count+1 WHERE corner_usage.count < ? RETURNING count').bind(scope,max).first();
  if(!r)throw new CornerError('Today’s custom-triangle limit has been reached. Come back tomorrow, or explore the curated topics.',429);
  }
 }
@@ -80,5 +80,5 @@ RESEARCH: ${researched.text}`,false,10000);
  finally{clearInterval(timer);if(connected)try{controller.close()}catch{}}
  }});
  return new Response(stream,{headers:{'Content-Type':'application/x-ndjson','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
- }catch(e){if(e instanceof CornerError)return reply({error:e.message},e.status);if(e instanceof SyntaxError)return reply({error:'Check your input and try again.'},400);console.error('Corner request failed',e instanceof Error?e.name:'unknown');return reply({error:'We couldn’t finish that research. Try adding the creator or a more specific title.'},503)}
+ }catch(e){if(e instanceof CornerError)return reply({error:e.message},e.status);if(e instanceof SyntaxError)return reply({error:'Check your input and try again.'},400);console.error('Corner request failed',e instanceof Error?e.name:'unknown',(e as {code?:string}).code??'',e instanceof Error?e.message.slice(0,200):'');return reply({error:'We couldn’t finish that research. Try adding the creator or a more specific title.'},503)}
 }
