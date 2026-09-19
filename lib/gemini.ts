@@ -21,4 +21,4 @@ export async function gemini(prompt:string,search:boolean,maxOutputTokens=7000,r
  if(search&&!sources.length){if(!retried)return gemini(prompt+'\n\nYou must run Google Search now and base every title, creator and claim on the search results. Do not answer from memory.',search,maxOutputTokens,true);throw new CornerError('We couldn’t find enough source material. Try adding the author, director, or podcast host.');}
  return {text,sources,html:c.groundingMetadata?.searchEntryPoint?.renderedContent||''};
 }
-export function parseJson(text:string):unknown{try{return JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))}catch{throw new CornerError('The research arrived incomplete. Please try again.')}}
+export function parseJson(text:string):unknown{try{return JSON.parse((()=>{const t=text.trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');return a>=0&&b>a?t.slice(a,b+1):t})())}catch{throw new CornerError('The research arrived incomplete. Please try again.')}}
