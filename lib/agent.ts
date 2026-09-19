@@ -128,18 +128,18 @@ return {id:crypto.randomUUID(),matches,sources,searchHtml:[]};
 }
 
 // ---------- 2. build the triangle ----------
-const cornerOut=z.object({slot:z.enum(SLOTS),title:z.string().min(1).max(3000),creator:z.string().min(1).max(3000),format:z.string().min(1).max(80),scope:z.string().max(3000).optional(),url:httpsUrl.optional(),contribution:z.string().min(1).max(3000),evidence:z.string().max(3000).optional()});
+const cornerOut=z.object({slot:z.string(),title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),url:z.string().optional()}).passthrough();
 const proposalOut=z.object({
 status:z.enum(['ok','needs_more_research','needs_clarification']),
-reason:z.string().max(3000).optional(),
-proposition:z.string().max(3000).optional(),
-corners:z.array(cornerOut).max(2).optional(),
-bonus:z.object({title:z.string().min(1).max(3000),creator:z.string().min(1).max(3000),format:z.string().min(1).max(80),url:httpsUrl.optional(),addedValue:z.string().min(1).max(3000)}).optional(),
-nearMiss:z.object({title:z.string().max(3000),weakness:z.string().max(3000)}).optional(),
-connections:z.array(z.string().max(3000)).max(3).optional(),
-insight:z.string().max(3000).optional(),
-boundary:z.string().max(3000).optional()
-});
+reason:z.string().optional(),
+proposition:z.unknown().optional(),
+corners:z.array(cornerOut).optional(),
+bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),url:z.string().optional()}).passthrough().optional(),
+nearMiss:z.unknown().optional(),
+connections:z.unknown().optional(),
+insight:z.unknown().optional(),
+boundary:z.unknown().optional()
+}).passthrough();
 const line=z.string().trim().min(1).max(1400);
 const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).length(3),bridges:z.array(line).length(3),shift:line,payoff:line,question:line,angles:z.array(line).length(3),answers:z.array(line).length(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).length(4)});
 
