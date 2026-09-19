@@ -14,7 +14,7 @@ import {CornerError} from './gemini';
 
 const FORMATS=['Book','Article','Movie','Documentary','Show','Podcast episode'] as const;
 const SLOTS=['read','watch','listen'] as const;
-export const agentModel=()=>process.env.AGENT_MODEL||'anthropic/claude-sonnet-5';
+export const agentModel=()=>process.env.AGENT_MODEL||'anthropic/claude-haiku-4.5';
 export const isAgentReady=()=>Boolean(process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
 
 // ---------- safe page access ----------
