@@ -92,6 +92,7 @@ const httpsUrl=z.string().url().refine(u=>u.startsWith('https://'),'https only')
 const providerError=(e:unknown)=>{
 const name=e instanceof Error?e.name:'unknown',message=e instanceof Error?e.message.slice(0,300):'';
 console.error('Agent call failed',name,message);
+if(name==='AI_NoObjectGeneratedError'){const x=e as {text?:string;cause?:{message?:string}};console.error('No object text',(x.text||'').slice(0,700),'cause',((x.cause&&x.cause.message)||'').slice(0,500))}
 return new CornerError(name==='TimeoutError'||name==='AbortError'?'The research took too long. Please try again.':'The research service could not finish. Please try again in a moment.');
 };
 async function recordRun(model:string,status:string,trace:unknown){
@@ -127,21 +128,22 @@ return {id:crypto.randomUUID(),matches,sources,searchHtml:[]};
 }
 
 // ---------- 2. build the triangle ----------
-const cornerOut=z.object({slot:z.enum(SLOTS),title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),scope:z.string().max(240),url:httpsUrl,contribution:z.string().min(1).max(600),evidence:z.string().min(1).max(500)});
+const cornerOut=z.object({slot:z.enum(SLOTS),title:z.string().min(1).max(3000),creator:z.string().min(1).max(3000),format:z.string().min(1).max(80),scope:z.string().max(3000).optional(),url:httpsUrl,contribution:z.string().min(1).max(3000),evidence:z.string().max(3000).optional()});
 const proposalOut=z.object({
 status:z.enum(['ok','needs_more_research','needs_clarification']),
-reason:z.string().max(500).optional(),
-proposition:z.string().max(500).optional(),
+reason:z.string().max(3000).optional(),
+proposition:z.string().max(3000).optional(),
 corners:z.array(cornerOut).max(2).optional(),
-bonus:z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.string().min(1).max(80),url:httpsUrl,addedValue:z.string().min(1).max(500)}).optional(),
-nearMiss:z.object({title:z.string().max(240),weakness:z.string().max(400)}).optional(),
-connections:z.array(z.string().max(500)).max(3).optional(),
-insight:z.string().max(800).optional(),
-boundary:z.string().max(400).optional()
+bonus:z.object({title:z.string().min(1).max(3000),creator:z.string().min(1).max(3000),format:z.string().min(1).max(80),url:httpsUrl,addedValue:z.string().min(1).max(3000)}).optional(),
+nearMiss:z.object({title:z.string().max(3000),weakness:z.string().max(3000)}).optional(),
+connections:z.array(z.string().max(3000)).max(3).optional(),
+insight:z.string().max(3000).optional(),
+boundary:z.string().max(3000).optional()
 });
 const line=z.string().trim().min(1).max(1400);
 const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).length(3),bridges:z.array(line).length(3),shift:line,payoff:line,question:line,angles:z.array(line).length(3),answers:z.array(line).length(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).length(4)});
 
+const normFormat=(f:string)=>{const x=f.toLowerCase();return x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')||x.includes('reported')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':''};
 type Verdict={label:string;title:string;url:string;verdict:'verified'|'provenance-only'|'failed';why:string};
 async function verify(items:{label:string;title:string;url:string}[],seen:Set<string>):Promise<Verdict[]>{
 return Promise.all(items.map(async it=>{
@@ -185,7 +187,7 @@ PROCESS: use web_search to find candidates for each missing slot, weigh them wit
 proposal=result.output;
 (trace.attempts as unknown[]).push({attempt,status:proposal.status,tools:toolCounts(result.steps),usage:result.usage});
 if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason||'We couldn’t support a full triangle for that title. Try adding its creator.',422)}
-const corners=proposal.corners||[];
+const corners=(proposal.corners||[]).map(c=>({...c,format:normFormat(c.format)}));
 const cornerSlots=corners.map(c=>c.slot).sort().join();
 const FORMAT_OF:Record<string,string[]>={read:['Book','Article'],watch:['Movie','Documentary','Show'],listen:['Podcast episode']};
 if(corners.length!==2||cornerSlots!==[...missing].sort().join()||corners.some(c=>!FORMAT_OF[c.slot].includes(c.format))||!proposal.bonus){feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners, one per missing slot, with the right format (read: book or article; watch: movie, documentary or show; listen: one podcast episode) and one bonus.';verdicts=[];continue}
@@ -201,7 +203,7 @@ if(!proposal||proposal.status!=='ok'||!proposal.bonus||verdicts.length===0||verd
 await recordRun(model,'unverified',{...trace,ms:Date.now()-started});
 throw new CornerError('We couldn’t verify a source for every recommended work. Please try again or add the creator to your title.',422);
 }
-const corners=proposal.corners as z.infer<typeof cornerOut>[],bonus=proposal.bonus;
+const corners=(proposal.corners as z.infer<typeof cornerOut>[]).map(c=>({...c,format:normFormat(c.format)})),bonus=proposal.bonus;
 
 // ---------- writer: no tools, verified works only ----------
 let written;
