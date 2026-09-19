@@ -1,5 +1,5 @@
 import {gateway,generateText,isStepCount,Output,tool} from 'ai';
-import {anthropic} from '@ai-sdk/anthropic';
+import {anthropic,createAnthropic} from '@ai-sdk/anthropic';
 import {z} from 'zod';
 import {lookup as dnsLookup} from 'node:dns/promises';
 import {isIP} from 'node:net';
@@ -15,9 +15,10 @@ import {CornerError} from './gemini';
 
 const FORMATS=['Book','Article','Movie','Documentary','Show','Podcast episode'] as const;
 const SLOTS=['read','watch','listen'] as const;
-const direct=()=>Boolean(process.env.ANTHROPIC_API_KEY);
+const anthropicKey=()=>process.env.ANTHROPIC_API_KEY||process.env[Object.keys(process.env).find(k=>/anthropic/i.test(k)&&/key|token/i.test(k))||'']||'';
+const direct=()=>Boolean(anthropicKey());
 export const agentModel=()=>process.env.AGENT_MODEL||(direct()?'claude-sonnet-5':'anthropic/claude-haiku-4.5');
-const languageModel=()=>direct()?anthropic(agentModel()):agentModel();
+const languageModel=()=>{console.log('agent model',agentModel(),direct()?'anthropic-direct':'gateway','env names:',Object.keys(process.env).filter(k=>/anthropic|openai|gateway/i.test(k)).join(','));return direct()?createAnthropic({apiKey:anthropicKey()})(agentModel()):agentModel()};
 export const isAgentReady=()=>Boolean(process.env.ANTHROPIC_API_KEY||process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
 
 // ---------- safe page access ----------
