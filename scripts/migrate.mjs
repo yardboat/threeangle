@@ -1,6 +1,7 @@
 import {neon} from '@neondatabase/serverless';
-if(!process.env.DATABASE_URL)throw new Error('Add DATABASE_URL before running migrations.');
-const sql=neon(process.env.DATABASE_URL);
+const databaseUrl=process.env.DATABASE_URL??process.env.ThreeangleSto_DATABASE_URL;
+if(!databaseUrl)throw new Error('Add DATABASE_URL before running migrations.');
+const sql=neon(databaseUrl);
 await sql.transaction([
  sql`CREATE TABLE IF NOT EXISTS crate (user_id text NOT NULL, topic_id text NOT NULL, saved_at bigint NOT NULL, PRIMARY KEY(user_id,topic_id))`,
  sql`CREATE TABLE IF NOT EXISTS corner_draft (id text PRIMARY KEY, user_id text NOT NULL, lookup text NOT NULL, status text NOT NULL DEFAULT 'ready', result text, updated_at bigint NOT NULL)`,
