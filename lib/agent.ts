@@ -128,18 +128,14 @@ return {id:crypto.randomUUID(),matches,sources,searchHtml:[]};
 }
 
 // ---------- 2. build the triangle ----------
-const cornerOut=z.object({slot:z.string(),title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),url:z.string().optional()}).passthrough();
+const cornerOut=z.object({slot:z.string(),title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),contribution:z.string().optional()});
 const proposalOut=z.object({
 status:z.enum(['ok','needs_more_research','needs_clarification']),
 reason:z.string().optional(),
-proposition:z.unknown().optional(),
+insight:z.string().optional(),
 corners:z.array(cornerOut).optional(),
-bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),url:z.string().optional()}).passthrough().optional(),
-nearMiss:z.unknown().optional(),
-connections:z.unknown().optional(),
-insight:z.unknown().optional(),
-boundary:z.unknown().optional()
-}).passthrough();
+bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),addedValue:z.string().optional()}).optional()
+});
 const line=z.string().trim().min(1).max(1400);
 const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).length(3),bridges:z.array(line).length(3),shift:line,payoff:line,question:line,angles:z.array(line).length(3),answers:z.array(line).length(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).length(4)});
 
@@ -202,7 +198,7 @@ prompt:`Write the finished threeangle as JSON using ONLY the verified works belo
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 VERIFIED CORNERS: ${JSON.stringify(corners)}
 BONUS: ${JSON.stringify(bonus)}
-EDITORIAL PROPOSAL: ${JSON.stringify({proposition:proposal.proposition,connections:proposal.connections,insight:proposal.insight,boundary:proposal.boundary,rejectedNearMiss:proposal.nearMiss})}
+EDITORIAL PROPOSAL: ${JSON.stringify({insight:proposal.insight})}
 WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}
 EDITORIAL VERSION: ${EDITORIAL_VERSION}
 REFERENCE TRIANGLES (voice only, never copy works or claims): ${references}
