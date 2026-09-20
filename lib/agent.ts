@@ -104,7 +104,7 @@ const toolCounts=(steps:{toolCalls:{toolName:string}[]}[])=>{const counts:Record
 const lookupOut=z.object({
 status:z.enum(['matches','none','clarify']),
 question:z.string().max(400).optional(),
-matches:z.array(z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),year:z.string().max(40),description:z.string().min(1).max(500),url:httpsUrl})).max(3)
+matches:z.array(z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),year:z.string().max(40),description:z.string().min(1).max(1200),url:httpsUrl})).max(3)
 });
 export async function identifyWork(title:string):Promise<Lookup>{
 const model=agentModel(),started=Date.now();
@@ -114,7 +114,7 @@ result=await generateText({
 model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
 prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.
-Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a two-sentence description covering the premise and key people, and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
+Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of four to six sentences drawn only from what you found in search (premise, principal cast and crew, tone, themes, setting, and reception), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
 });
 }catch(e){await recordRun(model,'error',{phase:'identify',title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=result.output;
