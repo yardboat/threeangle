@@ -104,7 +104,7 @@ const toolCounts=(steps:{toolCalls:{toolName:string}[]}[])=>{const counts:Record
 const lookupOut=z.object({
 status:z.enum(['matches','none','clarify']),
 question:z.string().max(400).optional(),
-matches:z.array(z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),year:z.string().max(40),description:z.string().min(1).max(1200),url:httpsUrl})).max(3)
+matches:z.array(z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),year:z.string().max(40),description:z.string().min(1).max(1400),url:httpsUrl})).max(3)
 });
 export async function identifyWork(title:string):Promise<Lookup>{
 const model=agentModel(),started=Date.now();
@@ -114,7 +114,7 @@ result=await generateText({
 model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
 prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.
-Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of four to six sentences drawn only from what you found in search (premise, principal cast and crew, tone, themes, setting, and reception), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
+Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of at most 1200 characters drawn only from what you found in search (premise, principal cast and crew, tone, setting, what critics say it is really about, their most common comparisons, and the two to four distinct topics or readings the work supports; paraphrase, never quote), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
 });
 }catch(e){await recordRun(model,'error',{phase:'identify',title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=result.output;
@@ -132,6 +132,7 @@ const cornerOut=z.object({slot:z.string(),title:z.string().min(1),creator:z.stri
 const proposalOut=z.object({
 status:z.enum(['ok','needs_more_research','needs_clarification']),
 reason:z.string().optional(),
+topic:z.string().optional(),
 insight:z.string().optional(),
 corners:z.array(cornerOut).optional(),
 bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),addedValue:z.string().optional()}).optional()
@@ -146,7 +147,7 @@ async function verify(items:{label:string;title:string;url:string}[],seen:Set<st
 return items.map(it=>seen.has(normUrl(it.url))?{...it,verdict:'verified' as const,why:''}:{...it,verdict:'failed' as const,why:'that URL was not in the search results'});
 }
 
-export async function buildTriangle(seed:Seed,interest:string,baseSources:Source[]){
+export async function buildTriangle(seed:Seed,interest:string,baseSources:Source[],avoid:string[]=[]){
 const model=agentModel(),started=Date.now();
 const seedUrl=baseSources[seed.source]?.url||'';
 const slot=SLOTS[cornerIndex(seed.format)];
@@ -169,7 +170,7 @@ CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 This work was already verified by web search before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series). Return exactly two corners, one for each missing slot, plus one distinct bonus.
 WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}.
-PROCESS: weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real works, and for the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
+${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together (prefer the reading the user's note points to, otherwise the reading with the strongest three works), state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real works, and for the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
 });
 }catch(e){await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 proposal=result.output;
@@ -199,12 +200,13 @@ prompt:`Write the finished threeangle as JSON using ONLY the verified works belo
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 VERIFIED CORNERS: ${JSON.stringify(corners)}
 BONUS: ${JSON.stringify(bonus)}
+CHOSEN TOPIC (every work must serve it): ${proposal.topic||''}
 EDITORIAL PROPOSAL: ${JSON.stringify({insight:proposal.insight})}
 WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}
 EDITORIAL VERSION: ${EDITORIAL_VERSION}
 REFERENCE TRIANGLES (voice only, never copy works or claims): ${references}
 
-Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker ("TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
+Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker (the chosen topic as a short uppercase label like "TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
 });
 }catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const raw=written.output;
