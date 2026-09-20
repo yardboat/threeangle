@@ -28,7 +28,7 @@ export async function GET(request:Request){
 }
 const inputSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('lookup'),title:z.string().trim().min(2).max(240)}),
- z.object({action:z.literal('generate'),id:z.string().uuid(),choice:z.number().int().min(0).max(2),interest:z.string().trim().max(600)})
+ z.object({action:z.literal('generate'),id:z.string().uuid(),choice:z.number().int().min(0).max(2),interest:z.string().trim().max(600),avoid:z.array(z.string().max(300)).max(8).optional()})
 ]);
 export async function POST(request:Request){
  const user=userOf(request);if(!user)return reply({error:'Please reload to start your private browser session.'},401);
@@ -55,7 +55,7 @@ export async function POST(request:Request){
  const timer=setInterval(()=>send({type:'heartbeat'}),10000);
  try{
  send({type:'status',text:'Finding the other two corners.'});
- const built=await buildTriangle(seed,input.interest,lookup.sources);
+ const built=await buildTriangle(seed,input.interest,lookup.sources,input.avoid||[]);
 const sources=built.sources;
 const result=resultSchema.parse(built.output);const works=result.works.map(w=>({...w,url:requireSource(sources,w.source).url}));
  const slot=cornerIndex(seed.format);if(works[slot].title.toLowerCase().trim()!==seed.title.toLowerCase().trim()||works[slot].creator.toLowerCase().trim()!==seed.creator.toLowerCase().trim()||works[slot].format!==seed.format)throw new Error('Seed was changed');works[slot]={...works[slot],title:seed.title,creator:seed.creator,format:seed.format,url:requireSource(lookup.sources,seed.source).url};
