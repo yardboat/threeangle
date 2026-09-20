@@ -114,7 +114,7 @@ result=await generateText({
 model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
 prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.
-Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a one-sentence identifying description and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
+Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a two-sentence description covering the premise and key people, and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
 });
 }catch(e){await recordRun(model,'error',{phase:'identify',title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=result.output;
@@ -166,6 +166,7 @@ REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
 
 TASK: choose the two missing corners of one finished threeangle.
 CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
+This work was already verified by web search before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series). Return exactly two corners, one for each missing slot, plus one distinct bonus.
 WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}.
 PROCESS: weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real works, and for the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
@@ -174,7 +175,7 @@ PROCESS: weigh candidates for each missing slot with the removal, substitution a
 proposal=result.output;
 console.log('agent pick done',Date.now()-started,JSON.stringify(result.usage));
 (trace.attempts as unknown[]).push({attempt,status:proposal.status,tools:toolCounts(result.steps),usage:result.usage});
-if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason||'We couldn’t support a full triangle for that title. Try adding its creator.',422)}
+if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason&&proposal.reason.length<=160?proposal.reason:'We couldn’t build a full triangle for that title yet. Try adding its creator.',422)}
 const corners=(proposal.corners||[]).map(c=>({...c,format:normFormat(c.format)}));
 const cornerSlots=corners.map(c=>c.slot).sort().join();
 const FORMAT_OF:Record<string,string[]>={read:['Book','Article'],watch:['Movie','Documentary','Show'],listen:['Podcast episode']};
