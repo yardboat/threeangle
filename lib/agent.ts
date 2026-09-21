@@ -6,14 +6,13 @@ import {isIP} from 'node:net';
 import corpus from '../editorial/refined-24.json';
 import {crateDb} from '@/db/crate';
 import {EDITORIAL_SYSTEM,EDITORIAL_VERSION,RESEARCH_BRIEF,calibrationFor} from './editorial';
-import {cornerIndex,type Lookup,type Seed,type Source} from './corner-schema';
+import {cornerIndex,dropRejected,FORMATS,type Lookup,type LookupHints,type Seed,type Source} from './corner-schema';
 import {CornerError} from './gemini';
 
 // threeangle's triangle-building agent. Model calls go through Vercel AI Gateway, so the
 // model is a config string (AGENT_MODEL). On Vercel the gateway authenticates with OIDC;
 // locally set AI_GATEWAY_API_KEY. The Gem's instructions are the system prompt.
 
-const FORMATS=['Book','Article','Movie','Documentary','Show','Podcast episode'] as const;
 const SLOTS=['read','watch','listen'] as const;
 const anthropicKey=()=>process.env.ANTHROPIC_API_KEY||process.env[Object.keys(process.env).find(k=>/anthropic/i.test(k)&&/key|token/i.test(k))||'']||'';
 const direct=()=>Boolean(anthropicKey());
@@ -106,20 +105,28 @@ status:z.enum(['matches','none','clarify']),
 question:z.string().max(400).optional(),
 matches:z.array(z.object({title:z.string().min(1).max(240),creator:z.string().min(1).max(240),format:z.enum(FORMATS),year:z.string().max(40),description:z.string().min(1).max(1400),url:httpsUrl})).max(3)
 });
-export async function identifyWork(title:string):Promise<Lookup>{
+function hintText(h:LookupHints={}){
+const parts:string[]=[];
+if(h.creator)parts.push(`The user says the creator (author, director, host or network) is ${JSON.stringify(h.creator)}.`);
+if(h.year)parts.push(`The user says it is from around ${JSON.stringify(h.year)}.`);
+if(h.format)parts.push(`The user says it is a ${h.format}; return only works of that format.`);
+if(h.exclude?.length)parts.push(`The user already looked at these candidates and said none of them is the one, so do NOT return them again: ${JSON.stringify(h.exclude)}. Look for what else this title could mean, including a work with the same title in another format or by another creator.`);
+return parts.length?'\n'+parts.join(' ')+'\n':'';
+}
+export async function identifyWork(title:string,hints:LookupHints={}):Promise<Lookup>{
 const model=agentModel(),started=Date.now();
 let result;
 try{
 result=await generateText({
 model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
-prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.
+prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.${hintText(hints)}
 Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of at most 1200 characters drawn only from what you found in search (premise, principal cast and crew, tone, setting, what critics say it is really about, their most common comparisons, and the two to four distinct topics or readings the work supports; paraphrase, never quote), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
 });
 }catch(e){await recordRun(model,'error',{phase:'identify',title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=result.output;
 const seen=urlsSeen(result.steps);
-const kept=(out.status==='matches'?out.matches:[]).filter(m=>seen.has(normUrl(m.url)));
+const kept=dropRejected((out.status==='matches'?out.matches:[]).filter(m=>seen.has(normUrl(m.url))),hints.exclude);
 await recordRun(model,out.status,{phase:'identify',title,tools:toolCounts(result.steps),returned:out.matches.length,kept:kept.length,ms:Date.now()-started,usage:result.usage});
 if(out.status==='clarify')throw new CornerError(out.question||'Could you add the creator or a more specific title?',422);
 const sources:Source[]=kept.map(m=>({title:m.title+' — '+hostOf(m.url),url:m.url}));

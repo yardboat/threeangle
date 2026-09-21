@@ -32,3 +32,16 @@ function requireTopic(value:unknown):Topic{
 }
 export const sameWork=(a:{title:string;creator:string;format:string},b:{title:string;creator:string;format:string})=>
  a.title.trim().toLocaleLowerCase()===b.title.trim().toLocaleLowerCase()&&a.creator.trim().toLocaleLowerCase()===b.creator.trim().toLocaleLowerCase()&&a.format===b.format;
+
+// ---- In-app navigation -------------------------------------------------------------
+// Every screen the visitor can be on. Each one that matters is a real browser history entry,
+// so the browser's Back button and the in-page Back button walk the same path.
+export type Screen={s:'welcome'}|{s:'find'}|{s:'confirm';c:number}|{s:'thinking'}|{s:'reveal';id:string};
+export const screenUrl=(screen:Screen)=>screen.s==='reveal'?'/v2?triangle='+encodeURIComponent(screen.id):screen.s==='welcome'?'/v2':'/v2?start=title';
+export function screenFromSearch(search:string):Screen{
+ const params=new URLSearchParams(search),id=params.get('triangle');
+ return id?{s:'reveal',id}:params.get('start')==='title'?{s:'find'}:{s:'welcome'};
+}
+export const sameScreen=(a:Screen,b:Screen)=>a.s===b.s&&(a.s!=='confirm'||a.c===(b as {c:number}).c)&&(a.s!=='reveal'||a.id===(b as {id:string}).id);
+// Where "Back" goes when there is no earlier in-app entry (a shared link, a reload).
+export const parentScreen=(screen:Screen):Screen=>screen.s==='confirm'?{s:'find'}:screen.s==='thinking'?{s:'find'}:{s:'welcome'};

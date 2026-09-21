@@ -1,0 +1,22 @@
+/* Navigation and "help us find it": structure and behaviour only. */
+.hall-back{display:flex;align-items:center;gap:8px;justify-self:start;min-height:44px;width:max-content;padding:0 10px;font-size:12px}
+.hall-back:hover span{text-decoration:underline;text-underline-offset:5px}
+.hall-notit{margin-top:22px}
+.hall-matches>.hall-notit{margin-top:18px}
+.hall-refine{display:flex;flex-direction:column;gap:6px;border:1px solid var(--h-line);padding:24px 26px;margin-top:14px;background:var(--h-paper)}
+.hall-refine-lede{font-size:12px;color:var(--h-muted);margin-bottom:10px!important}
+.hall-refine label{display:block;font-size:11px;margin:12px 0 6px}
+.hall-refine label span{color:var(--h-muted);margin-left:6px}
+.hall-refine input{width:100%;min-height:46px;padding:8px 12px;border:1px solid var(--h-line);background:var(--h-paper);color:var(--h-ink);font-size:16px;border-radius:0}
+.hall-refine fieldset{border:0;padding:0;margin:14px 0 0;min-width:0}
+.hall-refine legend{font-size:11px;padding:0;margin-bottom:8px}
+.hall-refine-formats{display:flex;flex-wrap:wrap;gap:8px}
+.hall-refine-formats button{min-height:40px;padding:6px 14px;font-size:11px;border:1px solid var(--h-line);background:var(--h-paper);transition:background .3s,color .3s,border-color .3s}
+.hall-refine-formats button:hover{border-color:var(--h-ink)}
+.hall-refine-formats button[aria-pressed=true]{background:var(--h-ink);color:var(--h-paper)!important;border-color:var(--h-ink)}
+.hall-refine-note{font-size:11px;color:var(--h-muted);margin-top:10px!important;line-height:1.6}
+.hall-refine-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:22px;flex-wrap:wrap}
+@media(max-width:700px){.hall-back{padding:0 6px}.hall-refine{padding:20px 18px}}
+
+/* The tagline was removed from the landing screen; keep its vertical room so the copy block sits where it did. */
+@media(min-width:701px){.hall-welcome{padding-top:58px}}

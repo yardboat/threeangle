@@ -2,7 +2,7 @@ import {identifyWork,buildTriangle,isAgentReady} from '@/lib/agent';
 import {sessionIdentity,ensureSession} from '@/lib/session';
 import {crateDb} from '@/db/crate';
 import {CornerError} from '@/lib/gemini';
-import {resultSchema,requireSource,cornerIndex,type Lookup} from '@/lib/corner-schema';
+import {resultSchema,requireSource,cornerIndex,lookupHintsSchema,type Lookup} from '@/lib/corner-schema';
 import type {Topic} from '@/lib/stories';
 import {z} from 'zod';
 export const dynamic='force-dynamic';
@@ -27,7 +27,7 @@ export async function GET(request:Request){
  try{const row=await crateDb().prepare('SELECT result,status FROM corner_draft WHERE id=? AND user_id=?').bind(id,user).first<{result:string|null;status:string}>();if(!row)return reply({error:'That custom triangle was not found.'},404);return reply({topic:row.result?JSON.parse(row.result):null,status:row.status});}catch{return reply({error:'Your triangle could not be loaded. Please try again.'},503)}
 }
 const inputSchema=z.discriminatedUnion('action',[
- z.object({action:z.literal('lookup'),title:z.string().trim().min(2).max(240)}),
+ z.object({action:z.literal('lookup'),title:z.string().trim().min(2).max(240)}).merge(lookupHintsSchema),
  z.object({action:z.literal('generate'),id:z.string().uuid(),choice:z.number().int().min(0).max(2),interest:z.string().trim().max(600),avoid:z.array(z.string().max(300)).max(8).optional()})
 ]);
 export async function POST(request:Request){
@@ -35,11 +35,11 @@ export async function POST(request:Request){
  if(request.headers.get('sec-fetch-site')==='cross-site'||(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin))return reply({error:'Please start from threeangle.'},403);
  if(!isAgentReady())return reply({error:'Custom triangles are not available yet. You can still explore the curated topics.'},503);
  try{
- const raw=await request.text();if(raw.length>3000)return reply({error:'Please use a shorter title or note.'},400);
+ const raw=await request.text();if(raw.length>6000)return reply({error:'Please use a shorter title or note.'},400);
  const parsed=inputSchema.safeParse(JSON.parse(raw));if(!parsed.success)return reply({error:'Check your title or selection and try again.'},400);const input=parsed.data;
  if(input.action==='lookup'){
  await quota(user,'lookup',10);
- const lookup=await identifyWork(input.title);
+ const lookup=await identifyWork(input.title,{creator:input.creator||undefined,year:input.year||undefined,format:input.format,exclude:input.exclude});
  await crateDb().prepare('INSERT INTO corner_draft (id,user_id,lookup,status,updated_at) VALUES (?,?,?,\'ready\',?)').bind(lookup.id,user,JSON.stringify(lookup),Date.now()).run();return reply(lookup);
  }
  const db=crateDb();const row=await db.prepare('SELECT lookup,result,status,updated_at FROM corner_draft WHERE id=? AND user_id=?').bind(input.id,user).first<{lookup:string;result:string|null;status:string;updated_at:number}>();
