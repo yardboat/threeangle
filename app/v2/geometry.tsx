@@ -1,0 +1,14 @@
+'use client';
+import {useId,useState} from 'react';
+export function HallMark(){return <svg viewBox="0 0 48 46" fill="none" aria-hidden="true"><path d="M24 3L45 40H3Z M24 3V27L3 40 M24 27L45 40" stroke="currentColor" strokeWidth="1.3"/><circle cx="24" cy="27" r="2" fill="currentColor"/></svg>}
+export function Geometry({building=false,active=-1}:{building?:boolean;active?:number}){
+ const id=useId().replace(/:/g,'');
+ return <svg className={`hall-geometry ${building?'hall-building':''}`} viewBox="0 0 400 350" fill="none" aria-hidden="true"><defs><pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><path d="M0 0V6" stroke="currentColor" strokeOpacity=".2"/></pattern></defs><circle className="hall-orbit" cx="200" cy="190" r="141"/><path d="M200 31L48 290H352Z" className="hall-ink"/><path d="M200 31V202L48 290M200 202L352 290" className="hall-construction"/><path d="M200 31L225 74H175Z" fill={`url(#${id})`}/><path d="M178 312H222M200 301V323" className="hall-construction"/>{[[200,31],[48,290],[352,290]].map(([cx,cy],i)=><g key={i} className={active===i?'hall-point-active':''}><circle cx={cx} cy={cy} r="4" fill="currentColor"/><circle className="hall-point-ring" cx={cx} cy={cy} r="11"/><text x={cx+(i===1?-20:i===2?20:0)} y={cy+(i===0?-16:24)} textAnchor="middle">{['a','b','c'][i]}</text></g>)}</svg>;
+}
+export function Flourish(){return <svg className="hall-flourish" viewBox="0 0 180 24" fill="none" aria-hidden="true"><path d="M0 12H65C80 12 76 3 68 5C59 8 80 23 90 12C100 1 121 16 112 19C104 21 100 12 115 12H180M90 12L85 7M90 12L95 17" stroke="currentColor" strokeWidth=".8"/></svg>}
+
+export function Invitation(){
+ const [angle,setAngle]=useState(0);
+ const words=['Read for another perspective.','Watch an idea come alive.','Listen a little closer.'];
+ return <div className="hall-invitation"><div className="hall-invitation-figure"><Geometry active={angle}/>{['Read','Watch','Listen'].map((label,i)=><button key={label} className={`hall-invitation-angle hall-invitation-angle-${i}`} aria-pressed={angle===i} onPointerEnter={()=>setAngle(i)} onFocus={()=>setAngle(i)} onClick={()=>setAngle(i)}>{label}</button>)}</div><p aria-live="polite">{words[angle]}</p></div>;
+}
