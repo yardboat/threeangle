@@ -1,6 +1,5 @@
 'use client';
-import {useCallback,useEffect,useRef,useState,type FormEvent,type PointerEvent} from 'react';
-import Image from 'next/image';
+import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {ArrowRight,ArrowUpRight,ArrowLeft,Bookmark,Check,Plus,X,Pause,Play,RotateCcw} from 'lucide-react';
 import type {Lookup} from '@/lib/corner-schema';
@@ -9,8 +8,7 @@ import {topics,workUrl,type Topic} from '@/lib/stories';
 import {readTriangleResponse,sameWork,screenFromSearch,screenUrl,parentScreen,sameScreen,type Screen} from '@/lib/hall-client';
 import {HallMark,Geometry,Flourish,Invitation} from './geometry';
 import {TriangleReveal} from './triangle';
-import hallImage from '@/public/hall/gilded-hall.webp';
-import readingRoom from '@/public/hall/reading-room.webp';
+import {HallWorld,roomNames,type Room} from './world';
 
 type Stage='welcome'|'input'|'thinking'|'reveal';
 type Saved={topicId:string;topic?:Topic|null};
@@ -36,10 +34,11 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const [title,setTitle]=useState(''),[lookup,setLookup]=useState<Lookup|null>(null),[choice,setChoice]=useState<number|null>(null),[interest,setInterest]=useState('');
  const [topic,setTopic]=useState<Topic|null>(first.topic),[previous,setPrevious]=useState<Topic|null>(null);
  const [ready,setReady]=useState<boolean|null>(null),[busy,setBusy]=useState(false),[phase,setPhase]=useState('Following the thread.'),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const [looking,setLooking]=useState(false);
  const [paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[saved,setSaved]=useState<Saved[]>([]),[saving,setSaving]=useState(false),[shelfLoading,setShelfLoading]=useState(false),[shelfError,setShelfError]=useState('');
  const [fact,setFact]=useState(0),[slow,setSlow]=useState(false),[restoring,setRestoring]=useState(Boolean(first.id&&!first.topic));
  const [refine,setRefine]=useState<Refine>({open:false,creator:'',year:'',format:''}),[clarify,setClarify]=useState(false);
- const controller=useRef<AbortController|null>(null),requestId=useRef(0),main=useRef<HTMLElement>(null),world=useRef<HTMLDivElement>(null),shelf=useRef<HTMLDialogElement>(null),titleInput=useRef<HTMLInputElement>(null);
+ const controller=useRef<AbortController|null>(null),requestId=useRef(0),main=useRef<HTMLElement>(null),shelf=useRef<HTMLDialogElement>(null),titleInput=useRef<HTMLInputElement>(null);
  // Live copies for handlers that outlive a render (popstate, async work).
  const stageRef=useRef(stage),lookupRef=useRef(lookup),choiceRef=useRef(choice),busyRef=useRef(busy),topicRef=useRef(topic);
  useEffect(()=>{stageRef.current=stage;lookupRef.current=lookup;choiceRef.current=choice;busyRef.current=busy;topicRef.current=topic;});
@@ -125,11 +124,10 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
  useEffect(()=>{
-  if(paused||reduced)return;
-  const element=world.current;let frame=0;const scroll=()=>{if(frame)return;frame=requestAnimationFrame(()=>{world.current?.style.setProperty('--hall-scroll',Math.min(window.scrollY*.10,48)+'px');frame=0;});};
-  window.addEventListener('scroll',scroll,{passive:true});
-  return()=>{window.removeEventListener('scroll',scroll);cancelAnimationFrame(frame);element?.style.setProperty('--hall-scroll','0px');};
- },[stage,paused,reduced]);
+  if(!looking)return;
+  const escape=(e:KeyboardEvent)=>{if(e.key==='Escape')setLooking(false);};
+  window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);
+ },[looking]);
  useEffect(()=>{if(stage!=='thinking')return;const timer=setTimeout(()=>setSlow(true),35000);return()=>clearTimeout(timer);},[stage]);
 
  const startInput=()=>{setError('');setNotice('');go({s:'find'});requestAnimationFrame(()=>titleInput.current?.focus());};
@@ -197,19 +195,19 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   try{const res=await fetch('/api/crate',{method:exists?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({topicId:topic.id})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Your connection couldn’t be saved.');setSaved(items=>exists?items.filter(i=>i.topicId!==topic.id):[{topicId:topic.id,topic},...items]);setNotice(exists?'Removed from your collection.':'Kept in your collection.');}
   catch(e){setNotice(errorText(e));}finally{setSaving(false);}
  }
- function tilt(event:PointerEvent<HTMLDivElement>){if(paused||reduced||event.pointerType!=='mouse'||!world.current)return;const rect=event.currentTarget.getBoundingClientRect();world.current.style.setProperty('--hall-x',`${(event.clientX-rect.left-rect.width/2)/rect.width*10}px`);world.current.style.setProperty('--hall-y',`${(event.clientY-rect.top-rect.height/2)/rect.height*6}px`);}
  const revisit=(t:Topic)=>{if(topic&&topic.id!==t.id)setPrevious(topic);openTopic(t,'push');};
- const resetTilt=()=>{world.current?.style.setProperty('--hall-x','0px');world.current?.style.setProperty('--hall-y','0px');};
  const choose=(i:number)=>{setChoice(i);setError('');go({s:'confirm',c:i});};
  const knownFact=seed?.facts[fact%(seed?.facts.length||1)];
  const factSource=knownFact?lookup?.sources[knownFact.source]:null;
  const isSaved=topic&&saved.some(s=>s.topicId===topic.id);
  const matches=lookup?.matches||[];
- return <div className={`hall hall-stage-${stage} ${paused||reduced?'hall-still':''}`} onPointerMove={tilt} onPointerLeave={resetTilt}>
+ const room:Room=stage==='welcome'?'arrival':stage==='thinking'?'gallery':stage==='reveal'?'rotunda':seed?'study':'reading';
+ return <div className={`hall hall-stage-${stage} ${paused||reduced?'hall-still':''} ${looking?'hall-looking':''}`}>
   <a className="hall-skip" href="#hall-main">Skip to content</a>
-  <div ref={world} className="hall-world" aria-hidden="true"><div className="hall-world-layer hall-world-arrival"><Image src={hallImage} alt="" fill priority sizes="100vw" placeholder="blur" quality={85}/></div><div className="hall-world-layer hall-world-reading"><Image src={readingRoom} alt="" fill priority sizes="100vw" placeholder="blur" quality={85}/></div><div className="hall-world-wash"/></div>
+  <HallWorld room={room} still={paused||reduced} looking={looking}/>
+  <div className="hall-room-tools"><span>{roomNames[room]}</span><button onClick={()=>setLooking(v=>!v)} aria-pressed={looking} aria-controls="hall-main">{looking?'Return to the experience':'Look around'} {looking?<X size={14}/>:<Plus size={14}/>}</button></div>
   <header className="hall-header">{stage==='welcome'?<span aria-hidden="true"/>:<button className="hall-back" onClick={goBack}><ArrowLeft size={15}/><span>Back</span></button>}<button className="hall-brand" onClick={goHome} aria-label="threeangle home" disabled={busy}><HallMark/><span>threeangle</span></button>{stage==='welcome'?<span aria-hidden="true"/>:<button className="hall-saved-nav" disabled={busy} onClick={()=>{shelf.current?.showModal();void loadShelf();}}><Bookmark size={15}/><span>Saved</span><span className="hall-save-count">{saved.length.toString().padStart(2,'0')}</span></button>}</header>
-  <main id="hall-main" ref={main} tabIndex={-1} className="hall-main">
+  <main id="hall-main" ref={main} tabIndex={-1} className="hall-main" inert={looking}>
    {stage==='welcome'&&<section className="hall-welcome"><Invitation/><div className="hall-welcome-copy"><p className="hall-eyebrow">READ · LISTEN · WATCH</p><h1>When you read, listen, and watch<br className="hall-desktop-break"/> around the same idea,<br/><em>it all glows a little brighter.</em></h1><p className="hall-welcome-description">One thing you love. Two things to discover.<br/>A connection you didn’t see coming.</p><button className="hall-button" onClick={startInput}>I have a title <ArrowRight size={17}/></button><Link className="hall-underlink" href="/?browse=1" prefetch={false}>Or wander through our threeangle ideas <ArrowUpRight size={13}/></Link></div><div className="hall-welcome-bottom"><span>THREE WORKS. ONE DEEPER FASCINATION.</span><Flourish/><span>COME IN. STAY CURIOUS.</span></div></section>}
    {stage==='input'&&<section className="hall-input hall-enter"><div className="hall-section-heading"><p className="hall-eyebrow">{seed?'YOUR FIRST CORNER':'BEGIN WITH SOMETHING YOU LOVED'}</p><Flourish/><h1>{seed?<>Every fascination<br/>starts <em>somewhere.</em></>:<>Tell us something you loved,<br/>and we’ll build the rest<br className="hall-mobile-break"/> <em>of the triangle.</em></>}</h1>{!seed&&<p>A book, a film, a podcast episode.<br/>We’ll find two companions and the idea that connects them.</p>}</div>
     {restoring?<p role="status" className="hall-center-note">Opening your connection…</p>:<div className="hall-desk">
@@ -243,7 +241,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    </section>}
   </main>
   {notice&&<div className="hall-toast" role="status">{notice}<button aria-label="Dismiss notification" onClick={()=>setNotice('')}><X size={15}/></button></div>}
-  <footer className="hall-footer"><span>READ. LISTEN. WATCH. CONNECT.</span><button className="hall-motion" onClick={()=>{setPaused(p=>!p);resetTilt();}} aria-pressed={paused||reduced} disabled={reduced}>{paused||reduced?<Play size={12}/>:<Pause size={12}/>} {reduced?'Reduced motion':paused?'Resume motion':'Pause motion'}</button><span>threeangle <span className="hall-footer-dot">·</span> STAY CURIOUS.</span></footer>
+  <footer className="hall-footer"><span>READ. LISTEN. WATCH. CONNECT.</span><button className="hall-motion" onClick={()=>setPaused(p=>!p)} aria-pressed={paused||reduced} disabled={reduced}>{paused||reduced?<Play size={12}/>:<Pause size={12}/>} {reduced?'Reduced motion':paused?'Resume motion':'Pause motion'}</button><span>threeangle <span className="hall-footer-dot">·</span> STAY CURIOUS.</span></footer>
   <dialog ref={shelf} className="hall-shelf" aria-labelledby="hall-shelf-title" onClick={e=>{if(e.target===e.currentTarget)shelf.current?.close();}}><div className="hall-shelf-inner"><header><span className="hall-eyebrow">YOUR PERSONAL COLLECTION</span><button onClick={()=>shelf.current?.close()} aria-label="Close saved connections"><X size={22}/></button></header><h2 id="hall-shelf-title">Good things,<br/><em>kept close.</em></h2><p className="hall-shelf-description">The connections you want to come back to.</p>{shelfLoading?<p role="status">Opening your collection…</p>:shelfError?<div className="hall-alert"><p role="alert">{shelfError}</p><button className="hall-text-button" onClick={()=>void loadShelf()}>Try again</button></div>:saved.length===0?<div className="hall-shelf-empty"><Geometry/><p>When something stays with you,<br/>keep the whole triangle here.</p><button className="hall-button" onClick={()=>{shelf.current?.close();startInput();}}>Find your first connection <ArrowRight size={16}/></button></div>:<div className="hall-saved-list">{saved.map(item=>{const t=item.topic||topics.find(t=>t.id===item.topicId);return t?<button key={item.topicId} onClick={()=>{shelf.current?.close();revisit(t);}}><span className="hall-eyebrow">{t.seedTitle?'YOUR CONNECTION':'CURATED THREEANGLE'}</span><h3>{t.name}</h3><p>{t.works.map(w=>w.title).slice(0,3).join(' · ')}</p><ArrowUpRight size={18}/></button>:null;})}</div>}<p className="hall-shelf-foot">Saved for this browser. Clearing cookies removes access to your collection.</p></div></dialog>
  </div>;
 }
