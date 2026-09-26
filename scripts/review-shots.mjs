@@ -35,7 +35,7 @@ for(const [name,viewport] of Object.entries(sizes)){
  if(want('welcome')||want('find')||want('matches')||want('confirm')||want('thinking')){
   await page.goto(base+'/v2',{waitUntil:'networkidle'});
   if(want('welcome'))await shot('1-welcome',2600);
-  await page.getByRole('button',{name:'I have a title'}).click();
+  await page.getByRole('button',{name:/Pick your starting point/}).click();
   if(want('find'))await shot('2-find',2600);
   await page.locator('#hall-title').fill('The Emerald Mile');await page.getByLabel('Find my title').click();
   if(want('matches'))await shot('3-matches');

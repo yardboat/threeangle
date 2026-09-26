@@ -9,6 +9,7 @@ import arrivalDepth from '@/public/hall/depth/gilded-hall.webp';
 import readingDepth from '@/public/hall/depth/reading-room.webp';
 import galleryDepth from '@/public/hall/depth/gallery.webp';
 import rotundaDepth from '@/public/hall/depth/rotunda.webp';
+import {clips,PROJECTION} from './archive';
 
 // The library is a character, not wallpaper.
 // Each room is a painting plus a depth map (MiDaS, see docs/gilded-hall-v2.md). A single fragment shader
@@ -27,44 +28,52 @@ const scenes:Record<Scene,{image:StaticImageData;depth:StaticImageData;pos:[numb
  rotunda:{image:rotunda,depth:rotundaDepth,pos:[.5,.62]},
 };
 // The time of day moves with the journey: morning at the door, dusk in the rotunda.
-type Mood={exposure:number;contrast:number;warm:number;cool:number;vignette:number;beam:number;sweep:number;lift:number;light:number;dolly:number};
+type Mood={exposure:number;contrast:number;warm:number;cool:number;vignette:number;beam:number;sweep:number;lift:number;light:number;dolly:number;film:number;project:number};
 const moods:Record<Room,Mood>={
- arrival:{exposure:1.04,contrast:1.1,warm:.04,cool:0,vignette:.22,beam:0,sweep:0,lift:.34,light:.05,dolly:0},
- reading:{exposure:1,contrast:1.1,warm:.12,cool:0,vignette:.3,beam:0,sweep:0,lift:.3,light:.06,dolly:0},
- study:{exposure:.98,contrast:1.12,warm:.2,cool:0,vignette:.36,beam:0,sweep:0,lift:.3,light:.06,dolly:.1},
- gallery:{exposure:.4,contrast:1.22,warm:.55,cool:.08,vignette:.8,beam:0,sweep:1,lift:0,light:.22,dolly:.04},
- rotunda:{exposure:.36,contrast:1.24,warm:.1,cool:.34,vignette:.78,beam:1,sweep:0,lift:0,light:.2,dolly:0},
+ arrival:{exposure:1.04,contrast:1.1,warm:.04,cool:0,vignette:.22,beam:0,sweep:0,lift:.34,light:.05,dolly:0,film:.05,project:0},
+ reading:{exposure:1,contrast:1.1,warm:.12,cool:0,vignette:.3,beam:0,sweep:0,lift:.3,light:.06,dolly:0,film:.05,project:0},
+ study:{exposure:.98,contrast:1.12,warm:.2,cool:0,vignette:.36,beam:0,sweep:0,lift:.3,light:.06,dolly:.1,film:.07,project:0},
+ gallery:{exposure:.4,contrast:1.22,warm:.55,cool:.08,vignette:.8,beam:0,sweep:1,lift:0,light:.22,dolly:.04,film:.42,project:1},
+ rotunda:{exposure:.36,contrast:1.24,warm:.1,cool:.34,vignette:.78,beam:1,sweep:0,lift:0,light:.2,dolly:0,film:.18,project:0},
 };
 const sceneOf=(r:Room):Scene=>r==='study'?'reading':r;
 
-// A tiny shared channel so the reveal can move the room (the camera orbits a little as the prism turns,
-// and the oculus light gathers when the common thread is open) without re-rendering React.
+// A tiny shared channel so the reveal can move the room (the camera orbits a little as the table turns,
+// and the oculus light gathers when the apex is open) without re-rendering React.
 export const worldSignal={orbit:0,beam:0};
 
 const VERT=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 const FRAG=`precision highp float;
-uniform vec2 uRes;uniform sampler2D uColA,uDepA,uColB,uDepB;uniform vec2 uSizeA,uSizeB,uPosA,uPosB;
-uniform float uMix,uAmp,uTilt,uTime,uDolly;uniform vec2 uCam,uLight;
-uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain;
+uniform vec2 uRes;uniform sampler2D uColA,uDepA,uColB,uDepB,uArc;uniform vec2 uSizeA,uSizeB,uPosA,uPosB,uArcSize;
+uniform float uMix,uAmp,uTilt,uTime,uDolly,uFrame;uniform vec2 uCam,uLight;
+uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uArcAmt,uProj;uniform vec4 uProjRect;
 float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 vec2 cover(vec2 f,vec2 size,vec2 pos){float s=max(uRes.x/size.x,uRes.y/size.y)*1.1;vec2 d=size*s;return(f-(uRes-d)*pos)/d;}
-vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,out float depth,out vec2 uv){
+vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,float blur,out float depth,out vec2 uv){
  vec2 base=cover(f,size,pos),vp=cover(uRes*.5,size,pos),p=base;float d=.3;
  for(int i=0;i<6;i++){
   d=texture2D(dep,clamp(p,0.,1.)).r;
   p=vp+(base-vp)/(1.+dolly*(.2+.8*d))-uCam*uAmp*(d-.32)+vec2(0.,uTilt*(.03+.09*d));
  }
- depth=d;uv=p;return texture2D(col,clamp(p,.002,.998)).rgb;
+ depth=d;uv=p;
+ // Moving through: a zoom blur toward the vanishing point, strongest on the near architecture.
+ vec3 c=texture2D(col,clamp(p,.002,.998)).rgb;
+ if(blur>.001){vec2 dir=(p-vp)*blur*(.35+.65*d);for(int i=1;i<5;i++)c+=texture2D(col,clamp(p-dir*float(i),.002,.998)).rgb;c/=5.;}
+ return c;
 }
+float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
 void main(){
- vec2 f=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y),sv=f/uRes;
+ float T=sin(3.14159*uMix);
+ // Film gate weave while travelling between rooms.
+ vec2 f=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y)+vec2(0.,(hash(vec2(uFrame,3.))-.5)*6.*T*T);
+ vec2 sv=f/uRes;
  float dA,dB;vec2 pA,pB;
- vec3 a=room(uColA,uDepA,uSizeA,uPosA,f,uDolly+uMix*.42,dA,pA);
- vec3 b=room(uColB,uDepB,uSizeB,uPosB,f,uDolly-(1.-uMix)*.16,dB,pB);
+ vec3 a=room(uColA,uDepA,uSizeA,uPosA,f,uDolly+uMix*.78,.022*T,dA,pA);
+ vec3 b=room(uColB,uDepB,uSizeB,uPosB,f,uDolly-(1.-uMix)*.3,.022*T,dB,pB);
  // Walking forward: the nearest architecture passes you first.
  float k=smoothstep(0.,1.,clamp((uMix-(1.-dA)*.38)/.62,0.,1.));
  vec3 c=mix(a,b,k);vec2 p=mix(pA,pB,k);float d=mix(dA,dB,k);
- c*=uExposure*(1.+.22*sin(3.14159*uMix));
+ c*=uExposure*(1.+.18*T);
  // The oculus: a shaft of late light onto the floor medallion (in painting space, so it stays put as you move).
  float bx=abs(p.x-.5),w=mix(.035,.2,clamp(p.y*1.25,0.,1.));
  float cone=smoothstep(w,w*.25,bx)*smoothstep(.95,.05,p.y);
@@ -73,15 +82,33 @@ void main(){
  // Golden-hour light crossing the gallery, slowly.
  float band=exp(-pow((p.x+p.y*.45-fract(uTime*.018)*2.2+.5)*4.,2.));
  c+=c*uSweep*band*.8;
+ // The archive, projected onto the far wall of the room: black-and-white film thrown by an unseen projector.
+ if(uProj>.001){
+  vec2 r=(pB-uProjRect.xy)/(uProjRect.zw-uProjRect.xy);
+  float inside=smoothstep(0.,.08,r.x)*smoothstep(1.,.92,r.x)*smoothstep(0.,.08,r.y)*smoothstep(1.,.92,r.y);
+  vec3 fr=texture2D(uArc,clamp(r,0.,1.)).rgb;float lf=luma(fr);
+  float wall=smoothstep(.55,.25,dB);
+  c=mix(c,c*.55+vec3(lf)*vec3(1.,.95,.84)*.95,uProj*inside*wall);
+ }
  // The visitor carries a little light.
  vec2 q=(sv-uLight)*vec2(uRes.x/uRes.y,1.);c+=c*uLightAmt*exp(-dot(q,q)*5.)*(.4+.6*d);
  c*=mix(vec3(1.),vec3(1.1,1.,.82),uWarm);
- float l=dot(c,vec3(.299,.587,.114));c=mix(c,l*vec3(.7,.8,1.02)+c*.25,uCool);
+ float l=luma(c);c=mix(c,l*vec3(.7,.8,1.02)+c*.25,uCool);
  c=(c-.5)*uContrast+.5;
- c=mix(c,vec3(.965,.95,.925),uLift*smoothstep(.62,.0,length((sv-vec2(.5,.56))*vec2(.95,1.45))));
+ c=mix(c,vec3(.965,.95,.925),uLift*(1.-T)*smoothstep(.62,.0,length((sv-vec2(.5,.56))*vec2(.95,1.45))));
+ // Mid-journey the rooms turn to archival film: silver, flickering, with a cut of real footage.
+ float film=clamp(uFilm+T*.85,0.,1.);
+ c=mix(c,vec3(luma(c))*vec3(1.03,1.,.94),T*.8);
+ if(uArcAmt>.001){vec2 au=cover(f,uArcSize,vec2(.5));vec3 ar=texture2D(uArc,clamp(au,0.,1.)).rgb;c=mix(c,vec3(luma(ar))*vec3(1.02,.99,.92),uArcAmt*smoothstep(.25,.6,T));}
+ c*=1.+(hash(vec2(uFrame,7.))-.5)*.16*film;
+ float col=floor(f.x/2.);float scratch=step(.9975,hash(vec2(col,floor(uFrame/2.))))*step(.3,hash(vec2(col,1.)));
+ c=mix(c,vec3(.92),scratch*film*.35);
+ vec2 cell=floor(f/3.);float dust=step(.99965,hash(cell+uFrame*1.7));c=mix(c,vec3(.05),dust*film*.8);
+ // An iris, as in silent film: it closes a little around the journey and opens on the new room.
+ float iris=mix(1.7,.86,T*T);c*=mix(.3,1.,smoothstep(iris,iris-.42,length((sv-.5)*vec2(uRes.x/uRes.y,1.))));
  c*=1.-uVignette*smoothstep(.3,1.05,length((sv-.5)*vec2(1.25,1.)));
  c*=1.-uTilt*.35;
- c+=(hash(gl_FragCoord.xy+fract(uTime)*97.)-.5)*uGrain;
+ c+=(hash(gl_FragCoord.xy+fract(uTime)*97.)-.5)*(uGrain+film*.05);
  gl_FragColor=vec4(clamp(c,0.,1.),1.);
 }`;
 
@@ -100,13 +127,22 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
   if(!gl)return;
   const shader=(type:number,src:string)=>{const s=gl.createShader(type)!;gl.shaderSource(s,src);gl.compileShader(s);return s;};
   const prog=gl.createProgram()!;gl.attachShader(prog,shader(gl.VERTEX_SHADER,VERT));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(prog);
-  if(!gl.getProgramParameter(prog,gl.LINK_STATUS))return;
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){if(process.env.NODE_ENV!=='production')console.warn('hall shader',gl.getProgramInfoLog(prog));return;}
   gl.useProgram(prog);
   const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   const loc=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
   const U:Record<string,WebGLUniformLocation|null>={};const u=(n:string)=>U[n]??=gl.getUniformLocation(prog,n);
   const texture=(img:HTMLImageElement)=>{const t=gl.createTexture()!;gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;};
   const tex:Partial<Record<Scene,Tex>>={};
+  // The archive: one video element, drawn into a texture while it is on screen.
+  const arcTex=gl.createTexture()!;gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0]));
+  [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER].forEach(pn=>gl.texParameteri(gl.TEXTURE_2D,pn,gl.LINEAR));[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(pn=>gl.texParameteri(gl.TEXTURE_2D,pn,gl.CLAMP_TO_EDGE));
+  const vid=clips.length?Object.assign(document.createElement('video'),{muted:true,playsInline:true,loop:true,preload:'auto'}):null;
+  let clipIndex=Math.floor(Math.random()*Math.max(1,clips.length)),clipAt=0,arcSize:[number,number]=[640,480],arcReady=false;
+  const ext=vid&&vid.canPlayType('video/webm; codecs="vp9"')?'.webm':'.mp4';
+  const nextClip=()=>{if(!vid||!clips.length)return;clipIndex=(clipIndex+1)%clips.length;const c=clips[clipIndex];arcReady=false;vid.src=c.src+ext;arcSize=[c.w,c.h];vid.currentTime=0;void vid.play().catch(()=>{});};
+  if(vid)vid.addEventListener('playing',()=>{arcReady=true;});
+  if(vid&&process.env.NODE_ENV!=='production')(window as unknown as {__hallArc:unknown}).__hallArc=()=>({src:vid.src,paused:vid.paused,ready:arcReady,rs:vid.readyState,err:vid.error?.message});
   let dead=false,frame=0,last=0;
   // Camera and light state, eased every frame toward where the visitor is looking.
   const cam={x:0,y:0,tx:0,ty:0},lightPos={x:.5,y:.45,tx:.5,ty:.45};
@@ -123,10 +159,10 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    // Room changes: walk forward into the next scene, and move the light of day with it.
    if(target.current!==shownRoom){
     const next=sceneOf(target.current);
-    if(next!==to&&tex[next]){from=to;to=next;mix=0;}
+    if(next!==to&&tex[next]){from=to;to=next;mix=0;if(!calm)nextClip();}
     moodFrom={...mood};moodTo=moods[target.current];moodT=0;shownRoom=target.current;
    }
-   mix=calm?1:Math.min(1,mix+dt/2.1);moodT=calm?1:Math.min(1,moodT+dt/2.4);
+   mix=calm?1:Math.min(1,mix+dt/2.8);moodT=calm?1:Math.min(1,moodT+dt/1.7);
    const e=ease(moodT);(Object.keys(mood) as (keyof Mood)[]).forEach(k=>{mood[k]=moodFrom[k]+(moodTo[k]-moodFrom[k])*e;});
    const idle=calm?0:now/1000;
    const drift={x:Math.sin(idle*.13)*.18,y:Math.sin(idle*.09+1)*.08};
@@ -140,6 +176,17 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    gl.uniform1f(u('uMix'),ease(mix));gl.uniform1f(u('uAmp'),look?.075:.036);gl.uniform1f(u('uTilt'),tilt);gl.uniform1f(u('uTime'),idle);gl.uniform1f(u('uDolly'),mood.dolly);
    gl.uniform2f(u('uCam'),cam.x,cam.y);gl.uniform2f(u('uLight'),lightPos.x,lightPos.y);
    gl.uniform1f(u('uExposure'),mood.exposure+beam*.05);gl.uniform1f(u('uContrast'),mood.contrast);gl.uniform1f(u('uWarm'),mood.warm);gl.uniform1f(u('uCool'),mood.cool);gl.uniform1f(u('uVignette'),mood.vignette);gl.uniform1f(u('uBeam'),mood.beam*(1+beam*.9));gl.uniform1f(u('uSweep'),mood.sweep);gl.uniform1f(u('uLift'),look?0:mood.lift);gl.uniform1f(u('uLightAmt'),mood.light);gl.uniform1f(u('uGrain'),calm?.02:.035);
+   // Archive footage: flashes through each journey, and plays on the gallery wall while the library works.
+   const transit=Math.sin(Math.PI*ease(mix));const wantArc=Boolean(vid)&&!calm&&(transit>.05||mood.project>.05);
+   if(vid){
+    if(wantArc&&vid.paused&&!vid.src)nextClip();
+    if(mood.project>.5&&now-clipAt>5200){clipAt=now;nextClip();}
+    if(!wantArc&&!vid.paused&&mood.project<.05&&mix>=1)vid.pause();
+    if(wantArc&&arcReady&&vid.readyState>=2){gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,vid);}
+   }
+   const arcOn=wantArc&&arcReady?1:0;
+   bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),arcOn*.55);gl.uniform1f(u('uProj'),arcOn*mood.project*.85);
+   gl.uniform4f(u('uProjRect'),...PROJECTION);gl.uniform1f(u('uFilm'),calm?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
    gl.drawArrays(gl.TRIANGLES,0,3);
    // Keep breathing while there is somewhere to go; stop entirely when still.
    const settling=mix<1||moodT<1||Math.abs(cam.tx+drift.x+orbit-cam.x)>.0005||Math.abs(orbit-(worldSignal.orbit||0))>.0005;
@@ -169,7 +216,7 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
   })();
   window.addEventListener('pointermove',move,{passive:true});window.addEventListener('blur',reset);document.documentElement.addEventListener('pointerleave',reset);window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('deviceorientation',tiltDevice);document.addEventListener('visibilitychange',visible);
   const poke=setInterval(()=>{if(target.current!==shownRoom||worldSignal.orbit!==orbit||worldSignal.beam!==beam)kick();},120);
-  return()=>{dead=true;cancelAnimationFrame(frame);clearInterval(poke);ro.disconnect();window.removeEventListener('pointermove',move);window.removeEventListener('blur',reset);document.documentElement.removeEventListener('pointerleave',reset);window.removeEventListener('scroll',scroll);window.removeEventListener('deviceorientation',tiltDevice);document.removeEventListener('visibilitychange',visible);gl.getExtension('WEBGL_lose_context')?.loseContext();};
+  return()=>{dead=true;cancelAnimationFrame(frame);clearInterval(poke);if(vid){vid.pause();vid.removeAttribute('src');vid.load();}ro.disconnect();window.removeEventListener('pointermove',move);window.removeEventListener('blur',reset);document.documentElement.removeEventListener('pointerleave',reset);window.removeEventListener('scroll',scroll);window.removeEventListener('deviceorientation',tiltDevice);document.removeEventListener('visibilitychange',visible);gl.getExtension('WEBGL_lose_context')?.loseContext();};
  },[]);
  const active=sceneOf(room);
  return <div className="hall-environment" data-room={room} data-live={live||undefined} aria-hidden="true">

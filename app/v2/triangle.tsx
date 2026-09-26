@@ -3,9 +3,8 @@ import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
 import {ArrowDown,ArrowLeft,ArrowRight,ArrowUpRight,Plus,X} from 'lucide-react';
 import {workUrl,type Topic} from '@/lib/stories';
 import {STEPS,ends,lightFor,sameFocus,stepOf,type Focus} from '@/lib/triangle-focus';
-import {MODES,Prism,viewFor} from './prism';
+import {MODES,Figure,viewFor} from './figure';
 import {worldSignal} from './world';
-import {HallMark} from './geometry';
 
 // The reveal: the finished threeangle stands in the Rotunda under the oculus.
 // Turn it (drag, the step rail, arrow keys) and the reading note beside it follows.
@@ -18,9 +17,9 @@ const stepName=(f:Focus)=>f.kind==='center'?'The common thread':f.kind==='vertex
 function Note({topic,focus,onSelect,onWalk,onConnection}:{topic:Topic;focus:Focus|null;onSelect:(f:Focus)=>void;onWalk:()=>void;onConnection:()=>void}){
  if(!focus)return <div className="rv-note-body rv-note-intro">
   <p className="hall-kicker">Three works · one thread</p>
-  <p className="rv-note-lede">Each face is a work. Each gilded edge, the thread between two. The crown holds what all three share.</p>
+  <p className="rv-note-lede">Each face is a work. Each edge, the thread between two. The apex is the one point all three reach.</p>
   <button className="hall-cta hall-cta-light" onClick={onWalk}>Walk the triangle <ArrowRight size={16}/></button>
-  <p className="rv-note-tip">Drag the prism to turn it.</p>
+  <p className="rv-note-tip">Drag the drawing to turn the table.</p>
  </div>;
  if(focus.kind==='vertex'){
   const i=focus.index,work=topic.works[i],seed=work.title===topic.seedTitle;
@@ -55,7 +54,7 @@ export function TriangleReveal({topic,instant,heading,actions}:{topic:Topic;inst
  const select=(f:Focus)=>setFocus(current=>sameFocus(current,f)?null:f);
  const pick=(f:Focus)=>setFocus(f);
  const walk=useCallback((delta:number)=>setFocus(current=>STEPS[Math.min(STEPS.length-1,Math.max(0,stepOf(current)+delta))]),[]);
- // The oculus light gathers on the crown when the common thread is open.
+ // The oculus light gathers on the figure when the common thread (the apex) is open.
  useEffect(()=>{worldSignal.beam=focus?.kind==='center'?1:0;return()=>{worldSignal.beam=0;};},[focus]);
  useEffect(()=>{
   const onKey=(e:globalThis.KeyboardEvent)=>{
@@ -66,13 +65,17 @@ export function TriangleReveal({topic,instant,heading,actions}:{topic:Topic;inst
   window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
  },[focus,walk]);
  const showConnection=()=>{setDeeper(true);requestAnimationFrame(()=>connection.current?.scrollIntoView({behavior:instant?'instant':'smooth',block:'start'}));};
- const faces=topic.works.slice(0,3).map(w=>({title:w.title,creator:w.creator,format:w.format,seed:w.title===topic.seedTitle}));
+ const faces=topic.works.slice(0,3).map(w=>({title:w.title,creator:w.creator,seed:w.title===topic.seedTitle}));
+ // An annotation in the margin of the drawing, for the face or apex in focus.
+ const callout=focus?.kind==='vertex'?{face:focus.index,content:<><span className="hall-kicker"><b>{letters[focus.index]}</b> {MODES[focus.index]}</span><span className="fig-callout-title">{topic.works[focus.index].title}</span><span className="fig-callout-by">{topic.works[focus.index].creator}</span></>}
+  :focus?.kind==='center'?{face:-1,content:<><span className="hall-kicker">The apex</span><span className="fig-callout-title">{topic.question}</span></>}:null;
  return <>
   <div className={`rv ${focus?'rv-open':''} ${focus?.kind==='center'?'rv-crowned':''}`}>
    {heading}
    <div className="rv-stage">
     <div className="rv-shaft" aria-hidden="true"/>
-    <Prism faces={faces} crown={<>{topic.question}</>} mark={<HallMark/>} view={viewFor(focus)} idle still={instant} lit={light} onPick={pick} orbitWorld label={`Your threeangle: ${topic.works.slice(0,3).map((w,i)=>`${MODES[i]}, ${w.title}`).join('; ')}`}/>
+    <Figure faces={faces} view={viewFor(focus)} idle still={instant} lit={light} onPick={pick} orbitWorld callout={callout} label={`Your threeangle: ${topic.works.slice(0,3).map((w,i)=>`${MODES[i]}, ${w.title}`).join('; ')}`}/>
+    <p className="rv-fig-caption" aria-hidden="true">Fig. — {topic.name.replace(/\.$/,'')}</p>
     {actions}
    </div>
    <aside id="hall-reading-note" className="rv-note" aria-live="polite">

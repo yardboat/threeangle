@@ -6,8 +6,8 @@ import type {Lookup} from '@/lib/corner-schema';
 import {FORMATS} from '@/lib/formats';
 import {topics,workUrl,type Topic} from '@/lib/stories';
 import {readTriangleResponse,sameWork,screenFromSearch,screenUrl,parentScreen,sameScreen,type Screen} from '@/lib/hall-client';
-import {HallMark,Invitation} from './geometry';
-import {Prism} from './prism';
+import {HallMark,Invitation,LiveMark} from './geometry';
+import {Figure} from './figure';
 import {TriangleReveal} from './triangle';
 import {HallWorld,roomNames,type Room} from './world';
 
@@ -210,7 +210,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   <HallWorld room={room} still={still} looking={looking}/>
   <header className="hall-header">
    <div className="hall-header-side">{stage!=='welcome'&&<button className="hall-nav hall-back" onClick={goBack}><ArrowLeft size={15}/><span>Back</span></button>}<span className="hall-room-name">{roomNames[room]}</span></div>
-   <button className="hall-brand" onClick={goHome} aria-label="threeangle home" disabled={busy}><HallMark/><span>threeangle</span></button>
+   <button className="hall-brand" onClick={goHome} aria-label="threeangle home" disabled={busy}><LiveMark still={still}/><span>threeangle</span></button>
    <div className="hall-header-side hall-header-end"><button className="hall-nav hall-look" onClick={()=>setLooking(v=>!v)} aria-pressed={looking} aria-controls="hall-main">{looking?'Return':'Look around'} {looking?<X size={13}/>:<Plus size={13}/>}</button>{stage!=='welcome'&&<button className="hall-nav hall-saved-nav" disabled={busy} onClick={()=>{shelf.current?.showModal();void loadShelf();}}><span>Saved</span><span className="hall-save-count">{saved.length.toString().padStart(2,'0')}</span></button>}</div>
   </header>
   <main id="hall-main" ref={main} tabIndex={-1} className="hall-main" inert={looking}>
@@ -220,7 +220,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
      <p className="hall-lead">When you read, listen, and watch around the same idea,</p>
      <h1 className="hall-mega">It all glows<br/>a little brighter.</h1>
      <p className="hall-sub">One thing you love. Two things to discover.<br/>A connection you didn’t see coming.</p>
-     <div className="hall-actions"><button className="hall-cta" onClick={startInput}>I have a title <ArrowRight size={17}/></button><Link className="hall-quiet" href="/?browse=1" prefetch={false}>Or wander through our threeangle ideas <ArrowUpRight size={13}/></Link></div>
+     <div className="hall-actions"><button className="hall-cta" onClick={startInput}>Pick your starting point <ArrowRight size={17}/></button><Link className="hall-quiet" href="/?browse=1" prefetch={false}>Or wander through our threeangle ideas <ArrowUpRight size={13}/></Link></div>
     </div>
    </section>}
    {stage==='input'&&<section className={`hall-input hall-enter ${seed?'hall-confirm':'hall-find'}`} key={seed?'confirm':'find'}>
@@ -243,7 +243,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
         </form>}</div>
        {lookup&&<Sources lookup={lookup}/>}</div>}
      </>:<div className="hall-confirm-body">
-      <Prism variant="hero" faces={[{title:seed.title,creator:seed.creator,format:seed.format,seed:true},{},{}]} mark={<HallMark/>} view={null} still={still} label={`Your first corner: ${seed.title}`}/>
+      <Figure variant="hero" faces={[{title:seed.title,creator:seed.creator,seed:true},{unknown:true},{unknown:true}]} labels={['a','?','?']} view={{turn:0,el:22}} lit={{corners:new Set([0]),sides:new Set()}} still={still} label={`Your first corner: ${seed.title}`}/>
       <div className="hall-confirmed"><p className="hall-kicker">{seed.format} · {seed.year}</p><h2>{seed.title}</h2><p className="hall-match-creator">{seed.creator}</p><button className="hall-quiet" onClick={goBack}>Not this one? Choose a different work</button>
        <form onSubmit={e=>{e.preventDefault();void generate();}}><details className="hall-interest" open={Boolean(interest)}><summary>Something in particular drew you in? <span>Optional</span><Plus size={14}/></summary><label className="hall-sr" htmlFor="hall-interest">What drew you in?</label><textarea id="hall-interest" value={interest} maxLength={600} onChange={e=>setInterest(e.target.value)} placeholder="A character, a question, a feeling you can’t shake…" rows={3}/></details><button className="hall-cta hall-build" disabled={busy||ready!==true}>Build my threeangle <ArrowRight size={17}/></button><p className="hall-form-foot">Your work stays. We’ll find the other two angles.</p></form>
       </div>
@@ -257,7 +257,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    {stage==='thinking'&&<section className="hall-thinking hall-enter">
     <p className="hall-kicker">The library at work</p>
     <h1 className="hall-mega hall-mega-m">A little further<br/>into the idea.</h1>
-    <Prism variant="hero" faces={[{title:seed?.title||topic?.seedTitle||topic?.works[0].title,creator:seed?.creator},{},{}]} mark={<HallMark/>} view={null} idle building still={still} label="Your threeangle, taking shape"/>
+    <Figure variant="hero" faces={[{title:seed?.title||topic?.seedTitle||topic?.works[0].title},{unknown:true},{unknown:true}]} labels={['a','?','?']} view={null} idle building still={still} label="Your threeangle, taking shape"/>
     <p className="hall-phase" role="status">{phase}</p>
     {knownFact&&factSource&&<div className="hall-discovery"><span className="hall-kicker">A note in the margin</span><p>{knownFact.text}</p><div><a className="hall-quiet" href={safeUrl(factSource.url)} target="_blank" rel="noopener noreferrer">Read the source <ArrowUpRight size={12}/></a>{seed&&seed.facts.length>1&&<button className="hall-quiet" onClick={()=>setFact(f=>f+1)}>Another note <ArrowRight size={12}/></button>}</div></div>}
     <p className="hall-wait-note">{slow?'Still following the thread. Your starting title is safe here.':'Thoughtful connections take a moment. Sometimes a couple of minutes.'}</p>
