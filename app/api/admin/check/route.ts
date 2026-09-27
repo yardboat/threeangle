@@ -1,4 +1,5 @@
 import {timingSafeEqual} from 'node:crypto';
+import {after} from 'next/server';
 import {runArtCheck,runSearchCheck} from '@/lib/art-cases';
 import {hasTmdb} from '@/lib/catalog';
 import {curatedFills} from '@/lib/backfill';
@@ -10,7 +11,8 @@ export const dynamic='force-dynamic';
 export const maxDuration=300;
 
 // Operator checks that need the live network: GET /api/admin/check?suite=art|search|backfill&token=<ADMIN_TOKEN>.
-// suite=build&q=<title>[&i=<what you loved>] finds the title in the catalogs and builds a triangle end to end.
+// suite=build&q=<title>[&i=<what you loved>] finds the title in the catalogs and builds a triangle end to end,
+// in the background; read the result with suite=runs.
 // suite=runs returns the latest recorded model runs (traces, no user data beyond titles).
 // suite=backfill returns the curated covers; save the JSON and apply it with scripts/backfill-art.ts <file>.
 // Off unless ADMIN_TOKEN is set on the project.
@@ -19,7 +21,9 @@ export async function GET(request:Request){
  const q=new URL(request.url).searchParams;
  if(!allowed(q.get('token')||''))return new Response('Not found',{status:404});
  const suite=q.get('suite')||'art',started=Date.now();
- const data=suite==='build'?await selfBuild(q.get('q')||'',q.get('i')||''):suite==='runs'?(await crateDb().prepare('SELECT created_at,model,status,response FROM generation_call ORDER BY created_at DESC LIMIT ?').bind(Math.min(30,Number(q.get('n'))||10)).all()).results.map(r=>({...r,response:JSON.parse(String(r.response||'null'))})):suite==='search'?await runSearchCheck(q.get('q')?[q.get('q')!.slice(0,200)]:undefined):suite==='backfill'?await curatedFills():await runArtCheck();
+ // A build outlives most HTTP clients: it runs after the response and its result lands in suite=runs (status 'selftest').
+ if(suite==='build'){const title=q.get('q')||'',interest=q.get('i')||'';after(async()=>{const r=await selfBuild(title,interest);try{await crateDb().prepare('INSERT INTO generation_call (id,model,created_at,status,response) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),'selftest',Date.now(),'selftest',JSON.stringify({title,...r})).run()}catch{}});return Response.json({suite,started:true,title},{headers:{'Cache-Control':'no-store'}});}
+ const data=suite==='runs'?(await crateDb().prepare('SELECT created_at,model,status,response FROM generation_call ORDER BY created_at DESC LIMIT ?').bind(Math.min(30,Number(q.get('n'))||10)).all()).results.map(r=>({...r,response:JSON.parse(String(r.response||'null'))})):suite==='search'?await runSearchCheck(q.get('q')?[q.get('q')!.slice(0,200)]:undefined):suite==='backfill'?await curatedFills():await runArtCheck();
  return Response.json({suite,ms:Date.now()-started,tmdb:hasTmdb(),data},{headers:{'Cache-Control':'no-store'}});
 }
 
