@@ -138,9 +138,13 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
   const arcTex=gl.createTexture()!;gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0]));
   [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER].forEach(pn=>gl.texParameteri(gl.TEXTURE_2D,pn,gl.LINEAR));[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(pn=>gl.texParameteri(gl.TEXTURE_2D,pn,gl.CLAMP_TO_EDGE));
   const vid=clips.length?Object.assign(document.createElement('video'),{muted:true,playsInline:true,loop:true,preload:'auto'}):null;
-  let clipIndex=Math.floor(Math.random()*Math.max(1,clips.length)),clipAt=0,arcSize:[number,number]=[640,480],arcReady=false;
+  let clipAt=0,arcSize:[number,number]=[640,480],arcReady=false;
   const ext=vid&&vid.canPlayType('video/webm; codecs="vp9"')?'.webm':'.mp4';
-  const nextClip=()=>{if(!vid||!clips.length)return;clipIndex=(clipIndex+1)%clips.length;const c=clips[clipIndex];arcReady=false;vid.src=c.src+ext;arcSize=[c.w,c.h];vid.currentTime=0;void vid.play().catch(()=>{});};
+  // Short shots flash through the walks between rooms; the projector on the gallery wall holds the longer ones.
+  // Each pool is shuffled once and dealt in order, so no shot repeats until the pool has run through.
+  const shuffle=<T,>(a:T[])=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const pools={flash:shuffle(clips.filter(c=>c.dur<4.5)),wall:shuffle(clips.filter(c=>c.dur>=4.5))},dealt={flash:0,wall:0};
+  const nextClip=(kind:'flash'|'wall'='flash')=>{if(!vid||!clips.length)return;const pool=pools[kind].length?pools[kind]:clips;const c=pool[dealt[kind]++%pool.length];arcReady=false;vid.src=c.src+ext;arcSize=[c.w,c.h];vid.currentTime=0;void vid.play().catch(()=>{});};
   if(vid)vid.addEventListener('playing',()=>{arcReady=true;});
   if(vid&&process.env.NODE_ENV!=='production')(window as unknown as {__hallArc:unknown}).__hallArc=()=>({src:vid.src,paused:vid.paused,ready:arcReady,rs:vid.readyState,err:vid.error?.message});
   let dead=false,frame=0,last=0;
@@ -179,8 +183,8 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    // Archive footage: flashes through each journey, and plays on the gallery wall while the library works.
    const transit=Math.sin(Math.PI*ease(mix));const wantArc=Boolean(vid)&&!calm&&(transit>.05||mood.project>.05);
    if(vid){
-    if(wantArc&&vid.paused&&!vid.src)nextClip();
-    if(mood.project>.5&&now-clipAt>5200){clipAt=now;nextClip();}
+    if(wantArc&&vid.paused&&!vid.src)nextClip(mood.project>.5?'wall':'flash');
+    if(mood.project>.5&&now-clipAt>5200){clipAt=now;nextClip('wall');}
     if(!wantArc&&!vid.paused&&mood.project<.05&&mix>=1)vid.pause();
     if(wantArc&&arcReady&&vid.readyState>=2){gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,vid);}
    }
