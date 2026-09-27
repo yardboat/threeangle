@@ -145,7 +145,10 @@ It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main 
 WHAT THE USER LOVED ABOUT IT (key input): ${interest?JSON.stringify(interest):'not stated'}.
 ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
    });
-  }catch(e){await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
+  }catch(e){
+   // A malformed pick costs one attempt, not the whole build.
+   if(e instanceof Error&&e.name==='AI_NoObjectGeneratedError'&&attempt<3){(trace.attempts as unknown[]).push({attempt,status:'malformed',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER WAS MALFORMED. Return complete JSON: every corner with its slot, exact title, creator and format, and a real bonus.';continue;}
+   await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
   const proposal=result.output;
   (trace.attempts as unknown[]).push({attempt,status:proposal.status,ms:Date.now()-started,usage:result.usage});
   if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason&&proposal.reason.length<=160?proposal.reason:'We couldn’t build a full triangle for that title yet. Try adding its creator.',422)}
@@ -174,6 +177,7 @@ Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wond
   writer.catch(()=>{});
   const found=await Promise.all(picks.map(async p=>{const c=await resolveCorner(p);if(c)onProgress(`Found ${SLOT_NAME[p.slot]}: ${c.title}.`);return c}));
   const lost=picks.filter((_,i)=>!found[i]);
+  console.log('build picks',attempt,JSON.stringify(picks.map((p,i)=>({slot:p.slot,title:p.title,creator:p.creator,format:p.format,found:found[i]?.from||null}))));
   (trace.attempts as {found?:unknown}[]).at(-1)!.found=picks.map((p,i)=>({slot:p.slot,title:p.title,from:found[i]?.from||null}));
   if(lost.length){
    writing.abort();
