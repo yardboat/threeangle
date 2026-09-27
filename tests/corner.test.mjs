@@ -27,6 +27,7 @@ async function harness({key=true,unfindable=[],env={}}={}){
  const catalog={formatOf,titleFit:(a,b)=>a.toLowerCase()===b.toLowerCase()?1:0,
   resolveWork:async q=>{resolved.push(q.title);return unfindable.includes(q.title)?null:{title:q.title,creator:q.creator,format:formatOf(q.format),year:'',description:'',url:'https://catalog.test/'+encodeURIComponent(q.title),image:'https://image.tmdb.org/t/p/w500/'+encodeURIComponent(q.title)+'.jpg',from:'test'}},
   describe:async c=>c.description+' Fuller dossier.',
+  findEpisodes:async terms=>[{title:'The River Is Running Dry',creator:'The Daily',format:'Podcast episode',year:'2023',description:'On the Colorado.',url:'https://podcasts.apple.com/x',from:'itunes'}],
   readCandidate:token=>token==='signed-emerald-mile-token'?structuredClone(seed):null};
  const context=vm.createContext({process:{env:{...(key?{ANTHROPIC_API_KEY:'test-only-not-a-real-key',DATABASE_URL:'test-only'}:{}),...env}},Response,Request,ReadableStream,TextEncoder,TextDecoder,AbortSignal,AbortController,URL,URLSearchParams,crypto,setInterval,clearInterval,setTimeout,clearTimeout,console,structuredClone,fetch:async()=>{throw new Error('no network in tests')}});
  const cache=new Map();function synthetic(name,data){const m=new vm.SyntheticModule(Object.keys(data),function(){for(const [k,v]of Object.entries(data))this.setExport(k,v)},{context,identifier:name});cache.set(name,m);return m}
@@ -106,6 +107,17 @@ test('a work no catalog can find is re-picked once, never shipped',async()=>{
  const topic=ev.find(e=>e.type==='result')?.topic;assert.ok(topic);
  assert.equal(topic.works[1].title,'The Emerald Mile Rapids');assert.ok(!topic.works.some(w=>w.title==='DamNation'));
  assert.match(h.calls[2].prompt,/DO NOT USE: \["DamNation"\]/);
+});
+test('an episode no catalog can find is re-picked from real catalog episodes',async()=>{
+ const h=await harness({unfindable:['7 States, 1 River and an Agonizing Choice']});const lookup=await h.pick();
+ const repick=structuredClone(proposal);repick.corners[1]={slot:'listen',title:'The River Is Running Dry',creator:'The Daily',format:'Podcast episode'};
+ // pick, writer, the web lookup for the missing episode (finds nothing), the grounded re-pick, writer
+ h.outputs.push({...proposal,listenSearch:['colorado river','water rights']},writer,{url:null},repick,writer);
+ const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));const topic=ev.find(e=>e.type==='result')?.topic;
+ assert.ok(topic,JSON.stringify(ev.filter(e=>e.type!=='heartbeat')));
+ assert.equal(topic.works[2].title,'The River Is Running Dry');
+ assert.match(h.calls[3].prompt,/choose ONE of these real episodes/);assert.match(h.calls[3].prompt,/The River Is Running Dry/);
+ assert.match(h.calls[3].prompt,/KEEP THESE, they were found: \["watch: DamNation/);
 });
 test('when works stay unfindable the build fails cleanly and nothing is saved',async()=>{
  const h=await harness({unfindable:['DamNation']});const lookup=await h.pick();

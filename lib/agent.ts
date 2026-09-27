@@ -6,7 +6,7 @@ import {crateDb} from '@/db/crate';
 import {EDITORIAL_SYSTEM,EDITORIAL_VERSION,RESEARCH_BRIEF,calibrationFor} from './editorial';
 import {cornerIndex,dropRejected,FORMATS,type Lookup,type LookupHints,type Seed,type Source} from './corner-schema';
 import {CornerError} from './corner-error';
-import {formatOf,resolveWork,titleFit,type Candidate} from './catalog';
+import {findEpisodes,formatOf,resolveWork,titleFit,type Candidate} from './catalog';
 import {openPage} from './page';
 
 // threeangle's triangle-building agent. With ANTHROPIC_API_KEY it calls Claude directly; otherwise it goes
@@ -109,7 +109,8 @@ const proposalOut=z.object({
  topic:z.string().optional(),
  insight:z.string().optional(),
  corners:z.array(cornerOut).optional(),
- bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),addedValue:z.string().optional()}).optional()
+ bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),addedValue:z.string().optional()}).optional(),
+ listenSearch:z.array(z.string().max(60)).max(4).optional()
 });
 const line=z.string().trim().min(1).max(1400);
 const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).min(3),bridges:z.array(line).min(3),shift:line,payoff:line,question:line,angles:z.array(line).min(3),answers:z.array(line).min(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).min(4)});
@@ -143,7 +144,7 @@ CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 This work was already confirmed in a catalog before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series; the listen slot may also be an album, but only when the confirmed work is that album). Return exactly two corners, one for each missing slot, plus one distinct bonus that is a book, article, movie, documentary, show, podcast episode or album.
 WHAT THE USER LOVED ABOUT IT (key input): ${interest?JSON.stringify(interest):'not stated'}.
-${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
+${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. Also give listenSearch: two to four short podcast-catalog search phrases (2–4 words each) that would find episodes on the chosen topic. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
    });
   }catch(e){
    // A malformed pick costs one attempt, not the whole build.
@@ -159,6 +160,8 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
   if(proposal.topic)onProgress(`The angle: ${proposal.topic.replace(/\.$/,'')}.`);
   const picks:Pick[]=[...corners.map(c=>({slot:c.slot as Slot,title:c.title,creator:c.creator,format:c.format})),{slot:'bonus',title:proposal.bonus.title,creator:proposal.bonus.creator,format:formatOf(proposal.bonus.format)!}];
 
+  // Real episodes on the topic, gathered alongside, in case the chosen episode can't be found.
+  const episodes=missing.includes('listen')?findEpisodes([...(proposal.listenSearch||[]),seed.title]).catch(()=>[] as Candidate[]):Promise.resolve([] as Candidate[]);
   // Find every chosen work in a real catalog while the writer drafts. A work that can't be found is re-picked.
   const writing=new AbortController();
   const writer=generateText({
@@ -184,7 +187,9 @@ Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wond
    if(attempt<3){
     rejected=[...rejected,...lost.map(p=>p.title)];
     onProgress(`Couldn’t find ${lost.map(p=>p.title).join(' or ')} in any catalog. Choosing again.`);
-    feedback=`\nYOUR PREVIOUS PICKS ${JSON.stringify(lost.map(p=>`${p.title} (${p.creator})`))} COULD NOT BE FOUND in any book, film, podcast or music catalog. Keep what worked and replace only those with real works under their exact published titles.`;
+    const kept=picks.filter((_,i)=>found[i]).map(p=>`${p.slot}: ${found[picks.indexOf(p)]!.title} (${p.creator})`);
+    const real=lost.some(p=>p.slot==='listen')?(await episodes).filter(e=>!rejected.includes(e.title)).map(e=>({title:e.title,show:e.creator,year:e.year,about:e.description.slice(0,140)})):[];
+    feedback=`\nYOUR PREVIOUS PICKS ${JSON.stringify(lost.map(p=>`${p.title} (${p.creator})`))} COULD NOT BE FOUND in any book, film, podcast or music catalog.${kept.length?` KEEP THESE, they were found: ${JSON.stringify(kept)}.`:''} Replace only the missing ones with real works under their exact published titles.${real.length?` For the listen corner choose ONE of these real episodes found in podcast catalogs, with its exact title and show as the creator: ${JSON.stringify(real)}.`:''}`;
     continue;
    }
    await recordRun(model,'unfound',{...trace,ms:Date.now()-started});

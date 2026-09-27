@@ -181,6 +181,14 @@ async function spotifyEpisodes(term:string,timeout=3000):Promise<Candidate[]>{
  return (full?.episodes||[]).filter((e):e is SpEpisode=>Boolean(e?.name&&e.show)).map((e,i)=>({title:e.name,creator:e.show!.name,alt:[e.show!.publisher||''],format:'Podcast episode' as const,year:yearOf(e.release_date),description:clip(e.description||''),url:e.external_urls?.spotify||`https://open.spotify.com/episode/${e.id}`,image:(e.images?.[0]||e.show!.images?.[0])?.url,from:'spotify',score:.28-i*.02}));
 }
 
+// Real episodes on a topic (short search phrases), so a listen corner can be chosen from what exists.
+export async function findEpisodes(terms:string[]):Promise<Candidate[]>{
+ const lists=await Promise.all(terms.filter(t=>t.trim().length>2).slice(0,4).flatMap(t=>[itunesEpisodes(t,3500),spotifyEpisodes(t,3500)]));
+ const seen=new Set<string>(),out:Candidate[]=[];
+ for(const c of lists.flat()){const k=words(c.title).join(' ')+'|'+words(c.creator).join(' ');if(!c.creator||seen.has(k))continue;seen.add(k);out.push(c);}
+ return out.slice(0,14);
+}
+
 // ---------- podcast feeds: find an exact episode in the show's own RSS ----------
 const unwrap=(s:string)=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;|&#8217;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
 const tag=(xml:string,name:string)=>{const m=xml.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`,'i'));return m?unwrap(m[1]):''};
