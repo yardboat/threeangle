@@ -42,7 +42,6 @@ export const ART_CASES:ArtCase[]=[
  {title:'Random Access Memories',creator:'Daft Punk',format:'Album',by:'Daft Punk'},
  {title:'Is Google Making Us Stupid?',creator:'Nicholas Carr',format:'Article',by:'Atlantic|Carr',url:'https://www.theatlantic.com/magazine/archive/2008/07/is-google-making-us-stupid/306868/'},
  {title:'The Really Big One',creator:'Kathryn Schulz',format:'Article',by:'New Yorker|Schulz',url:'https://www.newyorker.com/magazine/2015/07/20/the-really-big-one'},
- {title:'The Case for Letting Rivers Run Wild',creator:'Wired',format:'Article',by:'Wired|WIRED',url:'https://www.wired.com/story/rivers-dams-removal/'},
  {title:'Dune',creator:'Denis Villeneuve',format:'Movie',by:'Villeneuve',not:'Lynch'},
 ];
 export type ArtResult={title:string;format:string;ok:boolean;wrong:boolean;cover:boolean;found?:Pick<Candidate,'title'|'creator'|'format'|'year'|'url'|'image'|'from'>;ms:number};

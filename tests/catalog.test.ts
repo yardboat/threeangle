@@ -17,6 +17,8 @@ test('a different creator means a different work with the same name',()=>{
  assert.equal(creatorFits('Béla Tarr',work({title:'Damnation',creator:'Bela Tarr'})),true);
  assert.equal(creatorFits('HBO',work({creator:'David Simon',alt:['HBO']})),true);
  assert.equal(creatorFits('',work({creator:'Anyone'})),true);
+ // A creator the catalog didn't return is unverified: better no cover than a wrong one.
+ assert.equal(creatorFits('Bong Joon-ho',work({title:'Parasite',creator:''})),false);
 });
 test('Wikipedia descriptions map to formats, and people or songs are skipped',()=>{
  assert.equal(wikiFormat('1975 film by Steven Spielberg'),'Movie');

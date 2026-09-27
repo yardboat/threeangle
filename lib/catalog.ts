@@ -44,7 +44,9 @@ export function titleFit(want:string,have:string){
 }
 // A different creator means a different work with the same name (Damnation by Béla Tarr is not DamNation).
 export function creatorFits(want:string|undefined,c:Candidate){
- if(!want?.trim()||(!c.creator&&!c.alt?.length))return true;
+ if(!want?.trim())return true;
+ // A creator we couldn't read is unverified, not a match: a missing cover beats a wrong one.
+ if(!c.creator&&!c.alt?.filter(Boolean).length)return false;
  return [c.creator,...(c.alt||[])].filter(Boolean).some(have=>overlap(want,have)>0||overlap(have,want)>0);
 }
 const fits=(q:WorkQuery,c:Candidate,min=.75)=>titleFit(q.title,c.title)>=min&&creatorFits(q.creator,c);
@@ -88,16 +90,17 @@ function tmdb<T>(path:string,params:Record<string,string>={},timeout=2500){
 type TmdbHit={id:number;media_type?:string;title?:string;name?:string;release_date?:string;first_air_date?:string;overview?:string;poster_path?:string|null;genre_ids?:number[];popularity?:number};
 type TmdbDetail={credits?:{crew?:{job:string;name:string}[]};created_by?:{name:string}[];networks?:{name:string}[];production_companies?:{name:string}[];genres?:{id:number}[]};
 async function tmdbCandidate(h:TmdbHit,kind:'movie'|'tv'):Promise<Candidate>{
- const d=await tmdb<TmdbDetail>(`/${kind}/${h.id}`,kind==='movie'?{append_to_response:'credits'}:{},2000);
+ const d=await tmdb<TmdbDetail>(`/${kind}/${h.id}`,kind==='movie'?{append_to_response:'credits'}:{},4000);
  const directors=(d?.credits?.crew||[]).filter(c=>c.job==='Director').map(c=>c.name),made=(d?.created_by||[]).map(c=>c.name);
  const docu=(h.genre_ids||d?.genres?.map(g=>g.id)||[]).includes(99);
  const creator=(kind==='movie'?directors:made).slice(0,2).join(' and ')||(d?.networks?.[0]?.name||'');
  return {title:(kind==='movie'?h.title:h.name)||'',creator,alt:[...directors,...made,...(d?.networks||[]).map(n=>n.name),...(d?.production_companies||[]).slice(0,3).map(n=>n.name)],format:kind==='tv'?'Show':docu?'Documentary':'Movie',year:yearOf(kind==='movie'?h.release_date:h.first_air_date),description:clip(h.overview||''),url:`https://www.themoviedb.org/${kind}/${h.id}`,image:h.poster_path?`https://image.tmdb.org/t/p/w500${h.poster_path}`:undefined,from:'tmdb',score:Math.min(1,Math.log10((h.popularity||0)+1)/2)};
 }
-async function tmdbSearch(q:string,kind?:'movie'|'tv',timeout=2500):Promise<Candidate[]>{
+async function tmdbSearch(q:string,kind?:'movie'|'tv',timeout=2500,fit=false):Promise<Candidate[]>{
  if(!hasTmdb())return [];
  const d=await tmdb<{results?:TmdbHit[]}>(kind?`/search/${kind}`:'/search/multi',{query:q,include_adult:'false'},timeout);
- const hits=(d?.results||[]).map(h=>({...h,media_type:h.media_type||kind})).filter(h=>h.media_type==='movie'||h.media_type==='tv').slice(0,6);
+ // Resolving a known work: read credits only for titles that fit, so a burst of lookups stays small.
+ const hits=(d?.results||[]).map(h=>({...h,media_type:h.media_type||kind})).filter(h=>(h.media_type==='movie'||h.media_type==='tv')&&(!fit||titleFit(q,(h.title||h.name||''))>=.75)).slice(0,fit?3:6);
  return Promise.all(hits.map(h=>tmdbCandidate(h,h.media_type as 'movie'|'tv')));
 }
 
@@ -235,11 +238,11 @@ export async function resolveWork(q:WorkQuery):Promise<Candidate|null>{
  };
  let found:Candidate|null=null;
  if(f==='Book')found=await first([()=>openLibrary({title:q.title,...(q.creator?{author:q.creator}:{})}),()=>googleBooks(`intitle:${q.title}${q.creator?` inauthor:${q.creator}`:''}`),()=>wikiResolve(q,f)]);
- else if(f==='Movie'||f==='Documentary')found=await first([()=>tmdbSearch(q.title,'movie'),()=>itunesScreen(q.title,'movie'),()=>wikiResolve(q,f)]);
- else if(f==='Show')found=await first([()=>tmdbSearch(q.title,'tv'),()=>itunesScreen(q.title,'tv'),()=>wikiResolve(q,f)]);
+ else if(f==='Movie'||f==='Documentary')found=await first([()=>tmdbSearch(q.title,'movie',2500,true),()=>itunesScreen(q.title,'movie'),()=>wikiResolve(q,f)]);
+ else if(f==='Show')found=await first([()=>tmdbSearch(q.title,'tv',2500,true),()=>itunesScreen(q.title,'tv'),()=>wikiResolve(q,f)]);
  else if(f==='Album')found=await first([()=>itunesAlbums(`${q.title} ${q.creator||''}`.trim()),()=>musicBrainz(q),()=>wikiResolve(q,f)]);
  else if(f==='Podcast episode')found=await podcastEpisode(q);
- else if(f==='Article'&&q.url?.startsWith('https://'))found=await article(q.url);
+ else if(f==='Article'&&q.url?.startsWith('https://')){const a=await article(q.url);found=a?{...a,title:q.title,creator:q.creator||a.creator}:{title:q.title,creator:q.creator||'',format:'Article',year:'',description:'',url:q.url,from:'page'};}
  if(!found)return null;
  found={...found,format:f==='Documentary'&&found.format==='Movie'?'Documentary':found.format};
  return withArt(found);
