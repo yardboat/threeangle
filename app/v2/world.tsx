@@ -9,6 +9,12 @@ import arrivalDepth from '@/public/hall/depth/gilded-hall.webp';
 import readingDepth from '@/public/hall/depth/reading-room.webp';
 import galleryDepth from '@/public/hall/depth/gallery.webp';
 import rotundaDepth from '@/public/hall/depth/rotunda.webp';
+import mapRoom from '@/public/hall/map-room.webp';
+import frames from '@/public/hall/frames.webp';
+import stairs from '@/public/hall/stairs.webp';
+import mapRoomDepth from '@/public/hall/depth/map-room.webp';
+import framesDepth from '@/public/hall/depth/frames.webp';
+import stairsDepth from '@/public/hall/depth/stairs.webp';
 import {clips,PROJECTION} from './archive';
 
 // The library is a character, not wallpaper.
@@ -18,13 +24,18 @@ import {clips,PROJECTION} from './archive';
 // forward into the next room, and the light of each room changes with the time of day of the journey.
 // Without WebGL, or with reduced motion, the same rooms are shown as graded still images.
 
-export type Room='arrival'|'reading'|'study'|'gallery'|'rotunda';
-export const roomNames:Record<Room,string>={arrival:'The Gilded Hall',reading:'The Reading Room',study:'The Reading Alcove',gallery:'The Sunlit Gallery',rotunda:'The Rotunda'};
-type Scene='arrival'|'reading'|'gallery'|'rotunda';
-const scenes:Record<Scene,{image:StaticImageData;depth:StaticImageData;pos:[number,number]}>={
+export type Room='arrival'|'reading'|'study'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
+export const roomNames:Record<Room,string>={arrival:'The Gilded Hall',reading:'The Reading Room',study:'The Reading Alcove',gallery:'The Sunlit Gallery',maproom:'The Map Room',frames:'The Gallery of Frames',stairs:'The Stair Hall',rotunda:'The Rotunda'};
+type Scene='arrival'|'reading'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
+// proj: where the archive projector lands in painting space (x0, y0, x1, y1): a blank wall, canvas or niche.
+type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:[number,number,number,number]};
+const scenes:Record<Scene,SceneDef>={
  arrival:{image:arrival,depth:arrivalDepth,pos:[.5,.46]},
  reading:{image:reading,depth:readingDepth,pos:[.5,.5]},
- gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5]},
+ gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5],proj:PROJECTION},
+ maproom:{image:mapRoom,depth:mapRoomDepth,pos:[.5,.5],proj:[.425,.23,.655,.515]},
+ frames:{image:frames,depth:framesDepth,pos:[.5,.55],proj:[.475,.53,.582,.772]},
+ stairs:{image:stairs,depth:stairsDepth,pos:[.5,.5],proj:[.472,.36,.56,.655]},
  rotunda:{image:rotunda,depth:rotundaDepth,pos:[.5,.62]},
 };
 // The time of day moves with the journey: morning at the door, dusk in the rotunda.
@@ -34,9 +45,14 @@ const moods:Record<Room,Mood>={
  reading:{exposure:1,contrast:1.1,warm:.12,cool:0,vignette:.3,beam:0,sweep:0,lift:.3,light:.06,dolly:0,film:.05,project:0},
  study:{exposure:.98,contrast:1.12,warm:.2,cool:0,vignette:.36,beam:0,sweep:0,lift:.3,light:.06,dolly:.1,film:.07,project:0},
  gallery:{exposure:.4,contrast:1.22,warm:.55,cool:.08,vignette:.8,beam:0,sweep:1,lift:0,light:.22,dolly:.04,film:.42,project:1},
+ maproom:{exposure:.46,contrast:1.2,warm:.62,cool:0,vignette:.72,beam:0,sweep:.6,lift:0,light:.24,dolly:.1,film:.3,project:1},
+ frames:{exposure:.42,contrast:1.22,warm:.4,cool:.12,vignette:.78,beam:0,sweep:.3,lift:0,light:.22,dolly:.16,film:.26,project:1},
+ stairs:{exposure:.5,contrast:1.2,warm:.2,cool:.26,vignette:.74,beam:.3,sweep:0,lift:0,light:.2,dolly:.06,film:.22,project:1},
  rotunda:{exposure:.36,contrast:1.24,warm:.1,cool:.34,vignette:.78,beam:1,sweep:0,lift:0,light:.2,dolly:0,film:.18,project:0},
 };
-const sceneOf=(r:Room):Scene=>r==='study'?'reading':r;
+// Rooms that share a painting are seen from a different place in it (dolly) and at a different hour (mood).
+const ROOM_SCENE:Record<Room,Scene>={arrival:'arrival',reading:'reading',study:'reading',gallery:'gallery',maproom:'maproom',frames:'frames',stairs:'stairs',rotunda:'rotunda'};
+const sceneOf=(r:Room):Scene=>ROOM_SCENE[r];
 
 // A tiny shared channel so the reveal can move the room (the camera orbits a little as the table turns,
 // and the oculus light gathers when the apex is open) without re-rendering React.
@@ -163,7 +179,7 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    // Room changes: walk forward into the next scene, and move the light of day with it.
    if(target.current!==shownRoom){
     const next=sceneOf(target.current);
-    if(next!==to&&tex[next]){from=to;to=next;mix=0;if(!calm)nextClip();}
+    if(tex[next]){from=to;to=next;mix=0;if(!calm)nextClip();}
     moodFrom={...mood};moodTo=moods[target.current];moodT=0;shownRoom=target.current;
    }
    mix=calm?1:Math.min(1,mix+dt/2.8);moodT=calm?1:Math.min(1,moodT+dt/1.7);
@@ -181,16 +197,16 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    gl.uniform2f(u('uCam'),cam.x,cam.y);gl.uniform2f(u('uLight'),lightPos.x,lightPos.y);
    gl.uniform1f(u('uExposure'),mood.exposure+beam*.05);gl.uniform1f(u('uContrast'),mood.contrast);gl.uniform1f(u('uWarm'),mood.warm);gl.uniform1f(u('uCool'),mood.cool);gl.uniform1f(u('uVignette'),mood.vignette);gl.uniform1f(u('uBeam'),mood.beam*(1+beam*.9));gl.uniform1f(u('uSweep'),mood.sweep);gl.uniform1f(u('uLift'),look?0:mood.lift);gl.uniform1f(u('uLightAmt'),mood.light);gl.uniform1f(u('uGrain'),calm?.02:.035);
    // Archive footage: flashes through each journey, and plays on the gallery wall while the library works.
-   const transit=Math.sin(Math.PI*ease(mix));const wantArc=Boolean(vid)&&!calm&&(transit>.05||mood.project>.05);
+   const transit=Math.sin(Math.PI*ease(mix));const projAmt=scenes[to].proj?mood.project:0;const wantArc=Boolean(vid)&&!calm&&(transit>.05||projAmt>.05);
    if(vid){
-    if(wantArc&&vid.paused&&!vid.src)nextClip(mood.project>.5?'wall':'flash');
-    if(mood.project>.5&&now-clipAt>5200){clipAt=now;nextClip('wall');}
-    if(!wantArc&&!vid.paused&&mood.project<.05&&mix>=1)vid.pause();
+    if(wantArc&&vid.paused&&!vid.src)nextClip(projAmt>.5?'wall':'flash');
+    if(projAmt>.5&&now-clipAt>5200){clipAt=now;nextClip('wall');}
+    if(!wantArc&&!vid.paused&&projAmt<.05&&mix>=1)vid.pause();
     if(wantArc&&arcReady&&vid.readyState>=2){gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,vid);}
    }
    const arcOn=wantArc&&arcReady?1:0;
-   bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),arcOn*.55);gl.uniform1f(u('uProj'),arcOn*mood.project*.85);
-   gl.uniform4f(u('uProjRect'),...PROJECTION);gl.uniform1f(u('uFilm'),calm?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
+   bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),arcOn*.55);gl.uniform1f(u('uProj'),arcOn*projAmt*.85);
+   const pr=scenes[to].proj;gl.uniform4f(u('uProjRect'),...(pr||PROJECTION));gl.uniform1f(u('uFilm'),calm?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
    gl.drawArrays(gl.TRIANGLES,0,3);
    // Keep breathing while there is somewhere to go; stop entirely when still.
    const settling=mix<1||moodT<1||Math.abs(cam.tx+drift.x+orbit-cam.x)>.0005||Math.abs(orbit-(worldSignal.orbit||0))>.0005;

@@ -10,7 +10,7 @@ export const resultSchema=z.object({name:line,kicker:line,hook:line,intro:line,h
 export type Source=z.infer<typeof sourceSchema>;
 export type Seed=z.infer<typeof seedSchema>;
 export type Lookup={id:string;matches:Seed[];sources:Source[];searchHtml:string[]};
-export function cornerIndex(format:Seed['format']){return format==='Book'||format==='Article'?0:format==='Podcast episode'?2:1}
+export function cornerIndex(format:Seed['format']){return format==='Book'||format==='Article'?0:format==='Podcast episode'||format==='Album'?2:1}
 export function requireSource(sources:Source[],index:number){const source=sources[index];if(!source)throw new Error('Missing research source');return source;}
 
 // When the confirmed work is not the one the visitor meant, they can narrow the search

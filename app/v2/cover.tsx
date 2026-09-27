@@ -1,0 +1,28 @@
+'use client';
+import {useEffect,useState} from 'react';
+
+// A work's cover art, looked up once per page load. Until it arrives (or when there is none) the card is
+// typographic: format, title and creator set like a book plate, so a missing cover still looks intended.
+export type CoverWork={title:string;creator:string;format:string;url?:string};
+const cache=new Map<string,Promise<string|null>>();
+export function coverUrl(w:CoverWork){
+ const key=[w.title,w.creator,w.format].join('|').toLowerCase();
+ if(!cache.has(key)){
+  const q=new URLSearchParams({t:w.title,c:w.creator,f:w.format});if(w.url?.startsWith('https://'))q.set('u',w.url);
+  cache.set(key,fetch('/api/art?'+q).then(r=>r.ok?r.json():{url:null}).then(d=>typeof d.url==='string'?d.url:null).catch(()=>null));
+ }
+ return cache.get(key)!;
+}
+const shape=(format:string)=>{const f=format.toLowerCase();return f.includes('podcast')||f.includes('album')?'square':f.includes('movie')||f.includes('documentary')||f.includes('show')?'poster':f.includes('article')?'wide':'book';};
+
+export function Cover({work,size='m',className=''}:{work:CoverWork;size?:'s'|'m'|'l';className?:string}){
+ const key=[work.title,work.creator,work.format].join('|');
+ const [got,setGot]=useState<{key:string;src:string|null;loaded:boolean}>({key:'',src:null,loaded:false});
+ useEffect(()=>{let live=true;void coverUrl(work).then(u=>{if(live)setGot({key,src:u,loaded:false});});return()=>{live=false;};},[key]); // eslint-disable-line react-hooks/exhaustive-deps
+ const src=got.key===key?got.src:null,loaded=got.key===key&&got.loaded;
+ return <figure className={`wk-cover wk-cover-${shape(work.format)} wk-cover-${size} ${loaded?'is-loaded':''} ${className}`}>
+  <div className="wk-cover-plate" aria-hidden={Boolean(src&&loaded)}><span className="wk-cover-format">{work.format}</span><span className="wk-cover-title">{work.title}</span><span className="wk-cover-by">{work.creator}</span></div>
+  {/* eslint-disable-next-line @next/next/no-img-element -- remote covers from many hosts */}
+  {src&&<img src={src} alt={`Cover of ${work.title}`} loading="lazy" decoding="async" referrerPolicy="no-referrer" onLoad={()=>setGot(g=>({...g,loaded:true}))} onError={()=>setGot(g=>({...g,src:null}))}/>}
+ </figure>;
+}

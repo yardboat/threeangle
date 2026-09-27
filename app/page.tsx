@@ -1,2 +1,2 @@
-import Experience from './experience';
-export default async function Home({searchParams}:{searchParams:Promise<{browse?:string}>}){const query=await searchParams;return <Experience startBrowsing={query.browse==='1'}/>;}
+// The hall is the home of threeangle. The original experience (the curated collection) lives at /collection.
+export {default,metadata} from './v2/page';

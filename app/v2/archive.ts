@@ -5,7 +5,6 @@
 export type Clip={src:string;w:number;h:number;dur:number;subject:string};
 export const clips:Clip[]=[
  {src:"/archive/archive-01",w:640,h:480,dur:3.6,subject:"AMERICAN ARMY WOMEN SERVING ON ALL FRONTS"},
- {src:"/archive/archive-02",w:640,h:480,dur:6,subject:"Combat Bulletin Number 104 Korean War"},
  {src:"/archive/archive-03",w:640,h:480,dur:6,subject:"December 7th (Long Version)"},
  {src:"/archive/archive-04",w:640,h:480,dur:2.7,subject:"German Soldiers and Scientists Conduct Research and Development of Various Types of Missiles and Rockets, Including the"},
  {src:"/archive/archive-05",w:640,h:480,dur:2.9,subject:"HEAVY MORTAR PLATOON, INCHON, KOREA"},

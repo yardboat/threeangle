@@ -1,13 +1,12 @@
 import {gateway,generateText,isStepCount,Output,tool} from 'ai';
 import {anthropic,createAnthropic} from '@ai-sdk/anthropic';
 import {z} from 'zod';
-import {lookup as dnsLookup} from 'node:dns/promises';
-import {isIP} from 'node:net';
 import corpus from '../editorial/refined-24.json';
 import {crateDb} from '@/db/crate';
 import {EDITORIAL_SYSTEM,EDITORIAL_VERSION,RESEARCH_BRIEF,calibrationFor} from './editorial';
 import {cornerIndex,dropRejected,FORMATS,type Lookup,type LookupHints,type Seed,type Source} from './corner-schema';
 import {CornerError} from './gemini';
+import {openPage} from './page';
 
 // threeangle's triangle-building agent. Model calls go through Vercel AI Gateway, so the
 // model is a config string (AGENT_MODEL). On Vercel the gateway authenticates with OIDC;
@@ -20,49 +19,6 @@ export const agentModel=()=>process.env.AGENT_MODEL||(direct()?'claude-sonnet-5'
 const languageModel=()=>{console.log('agent model',agentModel(),direct()?'anthropic-direct':'gateway','env names:',Object.keys(process.env).filter(k=>/anthropic|openai|gateway/i.test(k)).join(','));return direct()?createAnthropic({apiKey:anthropicKey()})(agentModel()):agentModel()};
 export const isAgentReady=()=>Boolean(process.env.ANTHROPIC_API_KEY||process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
 
-// ---------- safe page access ----------
-type Page={ok:boolean;status:number;url:string;title:string;description:string;text:string;error?:string};
-const emptyPage=(url:string,status:number,error:string):Page=>({ok:false,status,url,title:'',description:'',text:'',error});
-function privateAddress(ip:string){
-if(isIP(ip)===4){const [a,b]=ip.split('.').map(Number);return a===0||a===10||a===127||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&b===168)||(a===100&&b>=64&&b<=127)||a>=224}
-const v=ip.toLowerCase();return v==='::1'||v==='::'||v.startsWith('fc')||v.startsWith('fd')||v.startsWith('fe80')||v.startsWith('::ffff:');
-}
-async function assertPublic(url:URL){
-if(url.protocol!=='https:')throw new Error('Only https pages can be opened.');
-const host=url.hostname;
-if(host==='localhost'||host.endsWith('.local')||host.endsWith('.internal')||isIP(host))throw new Error('That address is not allowed.');
-const addresses=await dnsLookup(host,{all:true});
-if(!addresses.length||addresses.some(a=>privateAddress(a.address)))throw new Error('That address is not allowed.');
-}
-async function readCapped(res:Response,limit:number){
-if(!res.body)return '';
-const reader=res.body.getReader(),decoder=new TextDecoder();let out='';
-while(out.length<limit){const {done,value}=await reader.read();if(done)break;out+=decoder.decode(value,{stream:true})}
-try{await reader.cancel()}catch{}
-return out.slice(0,limit);
-}
-const decodeEntities=(s:string)=>s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n)));
-const metaContent=(html:string,key:string)=>{const m=html.match(new RegExp('<meta[^>]+(?:name|property)=["\']'+key+'["\'][^>]*>','i'));const c=m&&m[0].match(/content=["']([^"']*)["']/i);return c?decodeEntities(c[1]).trim():''};
-async function openPage(raw:string,maxChars=4000):Promise<Page>{
-let url:URL;
-try{url=new URL(raw)}catch{return emptyPage(raw,0,'Invalid URL')}
-try{
-for(let hop=0;hop<4;hop++){
-await assertPublic(url);
-const res=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(9000),headers:{'user-agent':'Mozilla/5.0 (compatible; threeangle-verifier/1.0)',accept:'text/html,application/xhtml+xml,text/plain'}});
-const next=res.headers.get('location');
-if(res.status>=300&&res.status<400&&next){url=new URL(next,url);continue}
-if(!res.ok)return emptyPage(url.href,res.status,'HTTP '+res.status);
-if(!/html|xml|text/i.test(res.headers.get('content-type')||''))return {ok:true,status:res.status,url:url.href,title:'',description:'',text:'',error:'Not a web page'};
-const html=await readCapped(res,600000);
-const title=decodeEntities((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'').trim()||metaContent(html,'og:title');
-const description=metaContent(html,'og:description')||metaContent(html,'description');
-const text=decodeEntities(html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<noscript[\s\S]*?<\/noscript>/gi,' ').replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim().slice(0,maxChars);
-return {ok:true,status:res.status,url:url.href,title,description,text};
-}
-return emptyPage(url.href,0,'Too many redirects');
-}catch(e){return emptyPage(raw,0,e instanceof Error?e.message:'Could not open the page')}
-}
 const wordsOf=(s:string)=>s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').match(/[a-z0-9]+/g)||[];
 const STOP=new Set(['the','and','for','with','from','that','this','into','part','episode','season']);
 export function titleMatches(title:string,haystack:string){
@@ -121,7 +77,7 @@ result=await generateText({
 model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(7),abortSignal:AbortSignal.timeout(75000),
 output:Output.object({schema:lookupOut}),
 prompt:`Identify the work the user means. USER TITLE: ${JSON.stringify(title)}.${hintText(hints)}
-Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of at most 1200 characters drawn only from what you found in search (premise, principal cast and crew, tone, setting, what critics say it is really about, their most common comparisons, and the two to four distinct topics or readings the work supports; paraphrase, never quote), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. If the work is an album, song, game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, show or podcast episode. If nothing real matches, return status "none" with no matches. Do not guess.`
+Search official publisher, author, filmmaker, distributor or broadcaster pages and return up to three real works that could match, each with exact title, creator, format (${FORMATS.join(' | ')}), year, a factual dossier of at most 1200 characters drawn only from what you found in search (premise, principal cast and crew, tone, setting, what critics say it is really about, their most common comparisons, and the two to four distinct topics or readings the work supports; paraphrase, never quote), and an official https URL you retrieved. For a podcast identify a SPECIFIC episode, never a whole feed: if the user gave only a show or feed, return status "clarify" with one focused question asking which episode. If the title is ambiguous, return the candidates. An album is supported: return the album itself (creator = the artist). If the user gives a single song, return the album it appears on. If it is a game or another unsupported format, return status "clarify" and say that new threeangles start from a book, article, movie, documentary, TV show, podcast episode or album. If nothing real matches, return status "none" with no matches. Do not guess.`
 });
 }catch(e){await recordRun(model,'error',{phase:'identify',title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 const out=result.output;
@@ -147,8 +103,8 @@ bonus:z.object({title:z.string().min(1),creator:z.string().min(1),format:z.strin
 const line=z.string().trim().min(1).max(1400);
 const writerOut=z.object({name:line,kicker:line,hook:line,intro:line,heads:z.array(line).min(3),bridges:z.array(line).min(3),shift:line,payoff:line,question:line,angles:z.array(line).min(3),answers:z.array(line).min(3),bonus:line,works:z.array(z.object({title:line,creator:line,format:line,pitch:line})).min(4)});
 
-const normFormat=(f:string)=>{const x=f.toLowerCase();return x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')||x.includes('reported')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':''};
-const linkFor=(format:string,title:string,creator:string)=>{const q=encodeURIComponent((title+' '+creator).trim());const f=format.toLowerCase();return f.includes('podcast')?'https://podcasts.apple.com/us/search?term='+q:f.includes('book')?'https://openlibrary.org/search?q='+q:f.includes('movie')||f.includes('documentary')||f.includes('show')?'https://www.justwatch.com/us/search?q='+q:'https://www.google.com/search?q='+q};
+const normFormat=(f:string)=>{const x=f.toLowerCase();return x.includes('album')||x.includes('record')?'Album':x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')||x.includes('reported')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':''};
+const linkFor=(format:string,title:string,creator:string)=>{const q=encodeURIComponent((title+' '+creator).trim());const f=format.toLowerCase();return f.includes('podcast')||f.includes('album')?(f.includes('album')?'https://music.apple.com/us/search?term=':'https://podcasts.apple.com/us/search?term=')+q:f.includes('book')?'https://openlibrary.org/search?q='+q:f.includes('movie')||f.includes('documentary')||f.includes('show')?'https://www.justwatch.com/us/search?q='+q:'https://www.google.com/search?q='+q};
 type Verdict={label:string;title:string;url:string;verdict:'verified'|'provenance-only'|'failed';why:string};
 async function verify(items:{label:string;title:string;url:string}[],seen:Set<string>):Promise<Verdict[]>{
 return items.map(it=>seen.has(normUrl(it.url))?{...it,verdict:'verified' as const,why:''}:{...it,verdict:'failed' as const,why:'that URL was not in the search results'});
@@ -175,9 +131,9 @@ REFERENCE TRIANGLES (voice and judgment only, not evidence): ${references}
 TASK: choose the two missing corners of one finished threeangle.
 CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 This work was already verified by web search before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
-It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series). Return exactly two corners, one for each missing slot, plus one distinct bonus.
-WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}.
-${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together (prefer the reading the user's note points to, otherwise the reading with the strongest three works), state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real works, and for the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
+It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series; the listen slot may also be an album, but only when the confirmed work is that album). Return exactly two corners, one for each missing slot, plus one distinct bonus.
+WHAT THE USER LOVED ABOUT IT (key input): ${interest?JSON.stringify(interest):'not stated'}.
+${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real works, and for the podcast only an episode you are certain exists, with its exact title. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
 });
 }catch(e){await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
 proposal=result.output;
@@ -209,7 +165,7 @@ VERIFIED CORNERS: ${JSON.stringify(corners)}
 BONUS: ${JSON.stringify(bonus)}
 CHOSEN TOPIC (every work must serve it): ${proposal.topic||''}
 EDITORIAL PROPOSAL: ${JSON.stringify({insight:proposal.insight})}
-WHAT GRABBED THE USER: ${interest?JSON.stringify(interest):'not stated'}
+WHAT THE USER LOVED ABOUT IT (the pitch should honour it): ${interest?JSON.stringify(interest):'not stated'}
 EDITORIAL VERSION: ${EDITORIAL_VERSION}
 REFERENCE TRIANGLES (voice only, never copy works or claims): ${references}
 
@@ -230,4 +186,25 @@ identities.push({title:bonus.title,creator:bonus.creator,format:bonus.format,sou
 const works=out.works.map((w,i)=>({...w,...identities[i]}));
 await recordRun(model,'ok',{...trace,seedUrl,verdicts:verdicts.map(v=>({label:v.label,verdict:v.verdict})),ms:Date.now()-started,usage:written.usage});
 return {output:{...out,works},sources};
+}
+
+// ---------- 3. notable quotes, shown while the triangle is being built ----------
+const quotesOut=z.object({quotes:z.array(z.object({text:z.string().min(3).max(240),speaker:z.string().max(120).optional(),url:httpsUrl})).max(3)});
+export type Quote={text:string;speaker?:string;url:string};
+const wordCount=(s:string)=>s.trim().split(/\s+/).length;
+export async function notableQuotes(seed:{title:string;creator:string;format:string;year?:string}):Promise<Quote[]>{
+const model=agentModel(),started=Date.now(),album=seed.format==='Album';
+let result;
+try{
+result=await generateText({
+model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:tools(),stopWhen:isStepCount(4),abortSignal:AbortSignal.timeout(45000),providerOptions:{anthropic:{thinking:{type:'disabled'}}},
+output:Output.object({schema:quotesOut}),
+prompt:`WORK: ${JSON.stringify(seed)}
+Find two or three of the most notable, widely quoted short lines ${album?'ABOUT this album: things the artist said about making it, or a famous critic\'s line about it. NEVER quote song lyrics':'FROM this work: a famous line of text or dialogue, or a memorable line spoken in the episode'}. Search for them, and return only quotes whose exact wording appears in a page you retrieved, with that page's https URL. Each quote at most 25 words, verbatim, no ellipses in the middle. Speaker: the character or person who says it, if known. If you cannot verify any, return an empty list. Never invent or paraphrase a quote.`
+});
+}catch(e){await recordRun(model,'error',{phase:'quotes',title:seed.title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});return []}
+const seen=urlsSeen(result.steps);
+const quotes=result.output.quotes.filter(q=>seen.has(normUrl(q.url))&&wordCount(q.text)<=28).map(q=>({text:q.text.trim().replace(/^["“”']+|["“”']+$/g,''),speaker:q.speaker?.trim()||undefined,url:q.url}));
+await recordRun(model,'ok',{phase:'quotes',title:seed.title,returned:result.output.quotes.length,kept:quotes.length,ms:Date.now()-started,usage:result.usage});
+return quotes;
 }
