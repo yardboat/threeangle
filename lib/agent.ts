@@ -124,9 +124,9 @@ type Pick={slot:Slot|'bonus';title:string;creator:string;format:string};
 // When the chosen episode isn't in any catalog, one small call picks the best real episode from the catalogs' list.
 const episodeOut=z.object({title:z.string().min(1),show:z.string().min(1)});
 async function chooseEpisode(topic:string,wanted:{title:string;creator:string},real:Candidate[],system:SystemModelMessage[]):Promise<Candidate|null>{
- const list=real.slice(0,14).map(e=>({title:e.title,show:e.creator,year:e.year,about:e.description.slice(0,160)}));
+ const list=real.slice(0,20).map(e=>({title:e.title,show:e.creator,year:e.year,about:e.description.slice(0,160)}));
  const r=await generateText({model:languageModel(),system,abortSignal:AbortSignal.timeout(30000),providerOptions:noThinking,output:Output.object({schema:episodeOut}),
-  prompt:`TOPIC: ${topic}\nThe listen corner was going to be ${JSON.stringify(wanted)}, but that episode isn't in any podcast catalog. Choose the ONE episode from this list of real episodes that best serves the topic and stands on its own. Return its exact title and show.\n${JSON.stringify(list)}`});
+  prompt:`TOPIC: ${topic}\nThe listen corner was going to be ${JSON.stringify(wanted)}, but that episode isn't in any podcast catalog. Choose the ONE episode from this list of real episodes that best serves the topic and stands on its own. Prefer episodes from widely respected, well-produced shows (for example The Daily, 99% Invisible, Radiolab, This American Life, Planet Money, Hidden Brain, Throughline); avoid small, promotional or conference feeds unless nothing else fits. Return its exact title and show.\n${JSON.stringify(list)}`});
  return real.find(e=>e.title===r.output.title)||real.find(e=>titleFit(r.output.title,e.title)>=.9)||null;
 }
 

@@ -112,8 +112,8 @@ async function itunes(term:string,entity:string,media?:string,timeout=3000,limit
  return Array.isArray(d?.results)?d.results:[];
 }
 const art=(r:It)=>{const u=r.artworkUrl600||r.artworkUrl100;return u?bigArt(u):undefined};
-async function itunesEpisodes(term:string,timeout=3000):Promise<Candidate[]>{
- return (await itunes(term,'podcastEpisode','podcast',timeout,10)).filter(r=>r.trackName).map((r,i)=>({title:r.trackName!,creator:r.collectionName||r.artistName||'',alt:[r.artistName||''],format:'Podcast episode' as const,year:yearOf(r.releaseDate),description:clip(r.description||r.shortDescription||''),url:https(r.trackViewUrl)||'',image:art(r),from:'itunes',score:.3-i*.02}));
+async function itunesEpisodes(term:string,timeout=3000,limit=10):Promise<Candidate[]>{
+ return (await itunes(term,'podcastEpisode','podcast',timeout,limit)).filter(r=>r.trackName).map((r,i)=>({title:r.trackName!,creator:r.collectionName||r.artistName||'',alt:[r.artistName||''],format:'Podcast episode' as const,year:yearOf(r.releaseDate),description:clip(r.description||r.shortDescription||''),url:https(r.trackViewUrl)||'',image:art(r),from:'itunes',score:.3-i*.02}));
 }
 async function itunesAlbums(term:string,timeout=3000):Promise<Candidate[]>{
  return (await itunes(term,'album','music',timeout,8)).filter(r=>r.collectionName&&!/ - (single|ep)$/i.test(r.collectionName)).map((r,i)=>({title:r.collectionName!.replace(/ - (single|ep)$/i,''),creator:r.artistName||'',format:'Album' as const,year:yearOf(r.releaseDate),description:r.primaryGenreName?`A ${r.primaryGenreName.toLowerCase()} album by ${r.artistName}${yearOf(r.releaseDate)?`, released in ${yearOf(r.releaseDate)}`:''}.`:'',url:https(r.collectionViewUrl)||'',image:art(r),from:'itunes',score:.3-i*.02}));
@@ -184,11 +184,14 @@ async function spotifyEpisodes(term:string,timeout=3000):Promise<Candidate[]>{
 }
 
 // Real episodes on a topic (short search phrases), so a listen corner can be chosen from what exists.
+// Widely respected, well-produced shows come first; the chooser still weighs every episode on the topic.
+const RENOWNED=/\b(the daily|99% invisible|radiolab|this american life|planet money|hidden brain|throughline|freakonomics|invisibilia|code switch|short wave|science vs|the indicator|reply all|serial|more perfect|on the media|fresh air|the ezra klein show|the new yorker radio hour|the moth|snap judgment|decoder ring|you're wrong about|revisionist history|criminal|twenty thousand hertz|song exploder|the memory palace|stuff you missed in history class|outside\/in|the war on cars|volts|how to save a planet|a matter of degrees|the sunday read|all things considered|the journal|search engine|lost hills|99pi)\b/i;
 export async function findEpisodes(terms:string[]):Promise<Candidate[]>{
- const lists=await Promise.all(terms.filter(t=>t.trim().length>2).slice(0,4).flatMap(t=>[itunesEpisodes(t,3500),spotifyEpisodes(t,3500)]));
+ const lists=await Promise.all(terms.filter(t=>t.trim().length>2).slice(0,4).flatMap(t=>[itunesEpisodes(t,3500,25),spotifyEpisodes(t,3500)]));
  const seen=new Set<string>(),out:Candidate[]=[];
  for(const c of lists.flat()){const k=words(c.title).join(' ')+'|'+words(c.creator).join(' ');if(!c.creator||seen.has(k))continue;seen.add(k);out.push(c);}
- return out.slice(0,14);
+  out.sort((a,b)=>Number(RENOWNED.test(b.creator))-Number(RENOWNED.test(a.creator)));
+ return out.slice(0,20);
 }
 
 // ---------- podcast feeds: find an exact episode in the show's own RSS ----------
