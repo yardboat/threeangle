@@ -22,6 +22,9 @@ const languageModel=()=>direct()?createAnthropic({apiKey:anthropicKey()})(agentM
 export const isAgentReady=()=>Boolean(process.env.ANTHROPIC_API_KEY||process.env.AI_GATEWAY_API_KEY||process.env.VERCEL);
 const noThinking={anthropic:{thinking:{type:'disabled' as const}}};
 const cached={anthropic:{cacheControl:{type:'ephemeral' as const}}};
+// Choosing and writing think first (adaptive thinking): with thinking off, an unfamiliar work (newer than the
+// model's training) produced placeholder-filled JSON. Lookups and quotes stay fast with thinking off.
+const reasoned=(effort:'low'|'medium')=>({anthropic:{thinking:{type:'adaptive' as const},effort}});
 
 const normUrl=(u:string)=>{try{const x=new URL(u);return x.hostname.replace(/^www\./,'').toLowerCase()+x.pathname.replace(/\/+$/,'')}catch{return ''}};
 const hostOf=(u:string)=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch{return u}};
@@ -135,7 +138,7 @@ export async function buildTriangle(seed:Seed,interest:string,baseSources:Source
   let result;
   try{
    result=await generateText({
-    model:languageModel(),system,abortSignal:AbortSignal.timeout(90000),providerOptions:noThinking,
+    model:languageModel(),system,abortSignal:AbortSignal.timeout(100000),providerOptions:reasoned('medium'),
     output:Output.object({schema:proposalOut}),
     prompt:`${RESEARCH_BRIEF}
 
@@ -144,7 +147,7 @@ CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 This work was already confirmed in a catalog before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series; the listen slot may also be an album, but only when the confirmed work is that album). Return exactly two corners, one for each missing slot, plus one distinct bonus that is a book, article, movie, documentary, show, podcast episode or album.
 WHAT THE USER LOVED ABOUT IT (key input): ${interest?JSON.stringify(interest):'not stated'}.
-${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. Also give listenSearch: two to four short podcast-catalog search phrases (2–4 words each) that would find episodes on the chosen topic. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field.${feedback}`
+${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. Also give listenSearch: two to four short podcast-catalog search phrases (2–4 words each) that would find episodes on the chosen topic. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field. Never write placeholder text.${feedback}`
    });
   }catch(e){
    // A malformed pick costs one attempt, not the whole build.
@@ -153,6 +156,7 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
   const proposal=result.output;
   (trace.attempts as unknown[]).push({attempt,status:proposal.status,ms:Date.now()-started,usage:result.usage});
   if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason&&proposal.reason.length<=160?proposal.reason:'We couldn’t build a full triangle for that title yet. Try adding its creator.',422)}
+  if(/placeholder/i.test(JSON.stringify(proposal))&&attempt<3){(trace.attempts as unknown[]).push({attempt,status:'placeholder',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER CONTAINED PLACEHOLDER TEXT. Every corner and the bonus must be a real work with its exact title and creator.';continue;}
   const corners=(proposal.corners||[]).map(c=>({...c,format:formatOf(c.format)||''}));
   if(corners.length!==2||corners.map(c=>c.slot).sort().join()!==[...missing].sort().join()||corners.some(c=>!FORMAT_OF[c.slot as Slot]?.includes(c.format))||!proposal.bonus||!formatOf(proposal.bonus.format)){
    feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners, one per missing slot, with the right format (read: book or article; watch: movie, documentary or show; listen: one podcast episode) and one bonus in a supported format.';continue;
@@ -164,8 +168,8 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
   const episodes=missing.includes('listen')?findEpisodes([...(proposal.listenSearch||[]),seed.title]).catch(()=>[] as Candidate[]):Promise.resolve([] as Candidate[]);
   // Find every chosen work in a real catalog while the writer drafts. A work that can't be found is re-picked.
   const writing=new AbortController();
-  const writer=generateText({
-   model:languageModel(),system,abortSignal:AbortSignal.any([writing.signal,AbortSignal.timeout(75000)]),providerOptions:noThinking,output:Output.object({schema:writerOut}),
+  const write=()=>generateText({
+   model:languageModel(),system,abortSignal:AbortSignal.any([writing.signal,AbortSignal.timeout(90000)]),providerOptions:reasoned('low'),output:Output.object({schema:writerOut}),
    prompt:`Write the finished threeangle as JSON using ONLY the works below. Add no works, facts or links. Structuring must add nothing that was not researched.
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 CHOSEN CORNERS: ${JSON.stringify(corners)}
@@ -177,6 +181,8 @@ EDITORIAL VERSION: ${EDITORIAL_VERSION}
 
 Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker (the chosen topic as a short uppercase label like "TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
   });
+  // A malformed draft is written once more before the build gives up.
+  const writer=write().catch(e=>{if(!writing.signal.aborted&&e instanceof Error&&e.name==='AI_NoObjectGeneratedError'){(trace.attempts as unknown[]).push({attempt,status:'rewrite',ms:Date.now()-started});return write();}throw e;});
   writer.catch(()=>{});
   const found=await Promise.all(picks.map(async p=>{const c=await resolveCorner(p);if(c)onProgress(`Found ${SLOT_NAME[p.slot]}: ${c.title}.`);return c}));
   const lost=picks.filter((_,i)=>!found[i]);
