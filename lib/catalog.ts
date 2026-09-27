@@ -40,7 +40,12 @@ const bare=(t:string)=>t.replace(/\s*[,:(–—-]\s*(season|series|volume|vol\.?
 export function titleFit(want:string,have:string){
  let h=bare(have);const w=bare(want);
  if(!/[:–—]/.test(w))h=h.split(/\s*[:–—]\s+/)[0];
- return Math.min(overlap(w,h),overlap(h,w));
+ const full=Math.min(overlap(w,h),overlap(h,w));
+ // A descriptive subtitle on one side only ("The Orphan Trains: Placing Out in America") doesn't block a match;
+ // a sequel marker ("Dune: Part Two") does.
+ const [wMain,wSub]=w.split(/\s*[:–—]\s+/);
+ if(wSub&&!/[:–—]/.test(h)&&!/^(part|chapter|vol(ume)?|book|season|episode)\b|^\d+$|^(ii|iii|iv)\b/i.test(wSub))return Math.max(full,Math.min(overlap(wMain,h),overlap(h,wMain)));
+ return full;
 }
 // A different creator means a different work with the same name (Damnation by Béla Tarr is not DamNation).
 export function creatorFits(want:string|undefined,c:Candidate){
@@ -65,7 +70,7 @@ const screen=(f:Format)=>f==='Movie'||f==='Documentary'?'film':f;
 type OLDoc={key:string;title:string;subtitle?:string;author_name?:string[];first_publish_year?:number;cover_i?:number;edition_count?:number};
 async function openLibrary(params:Record<string,string>,timeout=3000):Promise<Candidate[]>{
  const d=await getJson<{docs?:OLDoc[]}>('https://openlibrary.org/search.json?'+new URLSearchParams({...params,limit:'8',fields:'key,title,subtitle,author_name,first_publish_year,cover_i,edition_count'}),{timeout});
- return (d?.docs||[]).map(x=>({title:x.title,creator:(x.author_name||[]).slice(0,2).join(' and '),alt:x.author_name,format:'Book' as const,year:x.first_publish_year?String(x.first_publish_year):'',description:'',url:'https://openlibrary.org'+x.key,image:x.cover_i?`https://covers.openlibrary.org/b/id/${x.cover_i}-L.jpg`:undefined,from:'openlibrary',score:Math.min(1,Math.log10((x.edition_count||1)+1)/2)}));
+ return (d?.docs||[]).map(x=>({title:x.subtitle?`${x.title}: ${x.subtitle}`:x.title,creator:(x.author_name||[]).slice(0,2).join(' and '),alt:x.author_name,format:'Book' as const,year:x.first_publish_year?String(x.first_publish_year):'',description:'',url:'https://openlibrary.org'+x.key,image:x.cover_i?`https://covers.openlibrary.org/b/id/${x.cover_i}-L.jpg`:undefined,from:'openlibrary',score:Math.min(1,Math.log10((x.edition_count||1)+1)/2)}));
 }
 async function openLibraryDescription(url:string){
  const d=await getJson<{description?:string|{value?:string}}>(url+'.json',{timeout:2500});

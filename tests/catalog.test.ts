@@ -10,6 +10,8 @@ test('a title must fit both ways, so a longer lookalike is not the work',()=>{
  assert.equal(titleFit('The Emerald Mile','The Emerald Mile: The Epic Story of the Fastest Ride in History'),1);
  assert.ok(titleFit('Red Rising','Red Rising: Sons of Ares')>=.75);
  assert.ok(titleFit('Mission: Impossible','Mission: Impossible – Fallout')<.75);
+ assert.equal(titleFit('The Orphan Trains: Placing Out in America','The Orphan Trains'),1);
+ assert.ok(titleFit('Dune: Part Two','Dune')<.75);
  assert.equal(titleFit('Won’t You Be My Neighbor?','Won\'t You Be My Neighbor?'),1);
 });
 test('a different creator means a different work with the same name',()=>{
