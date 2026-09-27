@@ -118,12 +118,14 @@ test('an episode no catalog can find is swapped for a real catalog episode, with
  assert.equal(h.calls.length,3);assert.match(h.calls[1].prompt,/The River Is Running Dry/);
  assert.match(h.calls[2].prompt,/The River Is Running Dry/);assert.doesNotMatch(h.calls[2].prompt,/7 States/);
 });
-test('when works stay unfindable the build fails cleanly and nothing is saved',async()=>{
+test('a work still unfindable after the last attempt ships with a search link instead of failing',async()=>{
  const h=await harness({unfindable:['DamNation']});const lookup=await h.pick();
- h.outputs.push(proposal,proposal,proposal);
+ h.outputs.push(proposal,proposal,proposal,proposal,writer);
  const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));
- assert.ok(ev.some(e=>e.type==='error'&&/catalog/.test(e.error)));assert.ok(!ev.some(e=>e.type==='result'));
- const row=h.sql.prepare('SELECT result,status FROM corner_draft WHERE id=?').get(lookup.id);assert.equal(row.result,null);assert.equal(row.status,'ready');
+ const topic=ev.find(e=>e.type==='result')?.topic;assert.ok(topic,JSON.stringify(ev.filter(e=>e.type!=='heartbeat')));
+ assert.equal(topic.works[1].title,'DamNation');assert.match(topic.works[1].url,/^https:\/\/www\.google\.com\/search\?q=DamNation/);
+ assert.equal(topic.works[2].url,'https://catalog.test/'+encodeURIComponent('7 States, 1 River and an Agonizing Choice'));
+ assert.equal(h.calls.length,5);
 });
 test('the writer cannot relabel a work: identities come from the confirmed work and the catalogs',async()=>{
  const h=await harness();const lookup=await h.pick();
@@ -132,12 +134,20 @@ test('the writer cannot relabel a work: identities come from the confirmed work 
  const topic=(await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})))).find(e=>e.type==='result')?.topic;
  assert.equal(topic.works[0].creator,seed.creator);assert.equal(topic.works[1].title,'DamNation');
 });
-test('a research limitation is surfaced without persisting a fabricated triangle',async()=>{
+test('needs-more-research is answered with another attempt, not shown to the visitor',async()=>{
  const h=await harness();const lookup=await h.pick();
- h.outputs.push({status:'needs_more_research',reason:'I could not verify an episode that adds a distinct perspective.'});
+ h.outputs.push({status:'needs_more_research',reason:'I could not verify an episode.'},proposal,writer);
+ const topic=(await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})))).find(e=>e.type==='result')?.topic;
+ assert.ok(topic);assert.match(h.calls[1].prompt,/YOU MUST CHOOSE/);
+});
+test('a limitation reaches the visitor only after every attempt and one rerun, and nothing is saved',async()=>{
+ const h=await harness();const lookup=await h.pick();
+ const no={status:'needs_more_research',reason:'I could not verify an episode that adds a distinct perspective.'};
+ h.outputs.push(no,no,no,no,no,no,no,no);
  const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));
  assert.ok(ev.some(e=>e.type==='error'&&e.error.includes('verify an episode')));assert.ok(!ev.some(e=>e.type==='result'));
- assert.equal(h.sql.prepare('SELECT result FROM corner_draft WHERE id=?').get(lookup.id).result,null);
+ assert.ok(ev.some(e=>e.type==='status'&&/another path/.test(e.text)));
+ assert.equal(h.sql.prepare('SELECT result FROM corner_draft WHERE id=?').get(lookup.id).result,null);assert.equal(h.calls.length,8);
 });
 test('quotes for a work are searched once and then served from the cache',async()=>{
  const h=await harness();const lookup=await h.pick();
