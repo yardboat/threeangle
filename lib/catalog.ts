@@ -52,7 +52,11 @@ const fits=(q:WorkQuery,c:Candidate,min=.75)=>titleFit(q.title,c.title)>=min&&cr
 const yearOf=(s?:string)=>(s||'').match(/\b(1[5-9]\d\d|20\d\d)\b/)?.[1]||'';
 const clip=(s:string,n=700)=>{const t=s.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).replace(/\s+\S*$/,'')+'…':t};
 const https=(u?:string)=>u?u.replace(/^http:\/\//,'https://'):undefined;
-export const formatOf=(f:string):Format|null=>{const x=f.toLowerCase();return x.includes('album')||x.includes('record')?'Album':x.includes('podcast')?'Podcast episode':x.includes('documentary')?'Documentary':x.includes('article')||x.includes('essay')?'Article':x.includes('book')||x.includes('novel')||x.includes('memoir')?'Book':x.includes('movie')||x.includes('film')?'Movie':x.includes('series')||x.includes('show')||x.includes('tv')?'Show':null};
+export const formatOf=(f:string):Format|null=>{const x=f.toLowerCase();
+ if(/album|record/.test(x))return 'Album';if(x.includes('podcast'))return 'Podcast episode';
+ if(/\b(tv|television)\b|series|show|miniseries/.test(x))return 'Show';if(x.includes('documentary'))return 'Documentary';
+ if(/book|novel|memoir|collection|oral history|biography|nonfiction|non-fiction/.test(x))return 'Book';
+ if(/article|essay|story|feature|reporting/.test(x))return 'Article';if(/movie|film/.test(x))return 'Movie';return null};
 const screen=(f:Format)=>f==='Movie'||f==='Documentary'?'film':f;
 
 // ---------- Open Library ----------

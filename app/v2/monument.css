@@ -281,9 +281,13 @@
 
 /* 11 ─ Look around & motion ──────────────────────────────────────── */
 /* Content arrives once the camera is under way into the new room. */
-.hall-enter>*{animation:hall-arrive 1.3s var(--ease) .55s both}
-.hall-enter>*:nth-child(2){animation-delay:.68s}.hall-enter>*:nth-child(3){animation-delay:.8s}.hall-enter>*:nth-child(4){animation-delay:.92s}.hall-enter>*:nth-child(n+5){animation-delay:1.04s}
+/* The first words arrive almost at once (they are the largest paint); the rest follow in order. */
+.hall-enter>*{animation:hall-arrive 1.3s var(--ease) .1s both}
+.hall-enter>*:nth-child(2){animation-delay:.2s}.hall-enter>*:nth-child(3){animation-delay:.32s}.hall-enter>*:nth-child(4){animation-delay:.44s}.hall-enter>*:nth-child(n+5){animation-delay:.56s}
 @keyframes hall-arrive{from{opacity:0;transform:translateY(22px);filter:blur(6px)}}
+/* The headline block arrives as a focus pull rather than a fade, so it is on screen from its first frame. */
+.hall-enter>.hall-welcome-copy,.hall-enter>.hall-screen-head{animation-name:hall-focus}
+@keyframes hall-focus{from{transform:translateY(18px);filter:blur(9px)}}
 .hall-dark .hall-enter>*{animation-delay:1s}.hall-dark .hall-enter>*:nth-child(2){animation-delay:1.12s}.hall-dark .hall-enter>*:nth-child(3){animation-delay:1.24s}.hall-dark .hall-enter>*:nth-child(n+4){animation-delay:1.36s}
 /* Opacity only: keep filters off the main column. */
 .hall-main,.hall-footer{transition:opacity .8s var(--ease)}

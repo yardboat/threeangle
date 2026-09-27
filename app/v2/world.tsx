@@ -53,6 +53,9 @@ const moods:Record<Room,Mood>={
 // Rooms that share a painting are seen from a different place in it (dolly) and at a different hour (mood).
 const ROOM_SCENE:Record<Room,Scene>={arrival:'arrival',reading:'reading',study:'reading',gallery:'gallery',maproom:'maproom',frames:'frames',stairs:'stairs',rotunda:'rotunda'};
 const sceneOf=(r:Room):Scene=>ROOM_SCENE[r];
+// The order a visitor walks through the rooms. Only the room in view and the next two on the walk are fetched.
+const JOURNEY:Scene[]=['arrival','reading','gallery','maproom','stairs','frames','rotunda'];
+const ahead=(s:Scene)=>{const i=JOURNEY.indexOf(s);return [JOURNEY[i+1],JOURNEY[i+2],s==='reading'?'maproom':undefined].filter(Boolean) as Scene[]};
 
 // A tiny shared channel so the reveal can move the room (the camera orbits a little as the table turns,
 // and the oculus light gathers when the apex is open) without re-rendering React.
@@ -179,8 +182,10 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    // Room changes: walk forward into the next scene, and move the light of day with it.
    if(target.current!==shownRoom){
     const next=sceneOf(target.current);
-    if(tex[next]){from=to;to=next;mix=0;if(!calm)nextClip();}
-    moodFrom={...mood};moodTo=moods[target.current];moodT=0;shownRoom=target.current;
+    // The walk starts once the next room's painting is ready; until then the current room holds.
+    if(tex[next]||next===to){if(next!==to){from=to;to=next;mix=0;if(!calm)nextClip();}
+     moodFrom={...mood};moodTo=moods[target.current];moodT=0;shownRoom=target.current;fetchAhead(next);}
+    else fetchScene(next);
    }
    mix=calm?1:Math.min(1,mix+dt/2.8);moodT=calm?1:Math.min(1,moodT+dt/1.7);
    const e=ease(moodT);(Object.keys(mood) as (keyof Mood)[]).forEach(k=>{mood[k]=moodFrom[k]+(moodTo[k]-moodFrom[k])*e;});
@@ -224,23 +229,30 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
   const tiltDevice=(e:DeviceOrientationEvent)=>{if(flags.current.still||e.gamma==null||e.beta==null)return;cam.tx=Math.max(-1,Math.min(1,e.gamma/22));cam.ty=Math.max(-1,Math.min(1,(e.beta-45)/30));kick();};
   const visible=()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;}else{last=0;kick();}};
   const ro=new ResizeObserver(()=>{resize();kick();});ro.observe(el);resize();
-  // Load the current room first so the canvas can take over quickly, then the rest of the journey.
-  const order=[sceneOf(target.current),...(Object.keys(scenes) as Scene[]).filter(s=>s!==sceneOf(target.current))];
-  (async()=>{
-   for(const s of order){
-    try{const [c,d]=await Promise.all([load(scenes[s].image.src),load(scenes[s].depth.src)]);if(dead)return;
-     tex[s]={col:texture(c),dep:texture(d),size:[c.naturalWidth,c.naturalHeight],pos:scenes[s].pos};
-     if(s===order[0]){from=to=s;setLive(true);kick();}
-    }catch{/* keep the still fallback */}
-   }
-  })();
+  // Load the current room first so the canvas can take over quickly, then only the next rooms on the walk.
+  const fetching=new Set<Scene>();
+  function fetchScene(s:Scene){
+   if(tex[s]||fetching.has(s))return;fetching.add(s);
+   void Promise.all([load(scenes[s].image.src),load(scenes[s].depth.src)]).then(([c,d])=>{if(dead)return;
+    tex[s]={col:texture(c),dep:texture(d),size:[c.naturalWidth,c.naturalHeight],pos:scenes[s].pos};
+    if(!live0){live0=true;from=to=s;setLive(true);fetchAhead(s);}
+    kick();
+   }).catch(()=>{fetching.delete(s);/* keep the still fallback */});
+  }
+  function fetchAhead(s:Scene){const go=()=>ahead(s).forEach(fetchScene);if('requestIdleCallback' in window)window.requestIdleCallback(go,{timeout:4000});else setTimeout(go,1500);}
+  let live0=false;
+  fetchScene(sceneOf(target.current));
   window.addEventListener('pointermove',move,{passive:true});window.addEventListener('blur',reset);document.documentElement.addEventListener('pointerleave',reset);window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('deviceorientation',tiltDevice);document.addEventListener('visibilitychange',visible);
   const poke=setInterval(()=>{if(target.current!==shownRoom||worldSignal.orbit!==orbit||worldSignal.beam!==beam)kick();},120);
   return()=>{dead=true;cancelAnimationFrame(frame);clearInterval(poke);if(vid){vid.pause();vid.removeAttribute('src');vid.load();}ro.disconnect();window.removeEventListener('pointermove',move);window.removeEventListener('blur',reset);document.documentElement.removeEventListener('pointerleave',reset);window.removeEventListener('scroll',scroll);window.removeEventListener('deviceorientation',tiltDevice);document.removeEventListener('visibilitychange',visible);gl.getExtension('WEBGL_lose_context')?.loseContext();};
  },[]);
  const active=sceneOf(room);
+ // Still plates (before WebGL takes over, or without it): only rooms that have been in view are rendered,
+ // so the first paint fetches one painting, at high priority, not seven.
+ const [shown,setShown]=useState<Scene[]>(()=>[active]);
+ if(!shown.includes(active))setShown([...shown,active]);
  return <div className="hall-environment" data-room={room} data-live={live||undefined} aria-hidden="true">
-  <div className="hall-plates">{(Object.keys(scenes) as Scene[]).map(s=><div key={s} className="hall-plate" data-active={s===active} data-scene={s}><Image src={scenes[s].image} alt="" fill priority={s==='arrival'} sizes="100vw" placeholder="blur" quality={85} style={{objectPosition:`${scenes[s].pos[0]*100}% ${scenes[s].pos[1]*100}%`}}/></div>)}</div>
+  <div className="hall-plates">{shown.map(s=><div key={s} className="hall-plate" data-active={s===active} data-scene={s}><Image src={scenes[s].image} alt="" fill priority={s===shown[0]} sizes="100vw" placeholder="blur" quality={85} style={{objectPosition:`${scenes[s].pos[0]*100}% ${scenes[s].pos[1]*100}%`}}/></div>)}</div>
   <canvas ref={canvas} className="hall-canvas"/>
   <div className="hall-atmos"/>
  </div>;
