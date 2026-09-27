@@ -12,6 +12,6 @@ export function Invitation({still}:{still:boolean}){
  return <div className="hall-invitation">
   <Figure variant="hero" labels={[...MODES]} view={angle===null?null:{turn:angle*120,el:22}} idle still={still} label="A threeangle: read, watch and listen"/>
   <div className="hall-invitation-angles" role="group" aria-label="The three angles">{MODES.map((label,i)=><button key={label} aria-pressed={angle===i} onPointerEnter={e=>{if(e.pointerType==='mouse')setAngle(i);}} onFocus={()=>setAngle(i)} onClick={()=>setAngle(i)}>{label}</button>)}</div>
-  <p aria-live="polite">{angle===null?'Fig. I — three ways into one idea.':words[angle]}</p>
+  <p aria-live="polite">{angle===null?'':words[angle]}</p>
  </div>;
 }

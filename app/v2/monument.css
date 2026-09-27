@@ -502,3 +502,5 @@
  .rw-cover-inline{box-shadow:0 26px 30px -16px rgba(0,0,0,.85)}
 }
 .rw-why-text,.rw-title,.rw-by,.rw-work-head .hall-kicker{text-shadow:0 2px 24px rgba(8,6,4,.75),0 0 2px rgba(8,6,4,.5)}
+.rw-story{margin-top:3vh;gap:14px}.rw-story svg{flex:none}
+.rw-down{margin-top:18px}

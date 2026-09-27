@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
-import {ArrowRight,ArrowUpRight,ArrowLeft,Bookmark,Check,Plus,X,Pause,Play,RotateCcw,Share2} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,ArrowLeft,Bookmark,Check,Plus,X,RotateCcw,Share2} from 'lucide-react';
 import type {Lookup} from '@/lib/corner-schema';
 import {FORMATS} from '@/lib/formats';
 import {topics,type Topic} from '@/lib/stories';
@@ -11,7 +11,7 @@ import {Figure} from './figure';
 import {Reveal} from './reveal';
 import {Cover} from './cover';
 import {WrittenQuotes,type Quote} from './quotes';
-import {HallWorld,roomNames,type Room} from './world';
+import {HallWorld,type Room} from './world';
 
 // While the library works it walks: a new room every few seconds, repeating as needed.
 const WAIT_ROOMS:Room[]=['gallery','maproom','frames','stairs'];
@@ -291,7 +291,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   <a className="hall-skip" href="#hall-main">Skip to content</a>
   <HallWorld room={room} still={still} looking={false} film={stage==='thinking'}/>
   <header className="hall-header">
-   <div className="hall-header-side">{stage!=='welcome'&&<button className="hall-nav hall-back" onClick={goBack}><ArrowLeft size={15}/><span>Back</span></button>}<span className="hall-room-name">{roomNames[room]}</span></div>
+   <div className="hall-header-side">{stage!=='welcome'&&<button className="hall-nav hall-back" onClick={goBack}><ArrowLeft size={15}/><span>Back</span></button>}</div>
    <button className="hall-brand" onClick={goHome} aria-label="threeangle home" disabled={busy}><LiveMark still={still}/><span>threeangle</span></button>
    <div className="hall-header-side hall-header-end">{stage!=='welcome'&&<button className="hall-nav hall-saved-nav" disabled={busy} onClick={()=>{shelf.current?.showModal();void loadShelf();}}><span>Saved</span><span className="hall-save-count">{saved.length.toString().padStart(2,'0')}</span></button>}</div>
   </header>
@@ -301,17 +301,16 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
     <div className="hall-welcome-copy">
      <p className="hall-lead">When you read, listen and watch around the same idea,</p>
      <h1 className="hall-mega">It all glows<br/>brighter.</h1>
-     <p className="hall-sub">One thing you love. Two things to discover.<br/>A connection you didn’t see coming.</p>
-     <div className="hall-actions"><button className="hall-cta" onClick={startInput}>Pick your starting point <ArrowRight size={17}/></button><Link className="hall-quiet" href="/collection?browse=1" prefetch={false}>Or wander through our threeangle ideas <ArrowUpRight size={13}/></Link></div>
+     <div className="hall-actions"><button className="hall-cta" onClick={startInput}>Pick your starting point <ArrowRight size={17}/></button><Link className="hall-quiet" href="/collection?browse=1" prefetch={false}>Browse by topic <ArrowUpRight size={13}/></Link></div>
     </div>
    </section>}
    {stage==='input'&&<section className={`hall-input hall-enter ${seed?'hall-confirm':'hall-find'}`} key={seed?'confirm':'find'}>
     {!seed?<header className="hall-screen-head"><h1 className="hall-mega hall-mega-m">What’s a work<br/>you love?</h1><p className="hall-sub">Start with an article, book, movie, podcast, TV show or album.</p></header>
-     :<header className="hall-screen-head hall-confirm-head"><p className="hall-kicker">Your starting point <span>·</span> {seed.format} · {seed.year}</p><h1 className={`hall-confirm-title ${seed.title.length>40?'is-long':seed.title.length>22?'is-mid':''}`}>{seed.title}</h1><p className="hall-match-creator">{seed.creator}</p></header>}
+     :<header className="hall-screen-head hall-confirm-head"><h1 className={`hall-confirm-title ${seed.title.length>40?'is-long':seed.title.length>22?'is-mid':''}`}>{seed.title}</h1><p className="hall-match-creator">{seed.creator}</p></header>}
     {restoring?<p role="status" className="hall-center-note">Opening your connection…</p>:<div className="hall-desk">
-     {!seed?<><form onSubmit={e=>void submitTitle(e)} className="hall-find-form" role="search"><label htmlFor="hall-title">Title</label><div className="hall-title-field"><input ref={titleInput} id="hall-title" value={title} onChange={e=>{setTitle(e.target.value);setListOpen(true);}} onFocus={()=>setListOpen(true)} onBlur={()=>setListOpen(false)} onKeyDown={onTitleKey} placeholder="Type a title" maxLength={240} required minLength={2} disabled={busy} autoComplete="off" role="combobox" aria-autocomplete="list" aria-expanded={listOpen&&shown.length>0} aria-controls="hall-suggest" aria-activedescendant={active>=0?`hall-suggest-${active}`:undefined}/><button type="submit" aria-label="Find my title" disabled={busy||ready!==true||typed.length<2}><ArrowRight size={24}/></button></div>
+     {!seed?<><form onSubmit={e=>void submitTitle(e)} className="hall-find-form" role="search"><label htmlFor="hall-title" className="hall-sr">Title</label><div className="hall-title-field"><input ref={titleInput} id="hall-title" value={title} onChange={e=>{setTitle(e.target.value);setListOpen(true);}} onFocus={()=>setListOpen(true)} onBlur={()=>setListOpen(false)} onKeyDown={onTitleKey} placeholder="Type a title" maxLength={240} required minLength={2} disabled={busy} autoComplete="off" role="combobox" aria-autocomplete="list" aria-expanded={listOpen&&shown.length>0} aria-controls="hall-suggest" aria-activedescendant={active>=0?`hall-suggest-${active}`:undefined}/><button type="submit" aria-label="Find my title" disabled={busy||ready!==true||typed.length<2}><ArrowRight size={24}/></button></div>
       {listOpen&&!busy&&shown.length>0&&<ul id="hall-suggest" role="listbox" aria-label="Works that match" className={`hall-suggest ${suggest.loading?'is-loading':''}`}>{shown.map((c,i)=><li key={c.token} id={`hall-suggest-${i}`} role="option" aria-selected={i===active} className={i===active?'is-active':''} onMouseDown={e=>e.preventDefault()} onMouseEnter={()=>setActive(i)} onClick={()=>void pickCandidate(c)}><Cover work={c} size="xs"/><span className="hall-suggest-text"><span className="hall-suggest-title">{c.title}</span><span className="hall-suggest-meta">{[c.creator,c.format,c.year].filter(Boolean).join(' · ')}</span></span><ArrowRight size={15} aria-hidden="true"/></li>)}</ul>}
-      <div className="hall-input-meta"><span>{typed.length>=2&&suggest.q===typed&&!suggest.loading&&!shown.length?'Nothing in the catalogs yet. Press enter and we’ll search further.':'For a podcast, use the episode title.'}</span><span>01 / 02</span></div></form>
+      {typed.length>=2&&suggest.q===typed&&!suggest.loading&&!shown.length&&<div className="hall-input-meta"><span>Nothing in the catalogs yet. Press enter and we’ll search further.</span></div>}</form>
       {busy&&<div className="hall-lookup-status" role="status"><span className="hall-pulse" aria-hidden="true"/> {busyText} <button className="hall-quiet" onClick={cancelLookup}>Cancel</button></div>}
       {!busy&&(matches.length>0||clarify||(suggest.q===typed&&typed.length>=2&&!suggest.loading))&&<div className="hall-matches">{matches.length>0&&<><h2 className="hall-kicker">{matches.length>1?'Which one stayed with you?':'Is this the one?'}</h2><ol>{matches.map((m,i)=><li key={m.title+i}><button onClick={()=>choose(i)}><Cover work={m} size="s" className="hall-match-cover"/><span className="hall-kicker">{m.format} · {m.year}</span><span className="hall-match-title">{m.title}</span><span className="hall-match-creator">{m.creator}</span><span className="hall-match-description">{m.description.length>220?m.description.slice(0,217).replace(/\s+\S*$/,'')+'…':m.description}</span><span className="hall-match-action">This is the one <ArrowRight size={16}/></span></button></li>)}</ol></>}
        <div className="hall-notit">{!refine.open?<button className="hall-quiet" onClick={()=>{setListOpen(false);setRefine(r=>({...r,open:true}));}}>{matches.length>0||shown.length>0?'None of these? Help us find it.':'Help us find it.'} <Plus size={14}/></button>
@@ -334,7 +333,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
       <form className="hall-love" onSubmit={e=>{e.preventDefault();void generate();}}>
        <label htmlFor="hall-interest" className="hall-love-q">What did you love about it?</label>
        <textarea id="hall-interest" value={interest} maxLength={600} onChange={e=>setInterest(e.target.value)} placeholder="A character, a question, a feeling you can’t shake…" rows={3} autoFocus/>
-       <div className="hall-input-meta"><span>{interest.trim()?'This shapes the whole triangle.':'This is what the search is built around. Skip it and we’ll choose the angle.'}</span><span>02 / 02</span></div>
+
        <button className="hall-cta hall-build" disabled={busy||ready!==true}>Build my threeangle <ArrowRight size={17}/></button>
       </form>
      </div>}
@@ -356,7 +355,6 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    </section>}
   </main>
   {notice&&<div className="hall-toast" role="status">{notice}<button aria-label="Dismiss notification" onClick={()=>setNotice('')}><X size={15}/></button></div>}
-  <footer className="hall-footer"><span>Read. Listen. Watch. Connect.</span><button className="hall-motion" onClick={()=>setPaused(p=>!p)} aria-pressed={still} disabled={reduced}>{still?<Play size={11}/>:<Pause size={11}/>} {reduced?'Reduced motion':paused?'Resume motion':'Pause motion'}</button><span>threeangle · Stay curious.</span></footer>
   <dialog ref={shelf} className="hall-shelf" aria-labelledby="hall-shelf-title" onClick={e=>{if(e.target===e.currentTarget)shelf.current?.close();}}><div className="hall-shelf-inner"><header><span className="hall-kicker">Your personal collection</span><button onClick={()=>shelf.current?.close()} aria-label="Close saved connections"><X size={22}/></button></header><h2 id="hall-shelf-title" className="hall-mega hall-mega-s">Good things,<br/>kept close.</h2><p className="hall-sub">The connections you want to come back to.</p>{shelfLoading?<p role="status">Opening your collection…</p>:shelfError?<div className="hall-alert"><p role="alert">{shelfError}</p><button className="hall-quiet" onClick={()=>void loadShelf()}>Try again</button></div>:saved.length===0?<div className="hall-shelf-empty"><span className="hall-shelf-mark"><HallMark/></span><p>When something stays with you,<br/>keep the whole triangle here.</p><button className="hall-cta hall-cta-light" onClick={()=>{shelf.current?.close();startInput();}}>Find your first connection <ArrowRight size={16}/></button></div>:<ol className="hall-saved-list">{saved.map(item=>{const t=item.topic||topics.find(t=>t.id===item.topicId);return t?<li key={item.topicId}><button onClick={()=>{shelf.current?.close();revisit(t);}}><span className="hall-kicker">{t.seedTitle?'Your connection':'Curated threeangle'}</span><span className="hall-saved-name">{t.name}</span><span className="hall-saved-works">{t.works.map(w=>w.title).slice(0,3).join(' · ')}</span><ArrowUpRight size={18}/></button></li>:null;})}</ol>}<p className="hall-shelf-foot">Saved for this browser. Clearing cookies removes access to your collection.</p></div></dialog>
  </div>;
 }

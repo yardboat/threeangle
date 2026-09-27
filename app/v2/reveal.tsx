@@ -1,6 +1,6 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
-import {ArrowDown,ArrowLeft,ArrowRight,ArrowUpRight} from 'lucide-react';
+import {ArrowDown,ArrowLeft,ArrowRight,ArrowUpRight,Share} from 'lucide-react';
 import {workUrl,type Topic,type Work} from '@/lib/stories';
 import {MODES,REST,Figure} from './figure';
 import {Cover} from './cover';
@@ -18,6 +18,25 @@ const titleSize=(n:string)=>n.length>44?'is-long':n.length>24?'is-mid':'';
 
 function WorkLink({work,children}:{work:Work;children:ReactNode}){
  return <a className="hall-quiet" href={safeUrl(workUrl(work))} target="_blank" rel="noopener noreferrer">{children} <ArrowUpRight size={14}/><span className="hall-sr"> (opens in a new tab)</span></a>;
+}
+
+// The story card (/api/card): shared straight to Instagram or anywhere through the phone's share sheet,
+// downloaded where a browser can't share files.
+function StoryButton({topic}:{topic:Topic}){
+ const [state,setState]=useState<'idle'|'making'|'saved'|'failed'>('idle');
+ const make=async()=>{
+  if(state==='making')return;setState('making');
+  try{
+   const res=await fetch('/api/card?id='+encodeURIComponent(topic.id));if(!res.ok)throw new Error('card');
+   const file=new File([await res.blob()],`threeangle-${topic.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.png`,{type:'image/png'});
+   const url=location.origin+'/?triangle='+encodeURIComponent(topic.id);
+   if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:topic.name+' · threeangle',url});}catch(e){if(!(e instanceof Error&&e.name==='AbortError'))throw e;}setState('idle');return;}
+   const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);setState('saved');
+  }catch{setState('failed');}
+ };
+ return <button className="hall-cta hall-cta-light rw-story" onClick={()=>void make()} disabled={state==='making'} aria-live="polite">
+  <Share size={16}/> {state==='making'?'Making your card…':state==='saved'?'Card saved. Add it to your story':state==='failed'?'Try that again':'Share to your story'}
+ </button>;
 }
 
 export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;onRoom:(r:Room)=>void;footer:ReactNode}){
@@ -60,7 +79,7 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
   const callout={face:i,content:<Cover work={work} size="m" className="rw-callout-cover"/>};
   return <div className="rw rw-work hall-enter" key={'w'+step}>
    <header className="rw-work-head">
-    <p className="hall-kicker"><span className="rw-count">{String(step).padStart(2,'0')} / 03</span> <b>{letters[i]}</b> {MODES[i]} · {work.format}</p>
+    <p className="hall-kicker">{MODES[i]} · {work.format}</p>
     <Cover work={work} size="m" className="rw-cover-inline"/>
     <h1 className={`rw-title ${titleSize(work.title)}`}>{work.title}</h1>
     <p className="rw-by">{work.creator}</p>
@@ -89,8 +108,9 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
    <div className="rw-constellation">
     <div className="rv-shaft" aria-hidden="true"/>
     <Figure faces={faces} view={REST} idle still={still} lit={{corners:new Set([0,1,2]),sides:new Set([0,1,2])}} orbitWorld label={`Your threeangle: ${main.map((w,i)=>`${MODES[i]}, ${w.title}`).join('; ')}`}/>
-    {main.map((w,i)=><a key={i} className={`rw-orbit rw-orbit-${letters[i]}`} href={`#rw-work-${i}`}><Cover work={w} size="m"/><span className="hall-kicker"><b>{letters[i]}</b> {MODES[i]}</span><span className="rw-orbit-title">{w.title}</span></a>)}
+    {main.map((w,i)=><a key={i} className={`rw-orbit rw-orbit-${letters[i]}`} href={`#rw-work-${i}`}><Cover work={w} size="m"/><span className="hall-kicker">{MODES[i]}</span><span className="rw-orbit-title">{w.title}</span></a>)}
    </div>
+   <StoryButton topic={topic}/>
    <button className="hall-quiet rw-down" onClick={()=>document.getElementById('rw-together')?.scrollIntoView({behavior:still?'instant':'smooth'})}>How they connect <ArrowDown size={14}/></button>
   </div>
   <section id="rw-together" className="rw-together">
@@ -100,7 +120,7 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
    <ol className="rw-works">{main.map((w,i)=><li key={i} id={`rw-work-${i}`}>
     <Cover work={w} size="s"/>
     <div>
-     <p className="hall-kicker"><b>{letters[i]}</b> {MODES[i]} · {w.format}</p>
+     <p className="hall-kicker">{MODES[i]} · {w.format}</p>
      <h3>{w.title}</h3>
      <p className="rw-by">{w.creator}</p>
      <p className="rw-works-why">{topic.answers?.[i]||w.pitch}</p>
