@@ -164,10 +164,12 @@ async function musicBrainz(q:WorkQuery):Promise<Candidate[]>{
 
 // ---------- Spotify (podcast episodes; SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET, client-credentials only) ----------
 let spotifyToken:{value:string;until:number}|null=null;
-export const hasSpotify=()=>Boolean(process.env.SPOTIFY_CLIENT_ID&&process.env.SPOTIFY_CLIENT_SECRET);
+// Variable names are matched without regard to case (Spotify_CLIENT_SECRET works too).
+const envAny=(name:string)=>(process.env[name]??process.env[Object.keys(process.env).find(k=>k.toUpperCase()===name)||'']??'').trim();
+export const hasSpotify=()=>Boolean(envAny('SPOTIFY_CLIENT_ID')&&envAny('SPOTIFY_CLIENT_SECRET'));
 async function spotifyAuth(){
  if(!hasSpotify())return null;if(spotifyToken&&spotifyToken.until>Date.now()+60000)return spotifyToken.value;
- try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',signal:AbortSignal.timeout(3000),headers:{'content-type':'application/x-www-form-urlencoded',authorization:'Basic '+Buffer.from(process.env.SPOTIFY_CLIENT_ID+':'+process.env.SPOTIFY_CLIENT_SECRET).toString('base64')},body:'grant_type=client_credentials'});
+ try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',signal:AbortSignal.timeout(3000),headers:{'content-type':'application/x-www-form-urlencoded',authorization:'Basic '+Buffer.from(envAny('SPOTIFY_CLIENT_ID')+':'+envAny('SPOTIFY_CLIENT_SECRET')).toString('base64')},body:'grant_type=client_credentials'});
   if(!r.ok)return null;const d=await r.json() as {access_token:string;expires_in:number};spotifyToken={value:d.access_token,until:Date.now()+d.expires_in*1000};return d.access_token;}catch{return null}
 }
 type SpEpisode={id:string;name:string;description?:string;release_date?:string;images?:{url:string;width?:number}[];external_urls?:{spotify?:string};show?:{name:string;publisher?:string;images?:{url:string}[]}};

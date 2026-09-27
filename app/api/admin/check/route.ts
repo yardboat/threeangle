@@ -1,7 +1,7 @@
 import {timingSafeEqual} from 'node:crypto';
 import {after} from 'next/server';
 import {runArtCheck,runSearchCheck} from '@/lib/art-cases';
-import {hasTmdb} from '@/lib/catalog';
+import {hasSpotify,hasTmdb} from '@/lib/catalog';
 import {curatedFills} from '@/lib/backfill';
 import {crateDb} from '@/db/crate';
 import {describe,searchCatalog} from '@/lib/catalog';
@@ -24,7 +24,7 @@ export async function GET(request:Request){
  // A build outlives most HTTP clients: it runs after the response and its result lands in suite=runs (status 'selftest').
  if(suite==='build'){const title=q.get('q')||'',interest=q.get('i')||'';after(async()=>{const r=await selfBuild(title,interest);try{await crateDb().prepare('INSERT INTO generation_call (id,model,created_at,status,response) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),'selftest',Date.now(),'selftest',JSON.stringify({title,...r})).run()}catch{}});return Response.json({suite,started:true,title},{headers:{'Cache-Control':'no-store'}});}
  const data=suite==='runs'?(await crateDb().prepare('SELECT created_at,model,status,response FROM generation_call ORDER BY created_at DESC LIMIT ?').bind(Math.min(30,Number(q.get('n'))||10)).all()).results.map(r=>({...r,response:JSON.parse(String(r.response||'null'))})):suite==='search'?await runSearchCheck(q.get('q')?[q.get('q')!.slice(0,200)]:undefined):suite==='backfill'?await curatedFills():await runArtCheck();
- return Response.json({suite,ms:Date.now()-started,tmdb:hasTmdb(),data},{headers:{'Cache-Control':'no-store'}});
+ return Response.json({suite,ms:Date.now()-started,tmdb:hasTmdb(),spotify:hasSpotify(),data},{headers:{'Cache-Control':'no-store'}});
 }
 
 async function selfBuild(title:string,interest:string){
