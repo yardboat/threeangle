@@ -3,7 +3,6 @@ import {notableQuotes,isAgentReady} from '@/lib/agent';
 import {sessionIdentity} from '@/lib/session';
 import {crateDb} from '@/db/crate';
 import type {Lookup} from '@/lib/corner-schema';
-import {quota} from '@/lib/quota';
 import {overLimit,tooMany} from '@/lib/limit';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -23,7 +22,6 @@ export async function POST(request:Request){
   const row=await crateDb().prepare('SELECT lookup FROM corner_draft WHERE id=? AND user_id=?').bind(parsed.data.id,user).first<{lookup:string}>();
   const seed=row?(JSON.parse(row.lookup) as Lookup).matches[parsed.data.choice]:null;
   if(!seed)return reply({quotes:[]},404);
-  await quota(user,'quotes',20);
   return reply({quotes:await notableQuotes(seed)});
  }catch{return reply({quotes:[]})}
 }

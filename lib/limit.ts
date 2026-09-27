@@ -1,5 +1,5 @@
 // A basic per-address rate limit, per server instance. It stops a runaway client, not a determined one;
-// the daily quota in the corner route (QUOTA_ENFORCED=1) is the real ceiling on model spend.
+// the rate limits here and the per-browser draft lock are the only ceilings on model spend (no daily quota).
 const hits=new Map<string,number[]>();
 export function clientAddress(request:Request){return (request.headers.get('x-forwarded-for')||'').split(',')[0].trim()||request.headers.get('x-real-ip')||'unknown'}
 export function overLimit(request:Request,bucket:string,max:number,windowMs=60000){

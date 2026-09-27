@@ -128,11 +128,6 @@ test('a research limitation is surfaced without persisting a fabricated triangle
  assert.ok(ev.some(e=>e.type==='error'&&e.error.includes('verify an episode')));assert.ok(!ev.some(e=>e.type==='result'));
  assert.equal(h.sql.prepare('SELECT result FROM corner_draft WHERE id=?').get(lookup.id).result,null);
 });
-test('the daily quota is atomic and stops before another model call',async()=>{
- const h=await harness({env:{QUOTA_ENFORCED:'1'}});const day=new Date().toISOString().slice(0,10);
- h.sql.prepare('INSERT INTO corner_usage(scope,count) VALUES (?,?)').run(`lookup:alice:${day}`,10);
- assert.equal((await h.api.POST(h.request({action:'lookup',title:'Another book'}))).status,429);assert.equal(h.calls.length,0);
-});
 test('quotes for a work are searched once and then served from the cache',async()=>{
  const h=await harness();const lookup=await h.pick();
  h.outputs.push({quotes:[]});

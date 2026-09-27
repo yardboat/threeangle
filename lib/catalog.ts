@@ -159,6 +159,25 @@ async function musicBrainz(q:WorkQuery):Promise<Candidate[]>{
  return (d?.['release-groups']||[]).map(g=>({title:g.title,creator:(g['artist-credit']||[]).map(a=>a.name).join(' & '),format:'Album' as const,year:yearOf(g['first-release-date']),description:'',url:`https://musicbrainz.org/release-group/${g.id}`,image:`https://coverartarchive.org/release-group/${g.id}/front-500`,from:'musicbrainz'}));
 }
 
+// ---------- Spotify (podcast episodes; SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET, client-credentials only) ----------
+let spotifyToken:{value:string;until:number}|null=null;
+export const hasSpotify=()=>Boolean(process.env.SPOTIFY_CLIENT_ID&&process.env.SPOTIFY_CLIENT_SECRET);
+async function spotifyAuth(){
+ if(!hasSpotify())return null;if(spotifyToken&&spotifyToken.until>Date.now()+60000)return spotifyToken.value;
+ try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',signal:AbortSignal.timeout(3000),headers:{'content-type':'application/x-www-form-urlencoded',authorization:'Basic '+Buffer.from(process.env.SPOTIFY_CLIENT_ID+':'+process.env.SPOTIFY_CLIENT_SECRET).toString('base64')},body:'grant_type=client_credentials'});
+  if(!r.ok)return null;const d=await r.json() as {access_token:string;expires_in:number};spotifyToken={value:d.access_token,until:Date.now()+d.expires_in*1000};return d.access_token;}catch{return null}
+}
+type SpEpisode={id:string;name:string;description?:string;release_date?:string;images?:{url:string;width?:number}[];external_urls?:{spotify?:string};show?:{name:string;publisher?:string;images?:{url:string}[]}};
+// Search results leave out the show, so the top hits are read back in one batch call that includes it.
+async function spotifyEpisodes(term:string,timeout=3000):Promise<Candidate[]>{
+ const token=await spotifyAuth();if(!token)return [];
+ const headers={authorization:'Bearer '+token};
+ const found=await getJson<{episodes?:{items?:(SpEpisode|null)[]}}>('https://api.spotify.com/v1/search?'+new URLSearchParams({q:term.slice(0,200),type:'episode',market:'US',limit:'8'}),{timeout,headers});
+ const ids=(found?.episodes?.items||[]).filter((x):x is SpEpisode=>Boolean(x?.id)).map(x=>x.id);if(!ids.length)return [];
+ const full=await getJson<{episodes?:(SpEpisode|null)[]}>('https://api.spotify.com/v1/episodes?'+new URLSearchParams({ids:ids.join(','),market:'US'}),{timeout,headers});
+ return (full?.episodes||[]).filter((e):e is SpEpisode=>Boolean(e?.name&&e.show)).map((e,i)=>({title:e.name,creator:e.show!.name,alt:[e.show!.publisher||''],format:'Podcast episode' as const,year:yearOf(e.release_date),description:clip(e.description||''),url:e.external_urls?.spotify||`https://open.spotify.com/episode/${e.id}`,image:(e.images?.[0]||e.show!.images?.[0])?.url,from:'spotify',score:.28-i*.02}));
+}
+
 // ---------- podcast feeds: find an exact episode in the show's own RSS ----------
 const unwrap=(s:string)=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;|&#8217;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
 const tag=(xml:string,name:string)=>{const m=xml.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`,'i'));return m?unwrap(m[1]):''};
@@ -188,7 +207,8 @@ async function podcastIndexFeeds(show:string):Promise<{title:string;url:string;i
   const d=r.ok?await r.json() as {feeds?:{title:string;url:string;image?:string;link?:string}[]}:null;return d?.feeds||[];}catch{return []}
 }
 async function podcastEpisode(q:WorkQuery):Promise<Candidate|null>{
- const direct=[...await itunesEpisodes(`${q.title} ${q.creator||''}`.trim()),...await itunesEpisodes(q.title)];
+ const term=`${q.title} ${q.creator||''}`.trim();
+ const direct=(await Promise.all([itunesEpisodes(term),itunesEpisodes(q.title),spotifyEpisodes(term)])).flat();
  const hit=direct.find(c=>fits(q,c,.8));if(hit)return hit;
  if(!q.creator)return null;
  const shows=(await itunes(q.creator,'podcast','podcast',3000,5)).filter(s=>s.feedUrl&&overlap(q.creator!,s.collectionName||'')>=.6);
@@ -234,7 +254,7 @@ async function withArt(c:Candidate):Promise<Candidate>{
 
 // ---------- typeahead search ----------
 const merge=(a:Candidate,b:Candidate):Candidate=>({...a,creator:a.creator||b.creator,alt:[...(a.alt||[]),b.creator,...(b.alt||[])].filter(Boolean),year:a.year||b.year,description:a.description.length>=120?a.description:(b.description.length>a.description.length?b.description:a.description),image:a.image||b.image,score:Math.max(a.score||0,b.score||0)+.15});
-const PRIORITY=['tmdb','openlibrary','itunes','googlebooks','feed','musicbrainz','wikipedia','page'];
+const PRIORITY=['tmdb','openlibrary','itunes','spotify','googlebooks','feed','musicbrainz','wikipedia','page'];
 function sameWork(a:Candidate,b:Candidate){
  if(screen(a.format)!==screen(b.format)||titleFit(a.title,b.title)<.9)return false;
  if(a.year&&b.year&&Math.abs(Number(a.year)-Number(b.year))>1)return false;
@@ -247,7 +267,7 @@ export async function searchCatalog(query:string,opts:{format?:Format;limit?:num
  const tasks:Promise<Candidate[]>[]=[];
  if(want('Book'))tasks.push(openLibrary({q},1400),googleBooks(q,1500));
  if(want('film')||want('Show'))tasks.push(hasTmdb()?tmdbSearch(q,undefined,1500):Promise.all([itunesScreen(q,'movie',1500),itunesScreen(q,'tv',1500)]).then(x=>x.flat()));
- if(want('Podcast episode'))tasks.push(itunesEpisodes(q,1500));
+ if(want('Podcast episode'))tasks.push(itunesEpisodes(q,1500),spotifyEpisodes(q,1500));
  if(want('Album'))tasks.push(itunesAlbums(q,1500));
  if(!opts.format||opts.format!=='Podcast episode')tasks.push(wikipedia(q,8,1500));
  const found=(await Promise.all(tasks.map(t=>t.catch(()=>[] as Candidate[])))).flat().filter(c=>c.title&&c.url&&(!opts.format||screen(c.format)===screen(opts.format)));

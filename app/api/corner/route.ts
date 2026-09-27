@@ -2,7 +2,6 @@ import {identifyWork,buildTriangle,isAgentReady} from '@/lib/agent';
 import {sessionIdentity,ensureSession} from '@/lib/session';
 import {crateDb} from '@/db/crate';
 import {CornerError} from '@/lib/corner-error';
-import {quota} from '@/lib/quota';
 import {overLimit,tooMany} from '@/lib/limit';
 import {describe,readCandidate} from '@/lib/catalog';
 import {resultSchema,requireSource,cornerIndex,lookupHintsSchema,type Lookup} from '@/lib/corner-schema';
@@ -59,7 +58,6 @@ export async function POST(request:Request){
   const lookup={...old,id:crypto.randomUUID()};await saveDraft(lookup,user);return reply({...lookup,choice});
  }
  if(input.action==='lookup'){
-  await quota(user,'lookup',10);
   const lookup=await identifyWork(input.title,{creator:input.creator||undefined,year:input.year||undefined,format:input.format,exclude:input.exclude});
   await saveDraft(lookup,user);return reply(lookup);
  }
@@ -69,7 +67,6 @@ export async function POST(request:Request){
  const lookup=JSON.parse(row.lookup) as Lookup,seed=lookup.matches[input.choice];if(!seed)return reply({error:'Choose one of the confirmed titles.'},400);
  const lock=await db.prepare("UPDATE corner_draft SET status='generating',updated_at=? WHERE id=? AND user_id=? AND (status!='generating' OR updated_at < ?) RETURNING id").bind(Date.now(),input.id,user,Date.now()-240000).first();
  if(!lock)return reply({error:'This triangle is already being researched. Give it a moment before trying again.'},409);
- try{await quota(user,'generate',3)}catch(e){await db.prepare("UPDATE corner_draft SET status='ready' WHERE id=? AND user_id=?").bind(input.id,user).run();throw e}
  const encoder=new TextEncoder();
  const stream=new ReadableStream({async start(controller){
   let connected=true;const send=(data:unknown)=>{if(connected)try{controller.enqueue(encoder.encode(JSON.stringify(data)+'\n'))}catch{connected=false}};

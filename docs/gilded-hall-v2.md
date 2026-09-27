@@ -124,5 +124,6 @@ Checkpoint before this round: commit `53c9721` (git tags can't be pushed from th
 - **Quotes are cached per work** (`quote_cache`, 90 days; an empty answer for a day).
 - **Shareable triangles.** `/?triangle=custom-…` opens read-only for anyone with the link; unfinished drafts stay private. Keeping is per browser (anyone can keep a shared triangle). "Find another angle" from a shared link starts the visitor's own draft (`action:'reuse'`). A Share button (system share sheet or copy link) sits with Keep at the end.
 - **Speed.** Only the room in view renders as a still plate; WebGL textures load the current room and then the next two on the walk. The headline block arrives as a focus pull instead of a fade from zero, so it counts as the first large paint: throttled mobile LCP 1.6–1.9 s (was ≈2.8 s).
-- **Limits.** Per-address rate limits on search, art, img, pick and quotes (`lib/limit.ts`); the daily quota (`lib/quota.ts`, `QUOTA_ENFORCED=1`) also covers quotes.
+- **Limits.** Per-address rate limits on search, art, img, pick and quotes (`lib/limit.ts`). No daily quota (removed at Randall's request).
+- **Podcast episodes** also come from Spotify when `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set (search, then one batch read for the show names).
 
