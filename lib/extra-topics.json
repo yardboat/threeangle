@@ -12,27 +12,33 @@
         "title": "Voices from Chernobyl",
         "creator": "Svetlana Alexievich",
         "format": "Book",
-        "pitch": "An oral history that keeps returning to the people inside the disaster: their love, confusion, anger, and ordinary routines. The scale is enormous. The voices refuse to become statistics."
+        "pitch": "An oral history that keeps returning to the people inside the disaster: their love, confusion, anger, and ordinary routines. The scale is enormous. The voices refuse to become statistics.",
+        "image": "https://upload.wikimedia.org/wikipedia/en/5/5c/Voices_from_Chernobyl_The_Oral_History_of_a_Nuclear_Disaster.jpg",
+        "url": "https://en.wikipedia.org/wiki/Voices_from_Chernobyl"
       },
       {
         "title": "Chernobyl",
         "creator": "Craig Mazin · HBO",
         "format": "Limited series",
         "pitch": "The catastrophe becomes a struggle over what an institution will admit. Watch how hierarchy shapes what can be said, then return to the eyewitnesses and notice the difference between testimony and dramatization.",
-        "url": "https://www.hbo.com/chernobyl"
+        "url": "https://www.hbo.com/chernobyl",
+        "image": "https://image.tmdb.org/t/p/w500/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg"
       },
       {
         "title": "Ten Thousand Years",
         "creator": "99% Invisible · Episode 114",
         "format": "Podcast episode",
         "pitch": "How could a warning about radioactive waste survive languages and civilizations? An extraordinary design problem makes the future feel concrete. The problem of being believed turns into the problem of being understood at all.",
-        "url": "https://99percentinvisible.org/episode/ten-thousand-years/"
+        "url": "https://99percentinvisible.org/episode/ten-thousand-years/",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg"
       },
       {
         "title": "Into Eternity",
         "creator": "Michael Madsen",
         "format": "Documentary",
-        "pitch": "Visit a Finnish nuclear-waste repository and confront the uneasy ambition of building something meant to outlast us. The perfect final step from institutional memory into geological time."
+        "pitch": "Visit a Finnish nuclear-waste repository and confront the uneasy ambition of building something meant to outlast us. The perfect final step from institutional memory into geological time.",
+        "image": "https://image.tmdb.org/t/p/w500/hzINyIeovFPMwtwMteSuXdByCby.jpg",
+        "url": "https://www.themoviedb.org/movie/54527"
       }
     ],
     "heads": [
@@ -78,13 +84,16 @@
         "creator": "Mario Salvadori",
         "format": "Book",
         "pitch": "An engineer makes the forces around us legible. Arches, towers, and bridges stop being mysterious objects and become solutions you can follow. You will look up differently.",
-        "url": "https://wwnorton.com/books/Why-Buildings-Stand-Up"
+        "url": "https://wwnorton.com/books/Why-Buildings-Stand-Up",
+        "image": "https://covers.openlibrary.org/b/id/4383608-L.jpg"
       },
       {
         "title": "Columbus",
         "creator": "Kogonada",
         "format": "Film",
-        "pitch": "Two people walk and talk among modernist buildings in Indiana. The spaces quietly shape their attention and choices. A film about architecture that understands that buildings are places to live a life, not just admire."
+        "pitch": "Two people walk and talk among modernist buildings in Indiana. The spaces quietly shape their attention and choices. A film about architecture that understands that buildings are places to live a life, not just admire.",
+        "image": "https://image.tmdb.org/t/p/w500/3ZE5Wl3CdfUH4BkWRmyMKPHkWHx.jpg",
+        "url": "https://www.themoviedb.org/movie/414453"
       },
       {
         "title": "Structural Integrity",
@@ -97,7 +106,9 @@
         "title": "My Architect",
         "creator": "Nathaniel Kahn",
         "format": "Documentary",
-        "pitch": "A son searches for Louis Kahn through the buildings and relationships he left behind. Admiration becomes more demanding when you have to make room for the person."
+        "pitch": "A son searches for Louis Kahn through the buildings and relationships he left behind. Admiration becomes more demanding when you have to make room for the person.",
+        "image": "https://image.tmdb.org/t/p/w500/flpuP2Y2qUkVGghsOYkxj0HkgB9.jpg",
+        "url": "https://www.themoviedb.org/movie/50314"
       }
     ],
     "heads": [
@@ -149,20 +160,23 @@
         "creator": "Nicole Newnham & Jim LeBrecht",
         "format": "Documentary",
         "pitch": "A summer camp gives disabled teenagers room to be teenagers. The friendships become part of a movement. The joy matters as much as the protest: it shows what the fight is for.",
-        "url": "https://cripcamp.com/"
+        "url": "https://cripcamp.com/",
+        "image": "https://image.tmdb.org/t/p/w500/iALSypN3MhC6kBVwc9VpuJUlm1j.jpg"
       },
       {
         "title": "Curb Cuts",
         "creator": "99% Invisible · Episode 308",
         "format": "Podcast episode",
         "pitch": "The lowered corner of a sidewalk contains a history of activism and design. This is what the memoir’s demands and the film’s collective energy look like when they reach the street.",
-        "url": "https://99percentinvisible.org/episode/308-curb-cuts/"
+        "url": "https://99percentinvisible.org/episode/308-curb-cuts/",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg"
       },
       {
         "title": "Disability Visibility",
         "creator": "Edited by Alice Wong",
         "format": "Essay collection",
-        "pitch": "A chorus of disabled writers broadens the frame beyond a single leader or campaign. Read for the range of voices, experiences, and disagreements."
+        "pitch": "A chorus of disabled writers broadens the frame beyond a single leader or campaign. Read for the range of voices, experiences, and disagreements.",
+        "url": "https://en.wikipedia.org/wiki/Disability_Visibility:_First-Person_Stories_from_the_Twenty-First_Century"
       }
     ],
     "heads": [
@@ -208,27 +222,32 @@
         "creator": "Merlin Sheldrake",
         "format": "Book",
         "pitch": "Fungi become a way to reconsider individuality, cooperation, and what counts as a living system. Sheldrake combines close scientific attention with a contagious appetite for strange possibilities.",
-        "url": "https://www.merlinsheldrake.com/entangled-life"
+        "url": "https://www.merlinsheldrake.com/entangled-life",
+        "image": "https://covers.openlibrary.org/b/id/10152882-L.jpg"
       },
       {
         "title": "The Truffle Hunters",
         "creator": "Michael Dweck & Gregory Kershaw",
         "format": "Documentary",
         "pitch": "Old men and their dogs search Italian woods while a luxury market waits beyond the trees. A wonderfully patient film about skill, secrecy, and a relationship with a place that cannot simply be scaled up.",
-        "url": "https://www.sonyclassics.com/film/thetrufflehunters/"
+        "url": "https://www.sonyclassics.com/film/thetrufflehunters/",
+        "image": "https://image.tmdb.org/t/p/w500/A8kuHpb1AKvRVbYbxBK4hua008p.jpg"
       },
       {
         "title": "From Tree to Shining Tree",
         "creator": "Radiolab",
         "format": "Podcast episode",
         "pitch": "A 2016 exploration of fungal networks beneath forests. Let it make the hidden relationships vivid, while remembering that its social metaphors are ways into the science, not proof that trees behave like people.",
-        "url": "https://radiolab.org/podcast/from-tree-to-shining-tree"
+        "url": "https://radiolab.org/podcast/from-tree-to-shining-tree",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/2b/b2/4d/2bb24d28-f3bb-916f-6bf3-9e125ba5219b/mza_4476298389845914795.jpg/600x600bb.jpg"
       },
       {
         "title": "The Mushroom at the End of the World",
         "creator": "Anna Lowenhaupt Tsing",
         "format": "Book",
-        "pitch": "Matsutake mushrooms lead into precarious work and damaged landscapes. A demanding, rewarding extension of the question: what survives inside systems nobody fully controls?"
+        "pitch": "Matsutake mushrooms lead into precarious work and damaged landscapes. A demanding, rewarding extension of the question: what survives inside systems nobody fully controls?",
+        "image": "https://covers.openlibrary.org/b/id/8881648-L.jpg",
+        "url": "https://openlibrary.org/works/OL20015789W"
       }
     ],
     "heads": [
@@ -274,13 +293,16 @@
         "creator": "Peter Godfrey-Smith",
         "format": "Book",
         "pitch": "A philosopher and diver approaches consciousness through octopuses. The question is thrillingly physical: how does a mind work when its body and evolutionary history are so different from ours?",
-        "url": "https://us.macmillan.com/books/9780374537197/otherminds/"
+        "url": "https://us.macmillan.com/books/9780374537197/otherminds/",
+        "image": "https://covers.openlibrary.org/b/id/9244367-L.jpg"
       },
       {
         "title": "My Octopus Teacher",
         "creator": "Pippa Ehrlich & James Reed",
         "format": "Documentary",
-        "pitch": "Daily visits to a kelp forest become an intimate portrait of one animal. Admire the attention, then ask how the human narrator’s need for a story shapes what we see."
+        "pitch": "Daily visits to a kelp forest become an intimate portrait of one animal. Admire the attention, then ask how the human narrator’s need for a story shapes what we see.",
+        "image": "https://image.tmdb.org/t/p/w500/hvTVZb7hBC8tZAGoEhH5eiMJu2B.jpg",
+        "url": "https://www.themoviedb.org/movie/682110"
       },
       {
         "title": "Octomom",
@@ -339,13 +361,17 @@
         "title": "The Seven Sins of Memory",
         "creator": "Daniel L. Schacter",
         "format": "Book",
-        "pitch": "A clear account of the ways memory fails and why those failures are not random. It gives you a vocabulary for experiences you have probably mistaken for a perfectly reliable recording."
+        "pitch": "A clear account of the ways memory fails and why those failures are not random. It gives you a vocabulary for experiences you have probably mistaken for a perfectly reliable recording.",
+        "image": "https://covers.openlibrary.org/b/id/392876-L.jpg",
+        "url": "https://openlibrary.org/works/OL3270068W"
       },
       {
         "title": "Eternal Sunshine of the Spotless Mind",
         "creator": "Michel Gondry",
         "format": "Film",
-        "pitch": "A breakup becomes a chase through disappearing memories. Its invention is dazzling, but the emotional question is simple: would you really want relief if it meant losing what mattered?"
+        "pitch": "A breakup becomes a chase through disappearing memories. Its invention is dazzling, but the emotional question is simple: would you really want relief if it meant losing what mattered?",
+        "image": "https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg",
+        "url": "https://www.themoviedb.org/movie/38"
       },
       {
         "title": "Memory and Forgetting",
@@ -358,7 +384,9 @@
         "title": "The Man Who Mistook His Wife for a Hat",
         "creator": "Oliver Sacks",
         "format": "Book",
-        "pitch": "Sacks turns neurological case histories into encounters with people. The right extension when the mechanism has become interesting but the person must remain central."
+        "pitch": "Sacks turns neurological case histories into encounters with people. The right extension when the mechanism has become interesting but the person must remain central.",
+        "image": "https://covers.openlibrary.org/b/id/6986188-L.jpg",
+        "url": "https://openlibrary.org/works/OL1811898W"
       }
     ],
     "heads": [
@@ -403,13 +431,17 @@
         "title": "The Big Short",
         "creator": "Michael Lewis",
         "format": "Book",
-        "pitch": "Lewis follows the people who recognized a housing-market disaster and found a way to bet on it. The outsiders are entertaining; the unsettling part is how much the insiders preferred not to see."
+        "pitch": "Lewis follows the people who recognized a housing-market disaster and found a way to bet on it. The outsiders are entertaining; the unsettling part is how much the insiders preferred not to see.",
+        "image": "https://covers.openlibrary.org/b/id/6386926-L.jpg",
+        "url": "https://openlibrary.org/works/OL15118378W"
       },
       {
         "title": "Margin Call",
         "creator": "J. C. Chandor",
         "format": "Film",
-        "pitch": "One fictional investment bank realizes what it is holding. Over a long night, technical risk becomes a series of personal choices. Watch the language get smoother as the decisions get uglier."
+        "pitch": "One fictional investment bank realizes what it is holding. Over a long night, technical risk becomes a series of personal choices. Watch the language get smoother as the decisions get uglier.",
+        "image": "https://image.tmdb.org/t/p/w500/xNXYXJ3XNC9o5wxDF2ImZ9b2es.jpg",
+        "url": "https://www.themoviedb.org/movie/50839"
       },
       {
         "title": "The Giant Pool of Money",
@@ -422,7 +454,9 @@
         "title": "Inside Job",
         "creator": "Charles Ferguson",
         "format": "Documentary",
-        "pitch": "A wider investigation of the crisis and its institutions. It adds the question of accountability after the machinery is clear."
+        "pitch": "A wider investigation of the crisis and its institutions. It adds the question of accountability after the machinery is clear.",
+        "image": "https://image.tmdb.org/t/p/w500/7yXXIWec24htucjsZS1sDuPLqw8.jpg",
+        "url": "https://www.themoviedb.org/movie/44639"
       }
     ],
     "heads": [
@@ -467,13 +501,17 @@
         "title": "All the King’s Men",
         "creator": "Robert Penn Warren",
         "format": "Novel",
-        "pitch": "A political rise becomes a study of loyalty, compromise, and the stories people tell to excuse themselves. Warren makes the attraction of power as important as its corruption."
+        "pitch": "A political rise becomes a study of loyalty, compromise, and the stories people tell to excuse themselves. Warren makes the attraction of power as important as its corruption.",
+        "image": "https://covers.openlibrary.org/b/id/112218-L.jpg",
+        "url": "https://openlibrary.org/works/OL14858283W"
       },
       {
         "title": "The War Room",
         "creator": "D. A. Pennebaker & Chris Hegedus",
         "format": "Documentary",
-        "pitch": "Inside the 1992 Clinton campaign, strategy becomes a form of performance. Watch the people building a public narrative while reacting to a world they cannot completely control."
+        "pitch": "Inside the 1992 Clinton campaign, strategy becomes a form of performance. Watch the people building a public narrative while reacting to a world they cannot completely control.",
+        "image": "https://image.tmdb.org/t/p/w500/prfxsyG4SnlnqqulavCJ4RksFUA.jpg",
+        "url": "https://www.themoviedb.org/movie/26408"
       },
       {
         "title": "Take the Money and Run for Office",
@@ -486,7 +524,9 @@
         "title": "The Candidate",
         "creator": "Michael Ritchie",
         "format": "Film",
-        "pitch": "A sharp campaign satire that asks what winning leaves a person prepared to do. The last question is worth the detour."
+        "pitch": "A sharp campaign satire that asks what winning leaves a person prepared to do. The last question is worth the detour.",
+        "image": "https://image.tmdb.org/t/p/w500/6zcDSOe1akUXsc2Q1APfchKcVaI.jpg",
+        "url": "https://www.themoviedb.org/movie/21711"
       }
     ],
     "heads": [
@@ -531,27 +571,33 @@
         "title": "Evicted",
         "creator": "Matthew Desmond",
         "format": "Book",
-        "pitch": "A close account of families and landlords in Milwaukee makes housing insecurity concrete. Read for the lives; stay with the structure that keeps turning ordinary setbacks into displacement."
+        "pitch": "A close account of families and landlords in Milwaukee makes housing insecurity concrete. Read for the lives; stay with the structure that keeps turning ordinary setbacks into displacement.",
+        "image": "https://covers.openlibrary.org/b/id/12915110-L.jpg",
+        "url": "https://openlibrary.org/works/OL17828326W"
       },
       {
         "title": "The Last Black Man in San Francisco",
         "creator": "Joe Talbot",
         "format": "Film",
         "pitch": "Jimmie Fails and his friend dream around a Victorian house in a changing city. The film is gorgeous, but its question is unsentimental: can a place belong to you if you cannot legally claim it?",
-        "url": "https://a24films.com/films/the-last-black-man-in-san-francisco"
+        "url": "https://a24films.com/films/the-last-black-man-in-san-francisco",
+        "image": "https://image.tmdb.org/t/p/w500/ow9zjibNrz5TYVZ6cqwmvCR1YX1.jpg"
       },
       {
         "title": "Holdout",
         "creator": "99% Invisible",
         "format": "Podcast episode",
         "pitch": "The story of a small house that remains while development grows around it. Listen for the difference between the symbol outsiders want and the life of the person whose home it actually is.",
-        "url": "https://99percentinvisible.org/episode/holdout/"
+        "url": "https://99percentinvisible.org/episode/holdout/",
+        "image": "https://image.simplecastcdn.com/images/8436e3c1-2479-4466-ac48-fa58259960bb/a6d5b177-ab5d-430d-b3f2-b393a09d8101/3000x3000/sxm-cover-99percentinvisible-r2025-3000x3000-final.jpg?aid=rss_feed"
       },
       {
         "title": "The Pruitt-Igoe Myth",
         "creator": "Chad Freidrichs",
         "format": "Documentary",
-        "pitch": "A housing project’s notorious demolition becomes the starting point for a harder look at its history. Buildings alone do not explain the fate of their residents."
+        "pitch": "A housing project’s notorious demolition becomes the starting point for a harder look at its history. Buildings alone do not explain the fate of their residents.",
+        "image": "https://image.tmdb.org/t/p/w500/taY9fhUIEGyv9n16t3WJsTVBi8b.jpg",
+        "url": "https://www.themoviedb.org/movie/84407"
       }
     ],
     "heads": [
@@ -596,13 +642,17 @@
         "title": "The Likeness",
         "creator": "Tana French",
         "format": "Novel",
-        "pitch": "A detective steps into another woman’s identity and an intensely close household. The mystery is gripping; the deeper pull is the temptation to belong to the life you are investigating."
+        "pitch": "A detective steps into another woman’s identity and an intensely close household. The mystery is gripping; the deeper pull is the temptation to belong to the life you are investigating.",
+        "image": "https://covers.openlibrary.org/b/id/6449351-L.jpg",
+        "url": "https://openlibrary.org/works/OL7989981W"
       },
       {
         "title": "The Lives of Others",
         "creator": "Florian Henckel von Donnersmarck",
         "format": "Film",
-        "pitch": "A surveillance officer listens to a private life and finds his own position becoming less stable. The film makes attention morally complicated: listening closely is not the same as having the right to listen."
+        "pitch": "A surveillance officer listens to a private life and finds his own position becoming less stable. The film makes attention morally complicated: listening closely is not the same as having the right to listen.",
+        "image": "https://image.tmdb.org/t/p/w500/cVUDMnskSc01rdbyH0tLATTJUdP.jpg",
+        "url": "https://www.themoviedb.org/movie/582"
       },
       {
         "title": "House on Loon Lake",
@@ -615,7 +665,9 @@
         "title": "The Secret History",
         "creator": "Donna Tartt",
         "format": "Novel",
-        "pitch": "Another compelling invitation into a closed circle. Read it to test how quickly fascination can become an excuse for overlooking what is in front of you."
+        "pitch": "Another compelling invitation into a closed circle. Read it to test how quickly fascination can become an excuse for overlooking what is in front of you.",
+        "image": "https://covers.openlibrary.org/b/id/744854-L.jpg",
+        "url": "https://openlibrary.org/works/OL4321141W"
       }
     ],
     "heads": [
@@ -660,13 +712,17 @@
         "title": "An Immense World",
         "creator": "Ed Yong",
         "format": "Book",
-        "pitch": "Yong makes the sensory lives of other animals wonderfully strange. Our experience stops looking like the world itself and starts looking like one narrow way of receiving it."
+        "pitch": "Yong makes the sensory lives of other animals wonderfully strange. Our experience stops looking like the world itself and starts looking like one narrow way of receiving it.",
+        "image": "https://covers.openlibrary.org/b/id/12835209-L.jpg",
+        "url": "https://openlibrary.org/works/OL25815646W"
       },
       {
         "title": "Project Nim",
         "creator": "James Marsh",
         "format": "Documentary",
-        "pitch": "An effort to teach a chimpanzee human language becomes a story about the people controlling his life. The experiment’s ambition and the animal’s needs do not stay comfortably aligned."
+        "pitch": "An effort to teach a chimpanzee human language becomes a story about the people controlling his life. The experiment’s ambition and the animal’s needs do not stay comfortably aligned.",
+        "image": "https://image.tmdb.org/t/p/w500/bKvxfhFK4hSgY19ObJ30bQYtyli.jpg",
+        "url": "https://www.themoviedb.org/movie/63579"
       },
       {
         "title": "Hello",
@@ -679,7 +735,9 @@
         "title": "Are We Smart Enough to Know How Smart Animals Are?",
         "creator": "Frans de Waal",
         "format": "Book",
-        "pitch": "A precise challenge to tests that mistake human convenience for a fair measure of another species. It makes the whole triangle’s central question explicit."
+        "pitch": "A precise challenge to tests that mistake human convenience for a fair measure of another species. It makes the whole triangle’s central question explicit.",
+        "image": "https://covers.openlibrary.org/b/id/12514840-L.jpg",
+        "url": "https://openlibrary.org/works/OL21299028W"
       }
     ],
     "heads": [
@@ -730,7 +788,9 @@
         "title": "F for Fake",
         "creator": "Orson Welles",
         "format": "Film",
-        "pitch": "Welles turns forgery, expertise, and storytelling into a dazzling confidence game. Enjoy being led around, then notice how authority changes what you are willing to believe."
+        "pitch": "Welles turns forgery, expertise, and storytelling into a dazzling confidence game. Enjoy being led around, then notice how authority changes what you are willing to believe.",
+        "image": "https://image.tmdb.org/t/p/w500/fVeIDxS73CrosoeVOaefQuCUGZg.jpg",
+        "url": "https://www.themoviedb.org/movie/43003"
       },
       {
         "title": "Whomst Among Us Let The Dogs Out",
@@ -743,7 +803,9 @@
         "title": "Exit Through the Gift Shop",
         "creator": "Banksy",
         "format": "Documentary",
-        "pitch": "A further tangle of authorship, hype, and the art market. Bring every question the first three works have raised, and enjoy how little settles neatly."
+        "pitch": "A further tangle of authorship, hype, and the art market. Bring every question the first three works have raised, and enjoy how little settles neatly.",
+        "image": "https://image.tmdb.org/t/p/w500/ruM5ehUQlHC1Kx3SF18d6klfrAx.jpg",
+        "url": "https://www.themoviedb.org/movie/39452"
       }
     ],
     "heads": [

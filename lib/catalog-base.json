@@ -12,21 +12,24 @@
         "creator": "Kevin Fedarko",
         "format": "Book",
         "pitch": "A wooden boat, an extraordinary flood, and three men who decide that the sensible thing is to go faster. The river is the main character; human ambition is its spectacularly unreliable supporting cast.",
-        "url": "https://www.simonandschuster.com/books/The-Emerald-Mile/Kevin-Fedarko/9781439159866"
+        "url": "https://www.simonandschuster.com/books/The-Emerald-Mile/Kevin-Fedarko/9781439159866",
+        "image": "https://covers.openlibrary.org/b/id/7821110-L.jpg"
       },
       {
         "title": "DamNation",
         "creator": "Ben Knight & Travis Rummel",
         "format": "Documentary",
         "pitch": "A dam-removal film that feels like a jailbreak. After Fedarko's intimate portrait of one canyon, this opens up the national argument about what we sacrifice when we make a river useful.",
-        "url": "https://www.patagonia.com/stories/damnation/video-79847.html"
+        "url": "https://www.patagonia.com/stories/damnation/video-79847.html",
+        "image": "https://image.tmdb.org/t/p/w500/nMMowv4ZFV7KUtQHIIOlLC875GD.jpg"
       },
       {
         "title": "7 States, 1 River and an Agonizing Choice",
         "creator": "The Daily · The New York Times · January 31, 2023",
         "format": "Podcast episode",
         "url": "https://podcasts.apple.com/us/podcast/7-states-1-river-and-an-agonizing-choice/id1200361736?i=1000597391888",
-        "pitch": "A sharp, single-episode account of the Colorado River shortage and the states facing cuts. Listen after the exhilaration of the book and the dam-removal argument of the film. The river you love is also a resource millions depend on. This is reporting from 2023, not a current water-status update."
+        "pitch": "A sharp, single-episode account of the Colorado River shortage and the states facing cuts. Listen after the exhilaration of the book and the dam-removal argument of the film. The river you love is also a resource millions depend on. This is reporting from 2023, not a current water-status update.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/00/50/15/005015f2-a5ca-10a1-287b-0783e203d0f4/mza_16107376200112124335.jpg/600x600bb.jpg"
       },
       {
         "title": "A Walk in the Park",
@@ -49,13 +52,16 @@
         "creator": "William Finnegan",
         "format": "Memoir",
         "pitch": "A life organized around waves, written with enough precision to make obsession sound entirely reasonable. Watch for the gap between the freedom surfing promises and the discipline it demands.",
-        "url": "https://www.penguinrandomhouse.com/books/292954/barbarian-days-by-william-finnegan/"
+        "url": "https://www.penguinrandomhouse.com/books/292954/barbarian-days-by-william-finnegan/",
+        "image": "https://covers.openlibrary.org/b/id/7901808-L.jpg"
       },
       {
         "title": "Bustin' Down the Door",
         "creator": "Jeremy Gosch",
         "format": "Documentary",
-        "pitch": "Young Australian and South African surfers arrive in 1970s Hawaii and help remake the sport. Progress, bravado, and local resentment share a very small stretch of beach."
+        "pitch": "Young Australian and South African surfers arrive in 1970s Hawaii and help remake the sport. Progress, bravado, and local resentment share a very small stretch of beach.",
+        "image": "https://image.tmdb.org/t/p/w500/qsvSb19kuUS7czr5rODWxOPfv2.jpg",
+        "url": "https://www.themoviedb.org/movie/44053"
       },
       {
         "title": "Soundings: William Finnegan",
@@ -68,7 +74,9 @@
         "title": "Surfers’ Choice",
         "creator": "Dick Dale and His Del-Tones",
         "format": "Album",
-        "pitch": "The surf fantasy in glorious reverb. Now that you have questioned the culture, hear the joyous, simplified invitation that helped carry it outward."
+        "pitch": "The surf fantasy in glorious reverb. Now that you have questioned the culture, hear the joyous, simplified invitation that helped carry it outward.",
+        "image": "https://coverartarchive.org/release-group/572ab42c-22d6-39c0-b886-d098d451f8d9/front-500",
+        "url": "https://musicbrainz.org/release-group/572ab42c-22d6-39c0-b886-d098d451f8d9"
       }
     ]
   },
@@ -90,7 +98,9 @@
         "title": "Sin Nombre",
         "creator": "Cary Joji Fukunaga",
         "format": "Film",
-        "pitch": "A young Honduran migrant and a fleeing gang member travel north through Mexico. The film makes movement frighteningly physical, with tenderness that never erases the danger."
+        "pitch": "A young Honduran migrant and a fleeing gang member travel north through Mexico. The film makes movement frighteningly physical, with tenderness that never erases the danger.",
+        "image": "https://image.tmdb.org/t/p/w500/dubZwiGWp6TwYNGYtyGEUC7XAin.jpg",
+        "url": "https://www.themoviedb.org/movie/21191"
       },
       {
         "title": "The Out Crowd",
@@ -103,7 +113,9 @@
         "title": "The Devil's Highway",
         "creator": "Luis Alberto Urrea",
         "format": "Book",
-        "pitch": "A fiercely reported account of a deadly desert crossing. Urrea restores individuality to people too often flattened into a number."
+        "pitch": "A fiercely reported account of a deadly desert crossing. Urrea restores individuality to people too often flattened into a number.",
+        "image": "https://covers.openlibrary.org/b/id/190164-L.jpg",
+        "url": "https://openlibrary.org/works/OL41209W"
       }
     ]
   },
@@ -119,13 +131,17 @@
         "title": "Kitchen Confidential",
         "creator": "Anthony Bourdain",
         "format": "Memoir",
-        "pitch": "The swagger is irresistible, but read past it: this is also a book about labor, loyalty, and an industry that teaches people to confuse damage with dedication."
+        "pitch": "The swagger is irresistible, but read past it: this is also a book about labor, loyalty, and an industry that teaches people to confuse damage with dedication.",
+        "image": "https://covers.openlibrary.org/b/id/843879-L.jpg",
+        "url": "https://openlibrary.org/works/OL3348011W"
       },
       {
         "title": "The Bear",
         "creator": "Christopher Storer",
         "format": "TV series",
-        "pitch": "Start with season one. A sandwich shop becomes a pressure chamber for grief, ambition, and inherited habits. Every shouted instruction has a family history attached."
+        "pitch": "Start with season one. A sandwich shop becomes a pressure chamber for grief, ambition, and inherited habits. Every shouted instruction has a family history attached.",
+        "image": "https://image.tmdb.org/t/p/w500/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
+        "url": "https://www.themoviedb.org/tv/136315"
       },
       {
         "title": "24 Hours at the Golden Apple",
@@ -138,7 +154,9 @@
         "title": "Heat",
         "creator": "Bill Buford",
         "format": "Book",
-        "pitch": "An amateur steps into professional kitchens and finds that apprenticeship is equal parts humiliation, repetition, and revelation. Deliciously obsessive."
+        "pitch": "An amateur steps into professional kitchens and finds that apprenticeship is equal parts humiliation, repetition, and revelation. Deliciously obsessive.",
+        "image": "https://covers.openlibrary.org/b/id/745024-L.jpg",
+        "url": "https://openlibrary.org/works/OL4124703W"
       }
     ]
   },
@@ -154,7 +172,9 @@
         "title": "The Girls",
         "creator": "Emma Cline",
         "format": "Novel",
-        "pitch": "A teenager's longing to be seen becomes the opening through which a dangerous world enters. Cline is superb on the ordinary emotional needs behind apparently inexplicable choices."
+        "pitch": "A teenager's longing to be seen becomes the opening through which a dangerous world enters. Cline is superb on the ordinary emotional needs behind apparently inexplicable choices.",
+        "image": "https://covers.openlibrary.org/b/id/7435133-L.jpg",
+        "url": "https://openlibrary.org/works/OL17357376W"
       },
       {
         "title": "Wild Wild Country",
@@ -174,7 +194,9 @@
         "title": "Going Clear",
         "creator": "Lawrence Wright",
         "format": "Book",
-        "pitch": "An exacting account of Scientology extends the question: what happens when an institution can turn your most private disclosures into leverage?"
+        "pitch": "An exacting account of Scientology extends the question: what happens when an institution can turn your most private disclosures into leverage?",
+        "image": "https://covers.openlibrary.org/b/id/7254471-L.jpg",
+        "url": "https://openlibrary.org/works/OL16802212W"
       }
     ]
   },
@@ -190,27 +212,33 @@
         "title": "Love Saves the Day",
         "creator": "Tim Lawrence",
         "format": "Book",
-        "pitch": "New York dance culture in the 1970s, reconstructed through the people and places that made it. The DJ booth starts to look less like a pedestal and more like a civic institution."
+        "pitch": "New York dance culture in the 1970s, reconstructed through the people and places that made it. The DJ booth starts to look less like a pedestal and more like a civic institution.",
+        "image": "https://covers.openlibrary.org/b/id/622727-L.jpg",
+        "url": "https://openlibrary.org/works/OL16659141W"
       },
       {
         "title": "Paris Is Burning",
         "creator": "Jennie Livingston",
         "format": "Documentary",
         "pitch": "New York ballroom performers turn exclusion into wit, spectacle, and chosen kinship. Keep the film's questions of class, authorship, and who gets to look in the picture too.",
-        "url": "https://www.criterion.com/films/29647-paris-is-burning"
+        "url": "https://www.criterion.com/films/29647-paris-is-burning",
+        "image": "https://image.tmdb.org/t/p/w500/90rCWH41mj9hjHUEy2SOHfuAOl3.jpg"
       },
       {
         "title": "Meet Me at Riis",
         "creator": "99% Invisible · Episode 602",
         "format": "Podcast episode",
         "url": "https://99percentinvisible.org/episode/602-meet-me-at-riis/",
-        "pitch": "Leave the dance floor for a queer beach in New York. This episode follows the history of Riis and the demolition of the building that helped shelter it. The connection is physical: freedom needs somewhere to gather, and that somewhere can disappear."
+        "pitch": "Leave the dance floor for a queer beach in New York. This episode follows the history of Riis and the demolition of the building that helped shelter it. The connection is physical: freedom needs somewhere to gather, and that somewhere can disappear.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg"
       },
       {
         "title": "The Queen",
         "creator": "Frank Simon",
         "format": "Documentary",
-        "pitch": "A 1967 drag pageant offers an earlier, pricklier look at performance, recognition, and who gets crowned. A short, astonishing expansion of the frame."
+        "pitch": "A 1967 drag pageant offers an earlier, pricklier look at performance, recognition, and who gets crowned. A short, astonishing expansion of the frame.",
+        "image": "https://image.tmdb.org/t/p/w500/enAf3MycnyeWFhgz8TOos9NvH4s.jpg",
+        "url": "https://www.themoviedb.org/movie/42649"
       }
     ]
   },
@@ -226,25 +254,33 @@
         "title": "The Year of Magical Thinking",
         "creator": "Joan Didion",
         "format": "Memoir",
-        "pitch": "Grief observed with extraordinary precision, including the thoughts reason cannot simply dismiss."
+        "pitch": "Grief observed with extraordinary precision, including the thoughts reason cannot simply dismiss.",
+        "image": "https://covers.openlibrary.org/b/id/13693-L.jpg",
+        "url": "https://openlibrary.org/works/OL500171W"
       },
       {
         "title": "A Ghost Story",
         "creator": "David Lowery",
         "format": "Film",
-        "pitch": "A nearly wordless meditation on attachment and time. Stay with its deliberate slowness."
+        "pitch": "A nearly wordless meditation on attachment and time. Stay with its deliberate slowness.",
+        "image": "https://image.tmdb.org/t/p/w500/rp5JPIyZi9sMob15l46zNQLe5cO.jpg",
+        "url": "https://www.themoviedb.org/movie/428449"
       },
       {
         "title": "Ghosteen",
         "creator": "Nick Cave & the Bad Seeds",
         "format": "Album",
-        "pitch": "Loss becomes luminous, searching music that refuses a neat arrival at consolation."
+        "pitch": "Loss becomes luminous, searching music that refuses a neat arrival at consolation.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/13/54/56/135456fb-4061-84ad-f75a-90ec8b0bc612/5056167114802_1.jpg/600x600bb.jpg",
+        "url": "https://music.apple.com/us/album/ghosteen/1479214340?uo=4"
       },
       {
         "title": "A Grief Observed",
         "creator": "C. S. Lewis",
         "format": "Book",
-        "pitch": "Belief itself is put under pressure in an intimate record of bereavement."
+        "pitch": "Belief itself is put under pressure in an intimate record of bereavement.",
+        "image": "https://covers.openlibrary.org/b/id/9321678-L.jpg",
+        "url": "https://openlibrary.org/works/OL71158W"
       }
     ]
   },
@@ -260,26 +296,33 @@
         "title": "Just Kids",
         "creator": "Patti Smith",
         "format": "Memoir",
-        "pitch": "Artistic becoming through the friendship of Smith and Robert Mapplethorpe. Poverty is real even when the memories glow."
+        "pitch": "Artistic becoming through the friendship of Smith and Robert Mapplethorpe. Poverty is real even when the memories glow.",
+        "image": "https://covers.openlibrary.org/b/id/6671097-L.jpg",
+        "url": "https://openlibrary.org/works/OL15474046W"
       },
       {
         "title": "Downtown 81",
         "creator": "Edo Bertoglio",
         "format": "Film",
-        "pitch": "Jean-Michel Basquiat moves through a downtown scene that feels less like a brand than an unstable habitat."
+        "pitch": "Jean-Michel Basquiat moves through a downtown scene that feels less like a brand than an unstable habitat.",
+        "image": "https://image.tmdb.org/t/p/w500/lAWr0YaC1PaflYT08GBLToqYhW9.jpg",
+        "url": "https://www.themoviedb.org/movie/26571"
       },
       {
         "title": "The SoHo Effect",
         "creator": "99% Invisible · Episode 204",
         "format": "Podcast episode",
         "url": "https://99percentinvisible.org/episode/the-soho-effect/",
-        "pitch": "The artist neighborhood becomes a selling point. This episode follows the transformation associated with SoHo and the way its name became a model. After the memoir and film, the question is personal: what happens when the scene helps make its own neighborhood unaffordable?"
+        "pitch": "The artist neighborhood becomes a selling point. This episode follows the transformation associated with SoHo and the way its name became a model. After the memoir and film, the question is personal: what happens when the scene helps make its own neighborhood unaffordable?",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg"
       },
       {
         "title": "Please Kill Me",
         "creator": "Legs McNeil & Gillian McCain",
         "format": "Oral history",
-        "pitch": "The punk version arrives louder, messier, and far less interested in behaving for posterity."
+        "pitch": "The punk version arrives louder, messier, and far less interested in behaving for posterity.",
+        "image": "https://covers.openlibrary.org/b/id/99846-L.jpg",
+        "url": "https://openlibrary.org/works/OL17743004W"
       }
     ]
   },
@@ -301,20 +344,25 @@
         "title": "Minding the Gap",
         "creator": "Bing Liu",
         "format": "Documentary",
-        "pitch": "Skateboarding friendships open into a profound inquiry into violence, masculinity, and escape."
+        "pitch": "Skateboarding friendships open into a profound inquiry into violence, masculinity, and escape.",
+        "image": "https://image.tmdb.org/t/p/w500/uOu2YgrryHD1UlngykzTodAxGdC.jpg",
+        "url": "https://www.themoviedb.org/movie/489985"
       },
       {
         "title": "The Pool and the Stream",
         "creator": "99% Invisible · Episode 265",
         "format": "Podcast episode",
         "url": "https://99percentinvisible.org/episode/the-pool-and-the-stream/",
-        "pitch": "A Finnish architect, California swimming pools, and skaters looking for somewhere to ride. Avery Trufelman follows an improbable design connection that gives the whole culture a new origin story. The place under the board matters as much as the person on it."
+        "pitch": "A Finnish architect, California swimming pools, and skaters looking for somewhere to ride. Avery Trufelman follows an improbable design connection that gives the whole culture a new origin story. The place under the board matters as much as the person on it.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/79/d0/35/79d035ea-9043-b43e-7380-33cd47bd968b/mza_2606971010425550919.jpg/600x600bb.jpg"
       },
       {
         "title": "Dogtown and Z-Boys",
         "creator": "Stacy Peralta",
         "format": "Documentary",
-        "pitch": "The origin-myth energy is irresistible; watch it beside Liu's less triumphant account of belonging."
+        "pitch": "The origin-myth energy is irresistible; watch it beside Liu's less triumphant account of belonging.",
+        "image": "https://image.tmdb.org/t/p/w500/eb02dpopuAhuThf7nXAAwKtAF88.jpg",
+        "url": "https://www.themoviedb.org/movie/1282"
       }
     ]
   },
@@ -330,26 +378,33 @@
         "title": "The Right Stuff",
         "creator": "Tom Wolfe",
         "format": "Book",
-        "pitch": "Test pilots and astronauts reveal a highly specific culture beneath the universal language of exploration."
+        "pitch": "Test pilots and astronauts reveal a highly specific culture beneath the universal language of exploration.",
+        "image": "https://covers.openlibrary.org/b/id/3326778-L.jpg",
+        "url": "https://openlibrary.org/works/OL1925474W"
       },
       {
         "title": "For All Mankind",
         "creator": "Ronald D. Moore, Matt Wolpert & Ben Nedivi",
         "format": "TV series",
-        "pitch": "An alternate space-race history makes technological futures visibly contingent."
+        "pitch": "An alternate space-race history makes technological futures visibly contingent.",
+        "image": "https://image.tmdb.org/t/p/w500/JP3DItWMbrrLiKR5AYUfpsNf2b.jpg",
+        "url": "https://www.themoviedb.org/tv/87917"
       },
       {
         "title": "Dark Side of the Earth",
         "creator": "Radiolab",
         "format": "Podcast episode",
         "url": "https://radiolab.org/podcast/dark-side-earth",
-        "pitch": "An astronaut describes a spacewalk, a malfunctioning airlock, and the colleague beside him. After all the national mythology, this is space at human scale: beautiful, dangerous, and utterly dependent on cooperation."
+        "pitch": "An astronaut describes a spacewalk, a malfunctioning airlock, and the colleague beside him. After all the national mythology, this is space at human scale: beautiful, dangerous, and utterly dependent on cooperation.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/1e/36/d1/1e36d1fc-1eca-3c2f-83d0-63dcc7bca4a3/mza_4859907473190691132.jpg/600x600bb.jpg"
       },
       {
         "title": "Hidden Figures",
         "creator": "Margot Lee Shetterly",
         "format": "Book",
-        "pitch": "The workforce omitted from familiar heroic portraits changes the history's center of gravity."
+        "pitch": "The workforce omitted from familiar heroic portraits changes the history's center of gravity.",
+        "image": "https://covers.openlibrary.org/b/id/10661694-L.jpg",
+        "url": "https://openlibrary.org/works/OL17598637W"
       }
     ]
   },
@@ -365,26 +420,33 @@
         "title": "Klara and the Sun",
         "creator": "Kazuo Ishiguro",
         "format": "Novel",
-        "pitch": "An artificial companion observes human arrangements with attention their participants rarely manage."
+        "pitch": "An artificial companion observes human arrangements with attention their participants rarely manage.",
+        "image": "https://covers.openlibrary.org/b/id/10648686-L.jpg",
+        "url": "https://openlibrary.org/works/OL20883297W"
       },
       {
         "title": "Her",
         "creator": "Spike Jonze",
         "format": "Film",
-        "pitch": "A relationship with an operating system exposes the expectations people bring to intimacy."
+        "pitch": "A relationship with an operating system exposes the expectations people bring to intimacy.",
+        "image": "https://image.tmdb.org/t/p/w500/eCOtqtfvn7mxGl6nfmq4b1exJRc.jpg",
+        "url": "https://www.themoviedb.org/movie/152601"
       },
       {
         "title": "Talking to Machines",
         "creator": "Radiolab · June 1, 2011",
         "format": "Podcast episode",
         "url": "https://radiolab.org/podcast/137407-talking-to-machines",
-        "pitch": "A man falls for a chatbot; a robot therapist unsettles its own inventor. This 2011 episode predates today’s generative AI, which is precisely why it belongs here. Our willingness to feel understood has a much longer history than the latest model."
+        "pitch": "A man falls for a chatbot; a robot therapist unsettles its own inventor. This 2011 episode predates today’s generative AI, which is precisely why it belongs here. Our willingness to feel understood has a much longer history than the latest model.",
+        "image": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/6a/0c/f4/6a0cf41e-83a9-404e-74b5-8b8a69d3491b/mza_17176820860102129627.jpg/600x600bb.jpg"
       },
       {
         "title": "Ex Machina",
         "creator": "Alex Garland",
         "format": "Film",
-        "pitch": "A darker chamber piece on observation, manipulation, and who controls the terms of the test."
+        "pitch": "A darker chamber piece on observation, manipulation, and who controls the terms of the test.",
+        "image": "https://image.tmdb.org/t/p/w500/dmJW8IAKHKxFNiUnoDR7JfsK7Rp.jpg",
+        "url": "https://www.themoviedb.org/movie/264660"
       }
     ]
   },
@@ -400,13 +462,17 @@
         "title": "Bullshit Jobs",
         "creator": "David Graeber",
         "format": "Book",
-        "pitch": "A provocative argument about meaningless work, useful even where you disagree with its categories."
+        "pitch": "A provocative argument about meaningless work, useful even where you disagree with its categories.",
+        "image": "https://covers.openlibrary.org/b/id/8798647-L.jpg",
+        "url": "https://openlibrary.org/works/OL20153626W"
       },
       {
         "title": "Severance",
         "creator": "Dan Erickson",
         "format": "TV series",
-        "pitch": "A workplace fantasy makes the demand to leave your self at the door horrifyingly literal."
+        "pitch": "A workplace fantasy makes the demand to leave your self at the door horrifyingly literal.",
+        "image": "https://image.tmdb.org/t/p/w500/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+        "url": "https://www.themoviedb.org/tv/95396"
       },
       {
         "title": "Essential",
