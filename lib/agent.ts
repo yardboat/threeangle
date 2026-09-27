@@ -121,6 +121,15 @@ const FORMAT_OF:Record<Slot,string[]>={read:['Book','Article'],watch:['Movie','D
 const SLOT_NAME:Record<Slot|'bonus',string>={read:'the read',watch:'the watch',listen:'the listen',bonus:'the bonus'};
 type Pick={slot:Slot|'bonus';title:string;creator:string;format:string};
 
+// When the chosen episode isn't in any catalog, one small call picks the best real episode from the catalogs' list.
+const episodeOut=z.object({title:z.string().min(1),show:z.string().min(1)});
+async function chooseEpisode(topic:string,wanted:{title:string;creator:string},real:Candidate[],system:SystemModelMessage[]):Promise<Candidate|null>{
+ const list=real.slice(0,14).map(e=>({title:e.title,show:e.creator,year:e.year,about:e.description.slice(0,160)}));
+ const r=await generateText({model:languageModel(),system,abortSignal:AbortSignal.timeout(30000),providerOptions:noThinking,output:Output.object({schema:episodeOut}),
+  prompt:`TOPIC: ${topic}\nThe listen corner was going to be ${JSON.stringify(wanted)}, but that episode isn't in any podcast catalog. Choose the ONE episode from this list of real episodes that best serves the topic and stands on its own. Return its exact title and show.\n${JSON.stringify(list)}`});
+ return real.find(e=>e.title===r.output.title)||real.find(e=>titleFit(r.output.title,e.title)>=.9)||null;
+}
+
 export type BuildProgress=(text:string)=>void;
 export async function buildTriangle(seed:Seed,interest:string,baseSources:Source[],avoid:string[]=[],onProgress:BuildProgress=()=>{}){
  const model=agentModel(),started=Date.now();
@@ -166,30 +175,20 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
 
   // Real episodes on the topic, gathered alongside, in case the chosen episode can't be found.
   const episodes=missing.includes('listen')?findEpisodes([...(proposal.listenSearch||[]),seed.title]).catch(()=>[] as Candidate[]):Promise.resolve([] as Candidate[]);
-  // Find every chosen work in a real catalog while the writer drafts. A work that can't be found is re-picked.
-  const writing=new AbortController();
-  const write=()=>generateText({
-   model:languageModel(),system,abortSignal:AbortSignal.any([writing.signal,AbortSignal.timeout(90000)]),providerOptions:reasoned('low'),output:Output.object({schema:writerOut}),
-   prompt:`Write the finished threeangle as JSON using ONLY the works below. Add no works, facts or links. Structuring must add nothing that was not researched.
-CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
-CHOSEN CORNERS: ${JSON.stringify(corners)}
-BONUS: ${JSON.stringify(proposal.bonus)}
-CHOSEN TOPIC (every work must serve it): ${proposal.topic||''}
-EDITORIAL PROPOSAL: ${JSON.stringify({insight:proposal.insight})}
-WHAT THE USER LOVED ABOUT IT (the pitch should honour it): ${interest?JSON.stringify(interest):'not stated'}
-EDITORIAL VERSION: ${EDITORIAL_VERSION}
-
-Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker (the chosen topic as a short uppercase label like "TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
-  });
-  // A malformed draft is written once more before the build gives up.
-  const writer=write().catch(e=>{if(!writing.signal.aborted&&e instanceof Error&&e.name==='AI_NoObjectGeneratedError'){(trace.attempts as unknown[]).push({attempt,status:'rewrite',ms:Date.now()-started});return write();}throw e;});
-  writer.catch(()=>{});
-  const found=await Promise.all(picks.map(async p=>{const c=await resolveCorner(p);if(c)onProgress(`Found ${SLOT_NAME[p.slot]}: ${c.title}.`);return c}));
+  // Find every chosen work in a real catalog. The listen corner tries the catalogs first: a miss is swapped for a
+  // real episode below, which is faster than a web lookup.
+  const found=await Promise.all(picks.map(async p=>{const c=p.slot==='listen'?await resolveWork(p).catch(()=>null):await resolveCorner(p);if(c)onProgress(`Found ${SLOT_NAME[p.slot]}: ${c.title}.`);return c}));
+  const li=picks.findIndex(p=>p.slot==='listen');
+  if(li>=0&&!found[li]){
+   const real=(await episodes).filter(e=>!rejected.includes(e.title));
+   const swapped=real.length?await chooseEpisode(proposal.topic||'',picks[li],real,system).catch(()=>null):null;
+   if(swapped){rejected=[...rejected,picks[li].title];picks[li]={...picks[li],title:swapped.title,creator:swapped.creator};found[li]=swapped;onProgress(`Found ${SLOT_NAME.listen}: ${swapped.title}.`);}
+   else{found[li]=await findOnWeb(picks[li]);if(found[li])onProgress(`Found ${SLOT_NAME.listen}: ${found[li]!.title}.`);}
+  }
   const lost=picks.filter((_,i)=>!found[i]);
   console.log('build picks',attempt,JSON.stringify(picks.map((p,i)=>({slot:p.slot,title:p.title,creator:p.creator,format:p.format,found:found[i]?.from||null}))));
   (trace.attempts as {found?:unknown}[]).at(-1)!.found=picks.map((p,i)=>({slot:p.slot,title:p.title,from:found[i]?.from||null}));
   if(lost.length){
-   writing.abort();
    if(attempt<3){
     rejected=[...rejected,...lost.map(p=>p.title)];
     onProgress(`Couldn’t find ${lost.map(p=>p.title).join(' or ')} in any catalog. Choosing again.`);
@@ -201,6 +200,23 @@ Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wond
    await recordRun(model,'unfound',{...trace,ms:Date.now()-started});
    throw new CornerError('We couldn’t confirm every recommended work in a catalog. Please try again.',422);
   }
+  // Every work is confirmed; the writer works from the confirmed identities.
+  const confirmed=corners.map(c=>{const k=picks.findIndex(p=>p.slot===c.slot);return {...c,title:found[k]!.title,creator:picks[k].creator}});
+  const write=()=>generateText({
+   model:languageModel(),system,abortSignal:AbortSignal.timeout(90000),providerOptions:reasoned('low'),output:Output.object({schema:writerOut}),
+   prompt:`Write the finished threeangle as JSON using ONLY the works below. Add no works, facts or links. Structuring must add nothing that was not researched.
+CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
+CHOSEN CORNERS: ${JSON.stringify(confirmed)}
+BONUS: ${JSON.stringify(proposal.bonus)}
+CHOSEN TOPIC (every work must serve it): ${proposal.topic||''}
+EDITORIAL PROPOSAL: ${JSON.stringify({insight:proposal.insight})}
+WHAT THE USER LOVED ABOUT IT (the pitch should honour it): ${interest?JSON.stringify(interest):'not stated'}
+EDITORIAL VERSION: ${EDITORIAL_VERSION}
+
+Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker (the chosen topic as a short uppercase label like "TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
+  });
+  // A malformed draft is written once more before the build gives up.
+  const writer=write().catch(e=>{if(e instanceof Error&&e.name==='AI_NoObjectGeneratedError'){(trace.attempts as unknown[]).push({attempt,status:'rewrite',ms:Date.now()-started});return write();}throw e;});
   onProgress('Writing the connections.');
   let written;
   try{written=await writer}catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}

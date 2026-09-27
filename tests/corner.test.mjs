@@ -101,27 +101,26 @@ test('an unfinished draft is private to its maker',async()=>{
 test('a work no catalog can find is re-picked once, never shipped',async()=>{
  const h=await harness({unfindable:['DamNation']});const lookup=await h.pick();
  const repick=structuredClone(proposal);repick.corners[0]={slot:'watch',title:'The Emerald Mile Rapids',creator:'A Filmmaker',format:'Documentary'};
- h.outputs.push(proposal,writer,repick,writer);
+ h.outputs.push(proposal,repick,writer);
  const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));
  assert.ok(ev.some(e=>e.type==='status'&&/Couldn’t find DamNation/.test(e.text)));
  const topic=ev.find(e=>e.type==='result')?.topic;assert.ok(topic);
  assert.equal(topic.works[1].title,'The Emerald Mile Rapids');assert.ok(!topic.works.some(w=>w.title==='DamNation'));
- assert.match(h.calls[2].prompt,/DO NOT USE: \["DamNation"\]/);
+ assert.match(h.calls[1].prompt,/DO NOT USE: \["DamNation"\]/);
 });
-test('an episode no catalog can find is re-picked from real catalog episodes',async()=>{
+test('an episode no catalog can find is swapped for a real catalog episode, without a second pick',async()=>{
  const h=await harness({unfindable:['7 States, 1 River and an Agonizing Choice']});const lookup=await h.pick();
- const repick=structuredClone(proposal);repick.corners[1]={slot:'listen',title:'The River Is Running Dry',creator:'The Daily',format:'Podcast episode'};
- // pick, writer, the web lookup for the missing episode (finds nothing), the grounded re-pick, writer
- h.outputs.push({...proposal,listenSearch:['colorado river','water rights']},writer,{url:null},repick,writer);
+ // pick, the one small call that chooses from real episodes, writer
+ h.outputs.push({...proposal,listenSearch:['colorado river','water rights']},{title:'The River Is Running Dry',show:'The Daily'},writer);
  const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));const topic=ev.find(e=>e.type==='result')?.topic;
  assert.ok(topic,JSON.stringify(ev.filter(e=>e.type!=='heartbeat')));
- assert.equal(topic.works[2].title,'The River Is Running Dry');
- assert.match(h.calls[3].prompt,/choose ONE of these real episodes/);assert.match(h.calls[3].prompt,/The River Is Running Dry/);
- assert.match(h.calls[3].prompt,/KEEP THESE, they were found: \["watch: DamNation/);
+ assert.equal(topic.works[2].title,'The River Is Running Dry');assert.equal(topic.works[2].url,'https://podcasts.apple.com/x');
+ assert.equal(h.calls.length,3);assert.match(h.calls[1].prompt,/The River Is Running Dry/);
+ assert.match(h.calls[2].prompt,/The River Is Running Dry/);assert.doesNotMatch(h.calls[2].prompt,/7 States/);
 });
 test('when works stay unfindable the build fails cleanly and nothing is saved',async()=>{
  const h=await harness({unfindable:['DamNation']});const lookup=await h.pick();
- h.outputs.push(proposal,writer,proposal,writer,proposal,writer);
+ h.outputs.push(proposal,proposal,proposal);
  const ev=await h.events(await h.api.POST(h.request({action:'generate',id:lookup.id,choice:0,interest:''})));
  assert.ok(ev.some(e=>e.type==='error'&&/catalog/.test(e.error)));assert.ok(!ev.some(e=>e.type==='result'));
  const row=h.sql.prepare('SELECT result,status FROM corner_draft WHERE id=?').get(lookup.id);assert.equal(row.result,null);assert.equal(row.status,'ready');
