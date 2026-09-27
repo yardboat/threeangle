@@ -8,3 +8,6 @@ export const cornerDraft=sqliteTable('corner_draft',{
 export const cornerUsage=sqliteTable('corner_usage',{
  scope:text('scope').primaryKey(),count:integer('count').notNull().default(0),
 });
+export const quoteCache=sqliteTable('quote_cache',{
+ workKey:text('work_key').primaryKey(),quotes:text('quotes').notNull(),createdAt:integer('created_at').notNull(),
+});

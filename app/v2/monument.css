@@ -120,6 +120,17 @@
 .hall-light .hall-title-field button{color:var(--bone)}
 .hall-title-field button:hover:not(:disabled){transform:translateX(4px)}
 .hall-title-field button:disabled{background:transparent;color:var(--fg);opacity:.3}
+.hall-find-form{position:relative}
+.hall-suggest{list-style:none;margin:0;padding:6px 0;border:1px solid var(--rule);border-top:0;background:rgba(247,243,236,.94);box-shadow:0 24px 50px -30px rgba(20,16,12,.45);transition:opacity .3s}
+.hall-dark .hall-suggest{background:rgba(20,16,12,.92)}
+.hall-suggest.is-loading{opacity:.6}
+.hall-suggest li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:10px 16px;cursor:pointer;transition:background .2s}
+.hall-suggest li.is-active{background:rgba(124,93,43,.12)}
+.hall-suggest li>svg{opacity:0;transition:opacity .2s,transform .3s var(--ease)}
+.hall-suggest li.is-active>svg{opacity:.8;transform:translateX(3px)}
+.hall-suggest-text{display:flex;flex-direction:column;gap:5px;min-width:0}
+.hall-suggest-title{font:500 21px/1.1 var(--hall-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-suggest-meta{font:600 9.5px/1.3 var(--hall-ui);font-stretch:112%;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hall-input-meta{display:flex;justify-content:space-between;gap:20px;margin-top:14px;font-size:12px;color:var(--mute)}
 .hall-pulse{width:9px;height:9px;background:var(--accent);transform:rotate(45deg);animation:hall-pulse 1.4s ease-in-out infinite}
 @keyframes hall-pulse{50%{opacity:.25;transform:rotate(45deg) scale(.6)}}
@@ -296,6 +307,7 @@
  .hall-mega-m{font-size:clamp(30px,9vw,44px)}
  .hall-screen-head{margin-bottom:36px;gap:16px}
  .hall-title-field input{height:72px;font-size:30px}
+ .hall-suggest li{gap:12px;padding:9px 10px}.hall-suggest-title{font-size:18px}
  .hall-title-field button{width:52px;height:52px}
  .hall-matches li button{grid-template-columns:1fr;grid-template-areas:"k" "t" "c" "d" "a";row-gap:0}
  .hall-match-action{margin-top:16px}
@@ -315,6 +327,7 @@
 /* Covers. A typographic plate sits underneath; the art fades in over it when it arrives. */
 .wk-cover{position:relative;flex:none;overflow:hidden;background:linear-gradient(160deg,#2a211a,#15110d);color:#efe4cf;box-shadow:0 18px 40px -18px rgba(0,0,0,.65),0 0 0 1px rgba(212,176,108,.28)}
 .wk-cover-book{aspect-ratio:2/3}.wk-cover-poster{aspect-ratio:2/3}.wk-cover-square{aspect-ratio:1}.wk-cover-wide{aspect-ratio:4/3}
+.wk-cover-xs{width:38px}.wk-cover-square.wk-cover-xs{width:46px}.wk-cover-xs .wk-cover-plate{padding:4px;border-width:1px;outline:0}.wk-cover-xs .wk-cover-format{font-size:5.5px;letter-spacing:.1em}
 .wk-cover-s{width:74px}.wk-cover-m{width:clamp(120px,12vw,168px)}.wk-cover-l{width:clamp(160px,18vw,240px)}
 .wk-cover-square.wk-cover-s{width:84px}.wk-cover-square.wk-cover-m{width:clamp(140px,13vw,180px)}
 .wk-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s var(--ease)}

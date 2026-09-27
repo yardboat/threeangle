@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
-import {ArrowRight,ArrowUpRight,ArrowLeft,Bookmark,Check,Plus,X,Pause,Play,RotateCcw} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,ArrowLeft,Bookmark,Check,Plus,X,Pause,Play,RotateCcw,Share2} from 'lucide-react';
 import type {Lookup} from '@/lib/corner-schema';
 import {FORMATS} from '@/lib/formats';
 import {topics,type Topic} from '@/lib/stories';
@@ -16,6 +16,8 @@ import {HallWorld,roomNames,type Room} from './world';
 type Stage='welcome'|'input'|'thinking'|'reveal';
 type Saved={topicId:string;topic?:Topic|null};
 type Refine={open:boolean;creator:string;year:string;format:string};
+// A catalog search result for the typeahead. The token is signed by the server; confirming sends only that.
+type Suggestion={title:string;creator:string;format:string;year:string;description:string;image:string|null;url:string;token:string};
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Something interrupted the connection. Please try again.';
 const safeUrl=(url:string)=>/^https?:\/\//i.test(url)?url:'#';
 const stageOf=(s:Screen):Stage=>s.s==='welcome'?'welcome':s.s==='thinking'?'thinking':s.s==='reveal'?'reveal':'input';
@@ -41,6 +43,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const [paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[saved,setSaved]=useState<Saved[]>([]),[saving,setSaving]=useState(false),[shelfLoading,setShelfLoading]=useState(false),[shelfError,setShelfError]=useState('');
  const [slow,setSlow]=useState(false),[restoring,setRestoring]=useState(Boolean(first.id&&!first.topic));
  const [refine,setRefine]=useState<Refine>({open:false,creator:'',year:'',format:''}),[clarify,setClarify]=useState(false);
+ const [suggest,setSuggest]=useState<{q:string;list:Suggestion[];loading:boolean}>({q:'',list:[],loading:false}),[active,setActive]=useState(-1),[listOpen,setListOpen]=useState(false),[busyText,setBusyText]=useState('Finding your work…');
  const controller=useRef<AbortController|null>(null),requestId=useRef(0),main=useRef<HTMLElement>(null),shelf=useRef<HTMLDialogElement>(null),titleInput=useRef<HTMLInputElement>(null);
  // Live copies for handlers that outlive a render (popstate, async work).
  const stageRef=useRef(stage),lookupRef=useRef(lookup),choiceRef=useRef(choice),busyRef=useRef(busy),topicRef=useRef(topic);
@@ -135,6 +138,18 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   return()=>abort.abort();
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[quoteKey]);
+ // Typeahead: the catalogs are searched as the visitor types (debounced), top five with covers.
+ const typed=title.trim();
+ useEffect(()=>{
+  if(stage!=='input'||seed||typed.length<2||suggest.q===typed)return;
+  const abort=new AbortController();
+  const timer=setTimeout(()=>{
+   setSuggest(x=>({...x,loading:true}));
+   fetch('/api/search?'+new URLSearchParams({q:typed}),{signal:abort.signal}).then(r=>r.ok?r.json():{candidates:[]}).then(d=>{setSuggest({q:typed,list:Array.isArray(d.candidates)?d.candidates:[],loading:false});setActive(-1);}).catch(()=>{if(!abort.signal.aborted)setSuggest({q:typed,list:[],loading:false});});
+  },250);
+  return()=>{clearTimeout(timer);abort.abort();};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[typed,stage,seed]);
  // A long wait is a walk: the library drifts between the gallery and the map room while it works.
  useEffect(()=>{if(stage!=='thinking')return;const t=setInterval(()=>setWander(w=>w+1),24000);return()=>clearInterval(t);},[stage]);
  useEffect(()=>{if(stage!=='thinking')return;const timer=setTimeout(()=>setSlow(true),35000);return()=>clearTimeout(timer);},[stage]);
@@ -156,12 +171,12 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  // again = "none of these": search again with what the visitor has added, without the works already ruled out.
  async function find(event?:FormEvent,again=false){
   event?.preventDefault();if(busy||title.trim().length<2)return;
-  if(again){if(lookup)rejected.current=[...rejected.current,...lookup.matches.map(m=>({title:m.title.slice(0,100),creator:m.creator.slice(0,60)}))].slice(-6);}
+  if(again){rejected.current=[...rejected.current,...(lookup?.matches||[]),...(suggest.q===title.trim()?suggest.list:[])].map(m=>({title:m.title.slice(0,100),creator:m.creator.slice(0,60)})).slice(-8);}
   else rejected.current=[];
   const hints:Record<string,unknown>={};
   if(again||refine.open){if(refine.creator.trim())hints.creator=refine.creator.trim();if(refine.year.trim())hints.year=refine.year.trim();if(refine.format)hints.format=refine.format;}
   if(rejected.current.length)hints.exclude=rejected.current;
-  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setError('');setLookup(null);setChoice(null);setClarify(false);
+  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setBusyText('Searching further afield… this can take a little while.');setListOpen(false);setError('');setLookup(null);setChoice(null);setClarify(false);
   try{
    const found=await lookupWork(title,controller.current.signal,hints);if(token!==requestId.current)return;
    setLookup(found);
@@ -173,6 +188,57 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    if(e instanceof LookupError&&e.status===422){setClarify(true);setRefine(r=>({...r,open:true}));}
   }finally{if(token===requestId.current)setBusy(false);}
  }
+ // Confirm a catalog result: the server re-reads the signed result, fills in a fuller description, and
+ // keeps it as this visitor's draft. Then straight to "What did you love about it?".
+ async function pickCandidate(s:Suggestion){
+  if(busy)return;
+  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setBusyText('Opening '+s.title+'…');setListOpen(false);setError('');setClarify(false);
+  try{
+   const res=await fetch('/api/corner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pick',token:s.token}),signal:controller.current.signal});const data=await res.json();
+   if(!res.ok)throw new Error(data.error||'That work couldn’t be opened. Please choose it again.');
+   if(token!==requestId.current)return;
+   setTitle(s.title);setLookup(data);lookupRef.current=data;setRefine(r=>({...r,open:false}));choose(0);
+  }catch(e){if(token===requestId.current)setError(errorText(e));}
+  finally{if(token===requestId.current)setBusy(false);}
+ }
+ // Enter: the highlighted result, else the top one; nothing in the catalogs -> the research fallback.
+ async function submitTitle(event:FormEvent){
+  event.preventDefault();if(busy||typed.length<2)return;
+  if(active>=0&&suggest.list[active])return pickCandidate(suggest.list[active]);
+  let list=suggest.q===typed?suggest.list:null;
+  if(!list){
+   setBusy(true);setBusyText('Searching the catalogs…');
+   try{const d=await fetch('/api/search?'+new URLSearchParams({q:typed})).then(r=>r.ok?r.json():{candidates:[]});list=Array.isArray(d.candidates)?d.candidates as Suggestion[]:[];setSuggest({q:typed,list,loading:false});}
+   catch{list=[];}finally{setBusy(false);}
+  }
+  if(list.length){setListOpen(true);return pickCandidate(list[0]);}
+  return find();
+ }
+ function onTitleKey(e:React.KeyboardEvent<HTMLInputElement>){
+  const n=suggest.list.length;if(!n)return;
+  if(e.key==='ArrowDown'){e.preventDefault();setListOpen(true);setActive(a=>(a+1)%n);}
+  else if(e.key==='ArrowUp'){e.preventDefault();setListOpen(true);setActive(a=>a<=0?n-1:a-1);}
+  else if(e.key==='Escape'){setListOpen(false);setActive(-1);}
+ }
+ // "Find another angle" starts again from the same work: a custom triangle reuses its confirmed work; a
+ // curated one finds its starting work in the catalogs (research only as the last resort).
+ async function lookupAgain(t:Topic,signal:AbortSignal):Promise<{found:Lookup;index:number}>{
+  const original=t.works.find(w=>w.title===t.seedTitle)||t.works[0];
+  const post=(body:unknown)=>fetch('/api/corner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});
+  if(t.id.startsWith('custom-')){const res=await post({action:'reuse',topicId:t.id});if(res.ok){const d=await res.json();return {found:d,index:typeof d.choice==='number'?d.choice:0};}}
+  const s=await fetch('/api/search?'+new URLSearchParams({q:original.title+' '+original.creator}),{signal}).then(r=>r.ok?r.json():{candidates:[]}).catch(()=>({candidates:[]}));
+  const hit=(s.candidates as Suggestion[]||[]).find(c=>c.title.trim().toLowerCase()===original.title.trim().toLowerCase());
+  if(hit){const res=await post({action:'pick',token:hit.token});if(res.ok)return {found:await res.json(),index:0};}
+  const found=await lookupWork((original.title+' — '+original.creator).slice(0,240),signal);
+  return {found,index:found.matches.findIndex(m=>sameWork(m,original))};
+ }
+ async function share(){
+  if(!topic)return;const url=location.origin+'/?triangle='+encodeURIComponent(topic.id);
+  try{
+   if(typeof navigator.share==='function'){await navigator.share({title:topic.name+' · threeangle',text:topic.hook,url});return;}
+   await navigator.clipboard.writeText(url);setNotice('Link copied. Anyone with it can open this threeangle.');
+  }catch(e){if(!(e instanceof Error&&e.name==='AbortError'))setNotice('Copy this link to share: '+url);}
+ }
  async function generate(another=false){
   if(busy)return;const currentTopic=topic;
   if(!another&&(!lookup||choice===null))return;
@@ -183,11 +249,10 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    let useLookup=lookup,useChoice=choice;
    if(another&&currentTopic){
     setPrevious(currentTopic);
-    const original=currentTopic.works.find(w=>w.title===currentTopic.seedTitle)||currentTopic.works[0];
-    // A completed draft is cached by the API. A second angle needs a fresh lookup ID.
-    const found=await lookupWork((original.title+' — '+original.creator).slice(0,240),controller.current.signal);
-    if(token!==requestId.current)return;const index=found.matches.findIndex(m=>sameWork(m,original));
-    setLookup(found);setChoice(index>=0?index:null);setTitle(original.title);useLookup=found;useChoice=index;lookupRef.current=found;choiceRef.current=index>=0?index:null;
+    // A completed draft is cached by the API. A second angle needs a fresh draft ID.
+    const {found,index}=await lookupAgain(currentTopic,controller.current.signal);
+    if(token!==requestId.current)return;const original=found.matches[index>=0?index:0];
+    setLookup(found);setChoice(index>=0?index:null);setTitle(original?.title||title);useLookup=found;useChoice=index;lookupRef.current=found;choiceRef.current=index>=0?index:null;
     if(index<0){setError('Let’s confirm your starting work again before finding another connection.');leaveThinking({s:'find'});return;}
    }
    if(!useLookup||useChoice===null||useChoice<0)throw new Error('Choose your starting work first.');
@@ -208,6 +273,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const choose=(i:number)=>{setChoice(i);setError('');go({s:'confirm',c:i});};
  const isSaved=topic&&saved.some(s=>s.topicId===topic.id);
  const matches=lookup?.matches||[];
+ const shown=suggest.q&&typed.toLowerCase().startsWith(suggest.q.toLowerCase().slice(0,Math.max(2,typed.length-3)))?suggest.list:[];
  const room:Room=stage==='welcome'?'arrival':stage==='thinking'?(wander%2?'maproom':'gallery'):stage==='reveal'?revealRoom:seed?'study':'reading';
  const still=paused||reduced;
  return <div className={`hall hall-stage-${stage} ${stage==='thinking'||stage==='reveal'?'hall-dark':'hall-light'} ${still?'hall-still':''}`}>
@@ -232,10 +298,12 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
     {!seed?<header className="hall-screen-head"><h1 className="hall-mega hall-mega-m">What’s a work<br/>you love?</h1><p className="hall-sub">Start with an article, book, movie, podcast, TV show or album.</p></header>
      :<header className="hall-screen-head hall-confirm-head"><p className="hall-kicker">Your starting point <span>·</span> {seed.format} · {seed.year}</p><h1 className={`hall-confirm-title ${seed.title.length>40?'is-long':seed.title.length>22?'is-mid':''}`}>{seed.title}</h1><p className="hall-match-creator">{seed.creator}</p></header>}
     {restoring?<p role="status" className="hall-center-note">Opening your connection…</p>:<div className="hall-desk">
-     {!seed?<><form onSubmit={find} className="hall-find-form"><label htmlFor="hall-title">Title</label><div className="hall-title-field"><input ref={titleInput} id="hall-title" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Type a title" maxLength={240} required minLength={2} disabled={busy} autoComplete="off"/><button type="submit" aria-label="Find my title" disabled={busy||ready!==true||title.trim().length<2}><ArrowRight size={24}/></button></div><div className="hall-input-meta"><span>For a podcast, use the episode title.</span><span>01 / 02</span></div></form>
-      {busy&&<div className="hall-lookup-status" role="status"><span className="hall-pulse" aria-hidden="true"/> Finding your work… <button className="hall-quiet" onClick={cancelLookup}>Cancel</button></div>}
-      {!busy&&(matches.length>0||clarify)&&<div className="hall-matches">{matches.length>0&&<><h2 className="hall-kicker">{matches.length>1?'Which one stayed with you?':'Is this the one?'}</h2><ol>{matches.map((m,i)=><li key={m.title+i}><button onClick={()=>choose(i)}><Cover work={m} size="s" className="hall-match-cover"/><span className="hall-kicker">{m.format} · {m.year}</span><span className="hall-match-title">{m.title}</span><span className="hall-match-creator">{m.creator}</span><span className="hall-match-description">{m.description.length>220?m.description.slice(0,217).replace(/\s+\S*$/,'')+'…':m.description}</span><span className="hall-match-action">This is the one <ArrowRight size={16}/></span></button></li>)}</ol></>}
-       <div className="hall-notit">{!refine.open?<button className="hall-quiet" onClick={()=>setRefine(r=>({...r,open:true}))}>{matches.length>0?'None of these? Help us find it.':'Help us find it.'} <Plus size={14}/></button>
+     {!seed?<><form onSubmit={e=>void submitTitle(e)} className="hall-find-form" role="search"><label htmlFor="hall-title">Title</label><div className="hall-title-field"><input ref={titleInput} id="hall-title" value={title} onChange={e=>{setTitle(e.target.value);setListOpen(true);}} onFocus={()=>setListOpen(true)} onBlur={()=>setListOpen(false)} onKeyDown={onTitleKey} placeholder="Type a title" maxLength={240} required minLength={2} disabled={busy} autoComplete="off" role="combobox" aria-autocomplete="list" aria-expanded={listOpen&&shown.length>0} aria-controls="hall-suggest" aria-activedescendant={active>=0?`hall-suggest-${active}`:undefined}/><button type="submit" aria-label="Find my title" disabled={busy||ready!==true||typed.length<2}><ArrowRight size={24}/></button></div>
+      {listOpen&&!busy&&shown.length>0&&<ul id="hall-suggest" role="listbox" aria-label="Works that match" className={`hall-suggest ${suggest.loading?'is-loading':''}`}>{shown.map((c,i)=><li key={c.token} id={`hall-suggest-${i}`} role="option" aria-selected={i===active} className={i===active?'is-active':''} onMouseDown={e=>e.preventDefault()} onMouseEnter={()=>setActive(i)} onClick={()=>void pickCandidate(c)}><Cover work={c} size="xs"/><span className="hall-suggest-text"><span className="hall-suggest-title">{c.title}</span><span className="hall-suggest-meta">{[c.creator,c.format,c.year].filter(Boolean).join(' · ')}</span></span><ArrowRight size={15} aria-hidden="true"/></li>)}</ul>}
+      <div className="hall-input-meta"><span>{typed.length>=2&&suggest.q===typed&&!suggest.loading&&!shown.length?'Nothing in the catalogs yet. Press enter and we’ll search further.':'For a podcast, use the episode title.'}</span><span>01 / 02</span></div></form>
+      {busy&&<div className="hall-lookup-status" role="status"><span className="hall-pulse" aria-hidden="true"/> {busyText} <button className="hall-quiet" onClick={cancelLookup}>Cancel</button></div>}
+      {!busy&&(matches.length>0||clarify||(suggest.q===typed&&typed.length>=2&&!suggest.loading))&&<div className="hall-matches">{matches.length>0&&<><h2 className="hall-kicker">{matches.length>1?'Which one stayed with you?':'Is this the one?'}</h2><ol>{matches.map((m,i)=><li key={m.title+i}><button onClick={()=>choose(i)}><Cover work={m} size="s" className="hall-match-cover"/><span className="hall-kicker">{m.format} · {m.year}</span><span className="hall-match-title">{m.title}</span><span className="hall-match-creator">{m.creator}</span><span className="hall-match-description">{m.description.length>220?m.description.slice(0,217).replace(/\s+\S*$/,'')+'…':m.description}</span><span className="hall-match-action">This is the one <ArrowRight size={16}/></span></button></li>)}</ol></>}
+       <div className="hall-notit">{!refine.open?<button className="hall-quiet" onClick={()=>{setListOpen(false);setRefine(r=>({...r,open:true}));}}>{matches.length>0||shown.length>0?'None of these? Help us find it.':'Help us find it.'} <Plus size={14}/></button>
         :<form className="hall-refine" onSubmit={e=>{void find(e,true);}} aria-label="Narrow the search">
          <p className="hall-kicker">{matches.length>0?'Not quite right':'A little more, please'}</p>
          <p className="hall-refine-lede">Add whatever you remember. {matches.length>0?'We’ll look again and skip the ones you’ve ruled out.':'We’ll look again.'}</p>
@@ -275,7 +343,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    {stage==='reveal'&&topic&&<section className="hall-reveal" key={topic.id}>
     <Reveal topic={topic} still={still} onRoom={setRevealRoom} footer={<>
      <Sources topic={topic}/>
-     <section className="rv-next"><p className="hall-kicker">There’s always another way in</p><h2 className="hall-mega hall-mega-s">What else<br/>might it open?</h2><p className="hall-sub">Keep {topic.seedTitle||topic.works[0].title} as your starting point, or bring something new.</p><div className="hall-actions"><button className="hall-cta hall-cta-light" onClick={()=>void generate(true)} disabled={busy||ready!==true}>Find another angle <RotateCcw size={16}/></button><button className="hall-quiet" onClick={save} disabled={saving}>{isSaved?<Check size={14}/>:<Bookmark size={14}/>} {saving?'Saving…':isSaved?'Kept in your collection':'Keep this threeangle'}</button><button className="hall-quiet" onClick={freshStart}>Start with a different work <ArrowRight size={14}/></button>{previous&&<button className="hall-quiet hall-return" onClick={()=>revisit(previous)}>Return to {previous.name}</button>}</div></section>
+     <section className="rv-next"><p className="hall-kicker">There’s always another way in</p><h2 className="hall-mega hall-mega-s">What else<br/>might it open?</h2><p className="hall-sub">Keep {topic.seedTitle||topic.works[0].title} as your starting point, or bring something new.</p><div className="hall-actions"><button className="hall-cta hall-cta-light" onClick={()=>void generate(true)} disabled={busy||ready!==true}>Find another angle <RotateCcw size={16}/></button><button className="hall-quiet" onClick={save} disabled={saving}>{isSaved?<Check size={14}/>:<Bookmark size={14}/>} {saving?'Saving…':isSaved?'Kept in your collection':'Keep this threeangle'}</button><button className="hall-quiet" onClick={()=>void share()}><Share2 size={14}/> Share</button><button className="hall-quiet" onClick={freshStart}>Start with a different work <ArrowRight size={14}/></button>{previous&&<button className="hall-quiet hall-return" onClick={()=>revisit(previous)}>Return to {previous.name}</button>}</div></section>
     </>}/>
    </section>}
   </main>

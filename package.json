@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "node scripts/prepare-db.mjs && next build --webpack",
     "start": "next start",
-    "test": "node --experimental-vm-modules --test tests/corner.test.mjs tests/session.test.mjs",
+    "test": "node --experimental-vm-modules --test tests/corner.test.mjs tests/session.test.mjs && tsx --test tests/hall-client.test.ts tests/catalog.test.ts",
     "lint": "eslint app lib db",
 "eval:agent": "tsx scripts/eval-agent.ts",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs"
