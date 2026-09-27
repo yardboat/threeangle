@@ -289,7 +289,11 @@ export async function searchCatalog(query:string,opts:{format?:Format;limit?:num
  for(const c of found){const i=merged.findIndex(m=>sameWork(m,c));if(i>=0)merged[i]=merge(merged[i],c);else merged.push({...c});}
  const qb=bare(q).toLowerCase();
  const rank=(c:Candidate)=>{const t=bare(c.title).toLowerCase();return 2*titleFit(q,c.title)+overlap(q,c.title)+(t===qb?1:t.startsWith(qb)?.4:0)+(c.score||0)+(c.image?.2:0)+(c.creator?.1:0)-(c.format==='Podcast episode'&&overlap(q,c.title)<.5?.8:0)};
- return merged.map(c=>({...c,score:rank(c)})).filter(c=>(c.score||0)>=.9).sort((a,b)=>(b.score||0)-(a.score||0)).slice(0,opts.limit||5);
+ // Half the typed words must start a word of the title (prefixes count, so a half-typed word still matches);
+ // popularity alone never brings in an unrelated classic.
+ const typed=words(q).filter(w=>!STOP.has(w));
+ const typedFit=(t:string)=>{if(!typed.length)return 1;const have=words(t);return typed.filter(w=>have.some(h=>h.startsWith(w))).length/typed.length};
+ return merged.map(c=>({...c,score:rank(c)})).filter(c=>(c.score||0)>=.9&&typedFit(c.title)>=.5).sort((a,b)=>(b.score||0)-(a.score||0)).slice(0,opts.limit||5);
 }
 
 // A fuller dossier for the confirmed work, from its catalog page and Wikipedia. Never blocks for long.
