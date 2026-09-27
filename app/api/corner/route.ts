@@ -62,7 +62,7 @@ const result=resultSchema.parse(built.output);const works=result.works.map(w=>({
  if(new Set(works.map(w=>w.title.toLowerCase().replace(/\W/g,''))).size!==4||!['Book','Article'].includes(works[0].format)||!['Movie','Documentary','Show'].includes(works[1].format)||!(works[2].format==='Podcast episode'||(works[2].format==='Album'&&seed.format==='Album')))throw new Error('Invalid media triangle');
  const topic:Topic={...result,id:'custom-'+input.id,title:result.name,pilotIndex:24,color:'#dfff00',works,sources,searchHtml:lookup.searchHtml,seedTitle:seed.title};
  await db.prepare("UPDATE corner_draft SET result=?,status='complete',updated_at=? WHERE id=? AND user_id=?").bind(JSON.stringify(topic),Date.now(),input.id,user).run();send({type:'result',topic});
- }catch(e){console.error('Custom triangle failed',e instanceof Error?e.name:'unknown');await db.prepare("UPDATE corner_draft SET status='ready',updated_at=? WHERE id=? AND user_id=?").bind(Date.now(),input.id,user).run();send({type:'error',error:e instanceof CornerError?e.message:'We couldn’t complete a well-supported triangle. Please try again.'});}
+ }catch(e){console.error('Custom triangle failed',e instanceof Error?e.name+': '+e.message.slice(0,300):'unknown');await db.prepare("UPDATE corner_draft SET status='ready',updated_at=? WHERE id=? AND user_id=?").bind(Date.now(),input.id,user).run();send({type:'error',error:e instanceof CornerError?e.message:'We couldn’t complete a well-supported triangle. Please try again.'});}
  finally{clearInterval(timer);if(connected)try{controller.close()}catch{}}
  }});
  return new Response(stream,{headers:{'Content-Type':'application/x-ndjson','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
