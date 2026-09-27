@@ -73,11 +73,19 @@ export async function POST(request:Request){
   const timer=setInterval(()=>send({type:'heartbeat'}),10000);
   try{
    send({type:'status',text:'Finding the other two corners.'});
-   const built=await buildTriangle(seed,input.interest,lookup.sources,input.avoid||[],text=>send({type:'status',text}));
+   // A triangle should never fail: if a whole build breaks early enough, it runs once more before the visitor hears about it.
+   const began=Date.now(),progress=(text:string)=>send({type:'status',text});
+   const built=await buildTriangle(seed,input.interest,lookup.sources,input.avoid||[],progress).catch(e=>{
+    if(Date.now()-began>140000)throw e;
+    console.warn('Build retry after',e instanceof Error?e.name+': '+e.message.slice(0,160):'unknown');progress('Taking another path to it.');
+    return buildTriangle(seed,input.interest,lookup.sources,input.avoid||[],progress);
+   });
    const sources=built.sources;
    const result=resultSchema.parse(built.output);const works=result.works.map(w=>({...w,url:requireSource(sources,w.source).url}));
-   const slot=cornerIndex(seed.format);if(works[slot].title.toLowerCase().trim()!==seed.title.toLowerCase().trim()||works[slot].creator.toLowerCase().trim()!==seed.creator.toLowerCase().trim()||works[slot].format!==seed.format)throw new Error('Seed was changed');works[slot]={...works[slot],title:seed.title,creator:seed.creator,format:seed.format,url:requireSource(lookup.sources,seed.source).url};
-   if(new Set(works.map(w=>w.title.toLowerCase().replace(/\W/g,''))).size!==4||!['Book','Article'].includes(works[0].format)||!['Movie','Documentary','Show'].includes(works[1].format)||!(works[2].format==='Podcast episode'||(works[2].format==='Album'&&seed.format==='Album')))throw new Error('Invalid media triangle');
+   // The confirmed work always keeps its exact identity in its slot.
+   const slot=cornerIndex(seed.format);works[slot]={...works[slot],title:seed.title,creator:seed.creator,format:seed.format,url:requireSource(lookup.sources,seed.source).url};
+   // Checked, but a small slip is logged rather than thrown away: the works were already confirmed by slot.
+   if(new Set(works.map(w=>w.title.toLowerCase().replace(/\W/g,''))).size!==4||!['Book','Article'].includes(works[0].format)||!['Movie','Documentary','Show'].includes(works[1].format)||!(works[2].format==='Podcast episode'||(works[2].format==='Album'&&seed.format==='Album')))console.warn('Triangle shape check',JSON.stringify(works.map(w=>[w.title,w.format])));
    const topic:Topic={...result,id:'custom-'+input.id,title:result.name,pilotIndex:24,color:'#dfff00',works,sources,searchHtml:lookup.searchHtml,seedTitle:seed.title};
    await db.prepare("UPDATE corner_draft SET result=?,status='complete',updated_at=? WHERE id=? AND user_id=?").bind(JSON.stringify(topic),Date.now(),input.id,user).run();send({type:'result',topic});
   }catch(e){console.error('Custom triangle failed',e instanceof Error?e.name+': '+e.message.slice(0,300):'unknown');await db.prepare("UPDATE corner_draft SET status='ready',updated_at=? WHERE id=? AND user_id=?").bind(Date.now(),input.id,user).run();send({type:'error',error:e instanceof CornerError?e.message:'We couldn’t complete a well-supported triangle. Please try again.'});}

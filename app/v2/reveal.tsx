@@ -12,8 +12,6 @@ import {worldSignal,type Room} from './world';
 
 const letters=['a','b','c'];
 const safeUrl=(url:string)=>/^https?:\/\//i.test(url)?url:'#';
-// Side i joins faces i and i+1 (side 2 closes the loop): the bridge between two works.
-const sideOf=(a:number,b:number)=>(a+1)%3===b?a:(b+1)%3===a?b:-1;
 export const REVEAL_ROOMS:Room[]=['stairs','frames','gallery','maproom','rotunda'];
 const sizeOf=(n:string)=>n.length>30?'is-xlong':n.length>20?'is-long':n.length>13?'is-mid':'';
 const titleSize=(n:string)=>n.length>44?'is-long':n.length>24?'is-mid':'';
@@ -56,10 +54,10 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
  </div>;
 
  if(step<=3){
-  const i=order[step-1],work=main[i],seed=i===seedIndex;
-  const side=seed?-1:sideOf(seedIndex,i);
+  const i=order[step-1],work=main[i];
   const lit={corners:new Set([i]),sides:new Set<number>()};
-  const callout={face:i,content:<><Cover work={work} size="s"/><span className="hall-kicker"><b>{letters[i]}</b> {MODES[i]}</span><span className="fig-callout-title">{work.title}</span><span className="fig-callout-by">{work.creator}</span></>};
+  // The work itself stands beside its face of the drawing: its cover, nothing else.
+  const callout={face:i,content:<Cover work={work} size="m" className="rw-callout-cover"/>};
   return <div className="rw rw-work hall-enter" key={'w'+step}>
    <header className="rw-work-head">
     <p className="hall-kicker"><span className="rw-count">{String(step).padStart(2,'0')} / 03</span> <b>{letters[i]}</b> {MODES[i]} · {work.format}</p>
@@ -71,10 +69,7 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
     <Figure faces={faces} view={{turn:i*120,el:20}} still={still} lit={lit} callout={callout} label={`${work.title}, face ${letters[i]} of your threeangle`}/>
    </div>
    <div className="rw-why">
-    {topic.angles?.[i]&&<p className="hall-kicker">Seen as · {topic.angles[i]}</p>}
     <p className="rw-why-text">{topic.answers?.[i]||work.pitch}</p>
-    {side>=0&&topic.bridges?.[side]&&<p className="rw-link"><span className="hall-kicker">The link to {main[seedIndex].title}</span>{topic.bridges[side]}</p>}
-    <WorkLink work={work}>Explore {work.title.length>34?'the work':work.title}</WorkLink>
    </div>
    <nav className="rw-nav" aria-label="Reveal">
     <button className="hall-quiet" onClick={()=>go(step-1)}><ArrowLeft size={14}/> Back</button>

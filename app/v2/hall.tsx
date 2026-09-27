@@ -13,6 +13,8 @@ import {Cover} from './cover';
 import {WrittenQuotes,type Quote} from './quotes';
 import {HallWorld,roomNames,type Room} from './world';
 
+// While the library works it walks: a new room every few seconds, repeating as needed.
+const WAIT_ROOMS:Room[]=['gallery','maproom','frames','stairs'];
 type Stage='welcome'|'input'|'thinking'|'reveal';
 type Saved={topicId:string;topic?:Topic|null};
 type Refine={open:boolean;creator:string;year:string;format:string};
@@ -41,7 +43,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const [ready,setReady]=useState<boolean|null>(null),[busy,setBusy]=useState(false),[phase,setPhase]=useState('Following the thread.'),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [quotes,setQuotes]=useState<{key:string;list:Quote[]}>({key:'',list:[]}),[revealRoom,setRevealRoom]=useState<Room>('stairs'),[wander,setWander]=useState(0);
  const [paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[saved,setSaved]=useState<Saved[]>([]),[saving,setSaving]=useState(false),[shelfLoading,setShelfLoading]=useState(false),[shelfError,setShelfError]=useState('');
- const [slow,setSlow]=useState(false),[restoring,setRestoring]=useState(Boolean(first.id&&!first.topic));
+ const [restoring,setRestoring]=useState(Boolean(first.id&&!first.topic));
  const [refine,setRefine]=useState<Refine>({open:false,creator:'',year:'',format:''}),[clarify,setClarify]=useState(false);
  const [suggest,setSuggest]=useState<{q:string;list:Suggestion[];loading:boolean}>({q:'',list:[],loading:false}),[active,setActive]=useState(-1),[listOpen,setListOpen]=useState(false),[busyText,setBusyText]=useState('Finding your work…');
  const controller=useRef<AbortController|null>(null),requestId=useRef(0),main=useRef<HTMLElement>(null),shelf=useRef<HTMLDialogElement>(null),titleInput=useRef<HTMLInputElement>(null);
@@ -59,7 +61,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   const n=mode==='push'?depth.current+1:depth.current;
   window.history[mode==='push'?'pushState':'replaceState']({hall:{...screen,n}},'',screenUrl(screen));depth.current=n;
  },[]);
- const stopRun=useCallback(()=>{requestId.current++;controller.current?.abort();setBusy(false);setSlow(false);},[]);
+ const stopRun=useCallback(()=>{requestId.current++;controller.current?.abort();setBusy(false);},[]);
  const showTopic=useCallback((t:Topic)=>{seen.current.set(t.id,t);setTopic(t);setStage('reveal');stageRef.current='reveal';},[]);
  const restore=useCallback(async(id:string,signal:AbortSignal)=>{
   if(!/^custom-[0-9a-f-]{36}$/.test(id))throw new Error('We couldn’t find that triangle. Start with a title you love.');
@@ -150,9 +152,8 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
   return()=>{clearTimeout(timer);abort.abort();};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[typed,stage,seed]);
- // A long wait is a walk: the library drifts between the gallery and the map room while it works.
- useEffect(()=>{if(stage!=='thinking')return;const t=setInterval(()=>setWander(w=>w+1),24000);return()=>clearInterval(t);},[stage]);
- useEffect(()=>{if(stage!=='thinking')return;const timer=setTimeout(()=>setSlow(true),35000);return()=>clearTimeout(timer);},[stage]);
+ // A long wait is a walk: a new room every nine seconds, round and round.
+ useEffect(()=>{if(stage!=='thinking')return;const t=setInterval(()=>setWander(w=>w+1),9000);return()=>clearInterval(t);},[stage]);
 
  const startInput=()=>{setError('');setNotice('');go({s:'find'});requestAnimationFrame(()=>titleInput.current?.focus());};
  const goHome=()=>{if(busy)return;go({s:'welcome'});};
@@ -242,7 +243,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  async function generate(another=false){
   if(busy)return;const currentTopic=topic;
   if(!another&&(!lookup||choice===null))return;
-  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setError('');setNotice('');setSlow(false);setPhase(another?'Finding another way in.':'Following the thread.');
+  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setError('');setNotice('');setPhase(another?'Finding another way in.':'Following the thread.');
   origin.current=another&&currentTopic?{s:'reveal',id:currentTopic.id}:{s:'confirm',c:choice as number};
   setWander(0);go({s:'thinking'});
   try{
@@ -257,8 +258,18 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    }
    if(!useLookup||useChoice===null||useChoice<0)throw new Error('Choose your starting work first.');
    const avoid=another&&currentTopic?currentTopic.works.filter(w=>w.title!==useLookup!.matches[useChoice!].title).map(w=>w.title.slice(0,300)):[];
-   const res=await fetch('/api/corner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate',id:useLookup.id,choice:useChoice,interest,avoid}),signal:controller.current.signal});
-   const result=await readTriangleResponse(res,text=>{if(token===requestId.current)setPhase(text);});
+   // A triangle should never fail in front of the visitor: a broken build is quietly tried again, and a build
+   // that is still running elsewhere (a dropped connection) is waited for; the finished draft is cached by the API.
+   const signal=controller.current.signal,body=JSON.stringify({action:'generate',id:useLookup.id,choice:useChoice,interest,avoid});
+   const pause=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+   let result:Topic|null=null,lastError:unknown=null;
+   for(let tries=0,waits=0;!result&&tries<3&&waits<16;){
+    const res=await fetch('/api/corner',{method:'POST',headers:{'Content-Type':'application/json'},body,signal});
+    if(res.status===409){waits++;await pause(12000);continue;}
+    try{result=await readTriangleResponse(res,text=>{if(token===requestId.current)setPhase(text);});}
+    catch(e){if(signal.aborted||res.status===429)throw e;lastError=e;tries++;if(token!==requestId.current)return;await pause(1500);}
+   }
+   if(!result)throw lastError||new Error('The library couldn’t finish this connection. Please try again.');
    if(token!==requestId.current)return;if(currentTopic)setPrevious(currentTopic);openTopic(result,'replace');
   }catch(e){if(token===requestId.current){setError(errorText(e));leaveThinking(choiceRef.current!==null&&lookupRef.current?{s:'confirm',c:choiceRef.current}:{s:'find'});}}
   finally{if(token===requestId.current)setBusy(false);}
@@ -274,11 +285,11 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const isSaved=topic&&saved.some(s=>s.topicId===topic.id);
  const matches=lookup?.matches||[];
  const shown=suggest.q&&typed.toLowerCase().startsWith(suggest.q.toLowerCase().slice(0,Math.max(2,typed.length-3)))?suggest.list:[];
- const room:Room=stage==='welcome'?'arrival':stage==='thinking'?(wander%2?'maproom':'gallery'):stage==='reveal'?revealRoom:seed?'study':'reading';
+ const room:Room=stage==='welcome'?'arrival':stage==='thinking'?WAIT_ROOMS[wander%WAIT_ROOMS.length]:stage==='reveal'?revealRoom:seed?'study':'reading';
  const still=paused||reduced;
  return <div className={`hall hall-stage-${stage} ${stage==='thinking'||stage==='reveal'?'hall-dark':'hall-light'} ${still?'hall-still':''}`}>
   <a className="hall-skip" href="#hall-main">Skip to content</a>
-  <HallWorld room={room} still={still} looking={false}/>
+  <HallWorld room={room} still={still} looking={false} film={stage==='thinking'}/>
   <header className="hall-header">
    <div className="hall-header-side">{stage!=='welcome'&&<button className="hall-nav hall-back" onClick={goBack}><ArrowLeft size={15}/><span>Back</span></button>}<span className="hall-room-name">{roomNames[room]}</span></div>
    <button className="hall-brand" onClick={goHome} aria-label="threeangle home" disabled={busy}><LiveMark still={still}/><span>threeangle</span></button>
@@ -332,13 +343,10 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
      {previous&&<button className="hall-quiet hall-return" onClick={()=>revisit(previous)}><ArrowLeft size={14}/> Your previous connection: {previous.name}</button>}
     </div>}
    </section>}
-   {stage==='thinking'&&<section className="hall-thinking hall-enter">
-    <p className="hall-kicker">The library at work</p>
+   {stage==='thinking'&&<section className="hall-thinking hall-enter" aria-label="Building your threeangle">
     <Figure variant="hero" faces={[{title:seed?.title||topic?.seedTitle||topic?.works[0].title},{unknown:true},{unknown:true}]} labels={['a','?','?']} view={null} idle building still={still} label="Your threeangle, taking shape"/>
-    {quotes.key===quoteKey&&quotes.list.length>0&&seed?<WrittenQuotes quotes={quotes.list} title={seed.title} still={still}/>:<p className="hall-phase" role="status">{phase}</p>}
-    {quotes.key===quoteKey&&quotes.list.length>0&&<p className="hall-phase-small" role="status">{phase}</p>}
-    <p className="hall-wait-note">{slow?'Still following the thread. Your starting title is safe here.':'Thoughtful connections take a moment. Sometimes a couple of minutes.'}</p>
-    <button className="hall-quiet" onClick={goBack}>Back to my title</button>
+    {quotes.key===quoteKey&&quotes.list.length>0&&seed?<WrittenQuotes quotes={quotes.list} title={seed.title} still={still}/>:<p className="hall-phase" aria-hidden="true">{phase}</p>}
+    <p className="hall-sr" role="status">{phase}</p>
    </section>}
    {stage==='reveal'&&topic&&<section className="hall-reveal" key={topic.id}>
     <Reveal topic={topic} still={still} onRoom={setRevealRoom} footer={<>

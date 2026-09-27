@@ -17,12 +17,8 @@ export function WrittenQuotes({quotes,title,still}:{quotes:Quote[];title:string;
  if(!q)return null;
  const chars=[...q.text];const step=still?0:Math.min(38,2400/chars.length);
  return <figure className="hq" key={n} aria-live="polite">
-  <blockquote className="hq-line" aria-label={q.text}>
+  <blockquote className="hq-line" aria-label={q.speaker?`${q.text} (${q.speaker}, ${title})`:q.text}>
    <span aria-hidden="true">{chars.map((c,i)=><span key={i} className="hq-ch" style={{animationDelay:`${i*step}ms`}}>{c}</span>)}</span>
   </blockquote>
-  <figcaption className="hq-by" style={{animationDelay:`${chars.length*step+200}ms`}}>
-   <span>{q.speaker?`${q.speaker}, `:''}<em>{title}</em></span>
-   <a href={/^https:\/\//.test(q.url)?q.url:'#'} target="_blank" rel="noopener noreferrer">Source</a>
-  </figcaption>
  </figure>;
 }

@@ -107,6 +107,7 @@ export async function resolveCorner(q:{title:string;creator:string;format:string
 // ---------- 2. build the triangle ----------
 const cornerOut=z.object({slot:z.string(),title:z.string().min(1),creator:z.string().min(1),format:z.string().min(1),contribution:z.string().optional()});
 const proposalOut=z.object({
+ notes:z.string().max(1600).optional(),
  status:z.enum(['ok','needs_more_research','needs_clarification']),
  reason:z.string().optional(),
  topic:z.string().optional(),
@@ -130,6 +131,7 @@ async function chooseEpisode(topic:string,wanted:{title:string;creator:string},r
  return real.find(e=>e.title===r.output.title)||real.find(e=>titleFit(r.output.title,e.title)>=.9)||null;
 }
 
+const searchLink=(p:{title:string;creator:string;format:string})=>{const q=encodeURIComponent(`${p.title} ${p.creator}`.trim());const f=p.format.toLowerCase();return f.includes('podcast')?'https://podcasts.apple.com/us/search?term='+q:f.includes('album')?'https://music.apple.com/us/search?term='+q:'https://www.google.com/search?q='+q;};
 export type BuildProgress=(text:string)=>void;
 export async function buildTriangle(seed:Seed,interest:string,baseSources:Source[],avoid:string[]=[],onProgress:BuildProgress=()=>{}){
  const model=agentModel(),started=Date.now();
@@ -143,11 +145,11 @@ export async function buildTriangle(seed:Seed,interest:string,baseSources:Source
  const trace:Record<string,unknown>={phase:'build',model,seed:seed.title,attempts:[]};
  const seedArt=seed.image?Promise.resolve(seed.image):resolveWork(seed).then(c=>c?.image).catch(()=>undefined);
  let feedback='',rejected:string[]=[];
- for(let attempt=1;attempt<=3;attempt++){
+ for(let attempt=1;attempt<=4;attempt++){
   let result;
   try{
    result=await generateText({
-    model:languageModel(),system,abortSignal:AbortSignal.timeout(100000),providerOptions:reasoned('medium'),
+    model:languageModel(),system,abortSignal:AbortSignal.timeout(100000),providerOptions:attempt===1?reasoned('medium'):noThinking,
     output:Output.object({schema:proposalOut}),
     prompt:`${RESEARCH_BRIEF}
 
@@ -156,16 +158,17 @@ CONFIRMED WORK (keep exactly): ${JSON.stringify(seedInfo)}
 This work was already confirmed in a catalog before you were called. Treat these details as established fact even if you do not recognize it (it may be newer than your training data). Never question that it exists and never return needs_more_research because it is unfamiliar; build around its description, creator, format and year.
 It occupies the ${slot} slot. Missing slots: ${missing.join(' and ')}. The main slots are read (a book or article), watch (a movie, documentary or show) and listen (ONE specific podcast episode, never a series; the listen slot may also be an album, but only when the confirmed work is that album). Return exactly two corners, one for each missing slot, plus one distinct bonus that is a book, article, movie, documentary, show, podcast episode or album.
 WHAT THE USER LOVED ABOUT IT (key input): ${interest?JSON.stringify(interest):'not stated'}.
-${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. Also give listenSearch: two to four short podcast-catalog search phrases (2–4 words each) that would find episodes on the chosen topic. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field. Never write placeholder text.${feedback}`
+${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.stringify(avoid)+'. Choose a different reading of the confirmed work and entirely different works.\n':''}${rejected.length?'DO NOT USE: '+JSON.stringify(rejected)+'.\n':''}PROCESS: the confirmed work supports several readings. Choose ONE precise topic that holds the whole triangle together. When the user said what they loved about the work, that is the key input: the topic MUST grow directly out of it, and each corner must speak to it. Only when it is not stated, choose the reading with the strongest three works, state it in the topic field as one sentence, and choose corners that all serve it. Never ask the user to choose. Weigh candidates for each missing slot with the removal, substitution and connection tests, then choose. Choose only real, findable works with their exact published titles and the creator a catalog would list (author; director; for a show its creator; for a podcast episode the show's name). For the podcast only an episode you are certain exists, with its exact title. Also give listenSearch: two to four short podcast-catalog search phrases (2–4 words each) that would find episodes on the chosen topic. No links are needed. Prefer one-off episodes from The Daily, 99% Invisible, Radiolab or This American Life, but choose a different show when it contributes much more. No adaptations or sequels of the confirmed work and no repeated works. If a supported set is not possible, set status to needs_more_research or needs_clarification with a short user-facing reason and omit the other fields. Be brief: one sentence per field. Never write placeholder text.${attempt>1?' Use the notes field first to weigh candidates, then fill every other field with final, real choices.':''}${feedback}`
    });
   }catch(e){
    // A malformed pick costs one attempt, not the whole build.
-   if(e instanceof Error&&e.name==='AI_NoObjectGeneratedError'&&attempt<3){(trace.attempts as unknown[]).push({attempt,status:'malformed',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER WAS MALFORMED. Return complete JSON: every corner with its slot, exact title, creator and format, and a real bonus.';continue;}
+   if(e instanceof Error&&(e.name==='AI_NoObjectGeneratedError'||e.name==='TimeoutError'||e.name==='AbortError')&&attempt<4){(trace.attempts as unknown[]).push({attempt,status:'malformed',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER WAS MALFORMED. Return complete JSON: every corner with its slot, exact title, creator and format, and a real bonus.';continue;}
    await recordRun(model,'error',{...trace,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
   const proposal=result.output;
   (trace.attempts as unknown[]).push({attempt,status:proposal.status,ms:Date.now()-started,usage:result.usage});
+  if(proposal.status!=='ok'&&attempt<4){feedback='\nYOU MUST CHOOSE. A threeangle can always be built: pick the strongest real works you are sure of for the most promising reading of the confirmed work.';continue;}
   if(proposal.status!=='ok'){await recordRun(model,proposal.status,{...trace,ms:Date.now()-started});throw new CornerError(proposal.reason&&proposal.reason.length<=160?proposal.reason:'We couldn’t build a full triangle for that title yet. Try adding its creator.',422)}
-  if(/placeholder/i.test(JSON.stringify(proposal))&&attempt<3){(trace.attempts as unknown[]).push({attempt,status:'placeholder',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER CONTAINED PLACEHOLDER TEXT. Every corner and the bonus must be a real work with its exact title and creator.';continue;}
+  if(/placeholder/i.test(JSON.stringify(proposal))&&attempt<4){(trace.attempts as unknown[]).push({attempt,status:'placeholder',ms:Date.now()-started});feedback='\nYOUR PREVIOUS ANSWER CONTAINED PLACEHOLDER TEXT. Every corner and the bonus must be a real work with its exact title and creator.';continue;}
   const corners=(proposal.corners||[]).map(c=>({...c,format:formatOf(c.format)||''}));
   if(corners.length!==2||corners.map(c=>c.slot).sort().join()!==[...missing].sort().join()||corners.some(c=>!FORMAT_OF[c.slot as Slot]?.includes(c.format))||!proposal.bonus||!formatOf(proposal.bonus.format)){
    feedback='\nYOUR PREVIOUS ANSWER WAS INCOMPLETE: return exactly two corners, one per missing slot, with the right format (read: book or article; watch: movie, documentary or show; listen: one podcast episode) and one bonus in a supported format.';continue;
@@ -189,7 +192,7 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
   console.log('build picks',attempt,JSON.stringify(picks.map((p,i)=>({slot:p.slot,title:p.title,creator:p.creator,format:p.format,found:found[i]?.from||null}))));
   (trace.attempts as {found?:unknown}[]).at(-1)!.found=picks.map((p,i)=>({slot:p.slot,title:p.title,from:found[i]?.from||null}));
   if(lost.length){
-   if(attempt<3){
+   if(attempt<4){
     rejected=[...rejected,...lost.map(p=>p.title)];
     onProgress(`Couldn’t find ${lost.map(p=>p.title).join(' or ')} in any catalog. Choosing again.`);
     const kept=picks.filter((_,i)=>found[i]).map(p=>`${p.slot}: ${found[picks.indexOf(p)]!.title} (${p.creator})`);
@@ -197,13 +200,14 @@ ${avoid.length?'TRY AGAIN: earlier triangles already used these works: '+JSON.st
     feedback=`\nYOUR PREVIOUS PICKS ${JSON.stringify(lost.map(p=>`${p.title} (${p.creator})`))} COULD NOT BE FOUND in any book, film, podcast or music catalog.${kept.length?` KEEP THESE, they were found: ${JSON.stringify(kept)}.`:''} Replace only the missing ones with real works under their exact published titles.${real.length?` For the listen corner choose ONE of these real episodes found in podcast catalogs, with its exact title and show as the creator: ${JSON.stringify(real)}.`:''}`;
     continue;
    }
-   await recordRun(model,'unfound',{...trace,ms:Date.now()-started});
-   throw new CornerError('We couldn’t confirm every recommended work in a catalog. Please try again.',422);
+   // Last attempt: never fail the visitor. Keep the chosen works; the unconfirmed ones link to a search.
+   console.warn('build keeps unconfirmed',JSON.stringify(lost.map(p=>p.title)));
+   picks.forEach((p,i)=>{if(!found[i])found[i]={title:p.title,creator:p.creator,format:p.format as Candidate['format'],year:'',description:'',url:searchLink(p),from:'unconfirmed'};});
   }
   // Every work is confirmed; the writer works from the confirmed identities.
   const confirmed=corners.map(c=>{const k=picks.findIndex(p=>p.slot===c.slot);return {...c,title:found[k]!.title,creator:picks[k].creator}});
-  const write=()=>generateText({
-   model:languageModel(),system,abortSignal:AbortSignal.timeout(90000),providerOptions:reasoned('low'),output:Output.object({schema:writerOut}),
+  const write=(options:typeof noThinking|ReturnType<typeof reasoned>=reasoned('low'))=>generateText({
+   model:languageModel(),system,abortSignal:AbortSignal.timeout(90000),providerOptions:options,output:Output.object({schema:writerOut}),
    prompt:`Write the finished threeangle as JSON using ONLY the works below. Add no works, facts or links. Structuring must add nothing that was not researched.
 CONFIRMED WORK (slot ${slot}): ${JSON.stringify(seedInfo)}
 CHOSEN CORNERS: ${JSON.stringify(confirmed)}
@@ -216,12 +220,12 @@ EDITORIAL VERSION: ${EDITORIAL_VERSION}
 Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wonder, flowery filler and claims of personal consumption; no unrequested spoilers. The three main works MUST be ordered read, watch, listen, then the bonus as the fourth work. The confirmed work is in slot ${cornerIndex(seed.format)} (zero-based) with its exact title, creator and format. Main pitches 35–50 words; payoff 50–70 words; the bonus pitch 25–40 words; other paragraphs under 35 words; headings under 9 words. Bridges must cover read-watch, watch-listen and listen-read. Exactly three strings in each array and four works. Fields: name (2–7 word topic title), kicker (the chosen topic as a short uppercase label like "TOPIC / FOCUS"), hook (a punchy invitation up to 16 words), intro, heads (read, watch, listen headline), bridges, shift (the insight), payoff (the three-way connection), question, angles (three lenses), answers (one per lens), bonus (a fourth-tangent headline), works.`
   });
   // A malformed draft is written once more before the build gives up.
-  const writer=write().catch(e=>{if(e instanceof Error&&e.name==='AI_NoObjectGeneratedError'){(trace.attempts as unknown[]).push({attempt,status:'rewrite',ms:Date.now()-started});return write();}throw e;});
+  const writer=write().catch(e=>{(trace.attempts as unknown[]).push({attempt,status:'rewrite',error:e instanceof Error?e.name:'unknown',ms:Date.now()-started});return write(noThinking);}).catch(e=>{(trace.attempts as unknown[]).push({attempt,status:'rewrite-2',error:e instanceof Error?e.name:'unknown'});return write(noThinking);});
   onProgress('Writing the connections.');
   let written;
   try{written=await writer}catch(e){await recordRun(model,'error',{...trace,phase:'write',error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});throw providerError(e)}
   const raw=written.output;
-  const clean=(xs:string[],min:number)=>xs.filter(x=>x.length>=min&&!/placeholder|\\"/.test(x)).slice(0,3);
+  const clean=(xs:string[],min:number)=>{const kept=xs.filter(x=>x.length>=min&&!/placeholder|\\"/.test(x)).slice(0,3);return kept.length===3?kept:xs.slice(0,3);};
   const out={...raw,heads:clean(raw.heads,12),bridges:clean(raw.bridges,12),angles:clean(raw.angles,2),answers:clean(raw.answers,12),works:raw.works.slice(0,4)};
 
   // ---------- assemble: identities, links and covers come from the catalogs, not from the writer ----------

@@ -28,13 +28,15 @@ export type Room='arrival'|'reading'|'study'|'gallery'|'maproom'|'frames'|'stair
 export const roomNames:Record<Room,string>={arrival:'The Gilded Hall',reading:'The Reading Room',study:'The Reading Alcove',gallery:'The Sunlit Gallery',maproom:'The Map Room',frames:'The Gallery of Frames',stairs:'The Stair Hall',rotunda:'The Rotunda'};
 type Scene='arrival'|'reading'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
 // proj: where the archive projector lands in painting space (x0, y0, x1, y1): a blank wall, canvas or niche.
-type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:[number,number,number,number]};
+// side: two quieter surfaces off to the sides, used outside the waiting screen so the centre stays clean behind the headline.
+type Rect=[number,number,number,number];
+type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:Rect;side?:[Rect,Rect]};
 const scenes:Record<Scene,SceneDef>={
  arrival:{image:arrival,depth:arrivalDepth,pos:[.5,.46]},
  reading:{image:reading,depth:readingDepth,pos:[.5,.5]},
  gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5],proj:PROJECTION},
  maproom:{image:mapRoom,depth:mapRoomDepth,pos:[.5,.5],proj:[.425,.23,.655,.515]},
- frames:{image:frames,depth:framesDepth,pos:[.5,.55],proj:[.475,.53,.582,.772]},
+ frames:{image:frames,depth:framesDepth,pos:[.5,.55],proj:[.475,.53,.582,.772],side:[[.224,.49,.264,.77],[.736,.49,.776,.77]]},
  stairs:{image:stairs,depth:stairsDepth,pos:[.5,.5],proj:[.472,.36,.56,.655]},
  rotunda:{image:rotunda,depth:rotundaDepth,pos:[.5,.62]},
 };
@@ -45,9 +47,9 @@ const moods:Record<Room,Mood>={
  reading:{exposure:1,contrast:1.1,warm:.12,cool:0,vignette:.3,beam:0,sweep:0,lift:.3,light:.06,dolly:0,film:.05,project:0},
  study:{exposure:.98,contrast:1.12,warm:.2,cool:0,vignette:.36,beam:0,sweep:0,lift:.3,light:.06,dolly:.1,film:.07,project:0},
  gallery:{exposure:.4,contrast:1.22,warm:.55,cool:.08,vignette:.8,beam:0,sweep:1,lift:0,light:.22,dolly:.04,film:.42,project:1},
- maproom:{exposure:.46,contrast:1.2,warm:.62,cool:0,vignette:.72,beam:0,sweep:.6,lift:0,light:.24,dolly:.1,film:.3,project:1},
- frames:{exposure:.42,contrast:1.22,warm:.4,cool:.12,vignette:.78,beam:0,sweep:.3,lift:0,light:.22,dolly:.16,film:.26,project:1},
- stairs:{exposure:.5,contrast:1.2,warm:.2,cool:.26,vignette:.74,beam:.3,sweep:0,lift:0,light:.2,dolly:.06,film:.22,project:1},
+ maproom:{exposure:.38,contrast:1.2,warm:.62,cool:0,vignette:.72,beam:0,sweep:.6,lift:0,light:.24,dolly:.1,film:.3,project:1},
+ frames:{exposure:.38,contrast:1.22,warm:.4,cool:.12,vignette:.78,beam:0,sweep:.3,lift:0,light:.22,dolly:.16,film:.26,project:1},
+ stairs:{exposure:.44,contrast:1.2,warm:.2,cool:.26,vignette:.74,beam:.3,sweep:0,lift:0,light:.2,dolly:.06,film:.22,project:1},
  rotunda:{exposure:.36,contrast:1.24,warm:.1,cool:.34,vignette:.78,beam:1,sweep:0,lift:0,light:.2,dolly:0,film:.18,project:0},
 };
 // Rooms that share a painting are seen from a different place in it (dolly) and at a different hour (mood).
@@ -65,7 +67,7 @@ const VERT=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 const FRAG=`precision highp float;
 uniform vec2 uRes;uniform sampler2D uColA,uDepA,uColB,uDepB,uArc;uniform vec2 uSizeA,uSizeB,uPosA,uPosB,uArcSize;
 uniform float uMix,uAmp,uTilt,uTime,uDolly,uFrame;uniform vec2 uCam,uLight;
-uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uArcAmt,uProj;uniform vec4 uProjRect;
+uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uFilmOn,uArcAmt,uProj,uProj2;uniform vec4 uProjRect,uProjRect2;
 float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 vec2 cover(vec2 f,vec2 size,vec2 pos){float s=max(uRes.x/size.x,uRes.y/size.y)*1.1;vec2 d=size*s;return(f-(uRes-d)*pos)/d;}
 vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,float blur,out float depth,out vec2 uv){
@@ -81,10 +83,17 @@ vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,floa
  return c;
 }
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
+vec3 project(vec3 c,vec2 pB,float dB,vec4 rect,float amt){
+ vec2 r=(pB-rect.xy)/(rect.zw-rect.xy);
+ float inside=smoothstep(0.,.08,r.x)*smoothstep(1.,.92,r.x)*smoothstep(0.,.08,r.y)*smoothstep(1.,.92,r.y);
+ float lf=luma(texture2D(uArc,clamp(r,0.,1.)).rgb);
+ float wall=smoothstep(.55,.25,dB);
+ return mix(c,c*.55+vec3(lf)*vec3(1.,.95,.84)*.95,amt*inside*wall);
+}
 void main(){
  float T=sin(3.14159*uMix);
  // Film gate weave while travelling between rooms.
- vec2 f=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y)+vec2(0.,(hash(vec2(uFrame,3.))-.5)*6.*T*T);
+ vec2 f=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y)+vec2(0.,(hash(vec2(uFrame,3.))-.5)*6.*T*T*uFilmOn);
  vec2 sv=f/uRes;
  float dA,dB;vec2 pA,pB;
  vec3 a=room(uColA,uDepA,uSizeA,uPosA,f,uDolly+uMix*.78,.022*T,dA,pA);
@@ -102,13 +111,8 @@ void main(){
  float band=exp(-pow((p.x+p.y*.45-fract(uTime*.018)*2.2+.5)*4.,2.));
  c+=c*uSweep*band*.8;
  // The archive, projected onto the far wall of the room: black-and-white film thrown by an unseen projector.
- if(uProj>.001){
-  vec2 r=(pB-uProjRect.xy)/(uProjRect.zw-uProjRect.xy);
-  float inside=smoothstep(0.,.08,r.x)*smoothstep(1.,.92,r.x)*smoothstep(0.,.08,r.y)*smoothstep(1.,.92,r.y);
-  vec3 fr=texture2D(uArc,clamp(r,0.,1.)).rgb;float lf=luma(fr);
-  float wall=smoothstep(.55,.25,dB);
-  c=mix(c,c*.55+vec3(lf)*vec3(1.,.95,.84)*.95,uProj*inside*wall);
- }
+ if(uProj>.001)c=project(c,pB,dB,uProjRect,uProj);
+ if(uProj2>.001)c=project(c,pB,dB,uProjRect2,uProj2);
  // The visitor carries a little light.
  vec2 q=(sv-uLight)*vec2(uRes.x/uRes.y,1.);c+=c*uLightAmt*exp(-dot(q,q)*5.)*(.4+.6*d);
  c*=mix(vec3(1.),vec3(1.1,1.,.82),uWarm);
@@ -116,15 +120,15 @@ void main(){
  c=(c-.5)*uContrast+.5;
  c=mix(c,vec3(.965,.95,.925),uLift*(1.-T)*smoothstep(.62,.0,length((sv-vec2(.5,.56))*vec2(.95,1.45))));
  // Mid-journey the rooms turn to archival film: silver, flickering, with a cut of real footage.
- float film=clamp(uFilm+T*.85,0.,1.);
- c=mix(c,vec3(luma(c))*vec3(1.03,1.,.94),T*.8);
+ float film=clamp(uFilm+T*.85*uFilmOn,0.,1.);
+ c=mix(c,vec3(luma(c))*vec3(1.03,1.,.94),T*.8*uFilmOn);
  if(uArcAmt>.001){vec2 au=cover(f,uArcSize,vec2(.5));vec3 ar=texture2D(uArc,clamp(au,0.,1.)).rgb;c=mix(c,vec3(luma(ar))*vec3(1.02,.99,.92),uArcAmt*smoothstep(.25,.6,T));}
  c*=1.+(hash(vec2(uFrame,7.))-.5)*.16*film;
  float col=floor(f.x/2.);float scratch=step(.9975,hash(vec2(col,floor(uFrame/2.))))*step(.3,hash(vec2(col,1.)));
  c=mix(c,vec3(.92),scratch*film*.35);
  vec2 cell=floor(f/3.);float dust=step(.99965,hash(cell+uFrame*1.7));c=mix(c,vec3(.05),dust*film*.8);
  // An iris, as in silent film: it closes a little around the journey and opens on the new room.
- float iris=mix(1.7,.86,T*T);c*=mix(.3,1.,smoothstep(iris,iris-.42,length((sv-.5)*vec2(uRes.x/uRes.y,1.))));
+ float iris=mix(1.7,.86,T*T*uFilmOn);c*=mix(.3,1.,smoothstep(iris,iris-.42,length((sv-.5)*vec2(uRes.x/uRes.y,1.))));
  c*=1.-uVignette*smoothstep(.3,1.05,length((sv-.5)*vec2(1.25,1.)));
  c*=1.-uTilt*.35;
  c+=(hash(gl_FragCoord.xy+fract(uTime)*97.)-.5)*(uGrain+film*.05);
@@ -134,12 +138,12 @@ void main(){
 type Tex={col:WebGLTexture;dep:WebGLTexture;size:[number,number];pos:[number,number]};
 function load(src:string){return new Promise<HTMLImageElement>((ok,fail)=>{const i=new window.Image();i.decoding='async';i.onload=()=>ok(i);i.onerror=fail;i.src=src;});}
 
-export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:boolean}){
+export function HallWorld({room,still,looking,film=false}:{room:Room;still:boolean;looking:boolean;film?:boolean}){
  const canvas=useRef<HTMLCanvasElement>(null);
  const [live,setLive]=useState(false);
- const target=useRef(room),flags=useRef({still,looking});
+ const target=useRef(room),flags=useRef({still,looking,film});
  // The render loop reads the latest room and motion settings without restarting.
- useEffect(()=>{target.current=room;flags.current={still,looking};},[room,still,looking]);
+ useEffect(()=>{target.current=room;flags.current={still,looking,film};},[room,still,looking,film]);
  useEffect(()=>{
   const el=canvas.current;if(!el)return;
   const gl=el.getContext('webgl',{antialias:false,alpha:false,premultipliedAlpha:false,powerPreference:'low-power'});
@@ -178,12 +182,12 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
   const draw=(now:number)=>{
    frame=0;if(dead)return;
    const dt=Math.min(.1,last?(now-last)/1000:.016);last=now;
-   const {still:calm,looking:look}=flags.current;
+   const {still:calm,looking:look,film:filmOn}=flags.current;
    // Room changes: walk forward into the next scene, and move the light of day with it.
    if(target.current!==shownRoom){
     const next=sceneOf(target.current);
     // The walk starts once the next room's painting is ready; until then the current room holds.
-    if(tex[next]||next===to){if(next!==to){from=to;to=next;mix=0;if(!calm)nextClip();}
+    if(tex[next]||next===to){if(next!==to){from=to;to=next;mix=0;if(!calm&&filmOn)nextClip();}
      moodFrom={...mood};moodTo=moods[target.current];moodT=0;shownRoom=target.current;fetchAhead(next);}
     else fetchScene(next);
    }
@@ -202,7 +206,9 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
    gl.uniform2f(u('uCam'),cam.x,cam.y);gl.uniform2f(u('uLight'),lightPos.x,lightPos.y);
    gl.uniform1f(u('uExposure'),mood.exposure+beam*.05);gl.uniform1f(u('uContrast'),mood.contrast);gl.uniform1f(u('uWarm'),mood.warm);gl.uniform1f(u('uCool'),mood.cool);gl.uniform1f(u('uVignette'),mood.vignette);gl.uniform1f(u('uBeam'),mood.beam*(1+beam*.9));gl.uniform1f(u('uSweep'),mood.sweep);gl.uniform1f(u('uLift'),look?0:mood.lift);gl.uniform1f(u('uLightAmt'),mood.light);gl.uniform1f(u('uGrain'),calm?.02:.035);
    // Archive footage: flashes through each journey, and plays on the gallery wall while the library works.
-   const transit=Math.sin(Math.PI*ease(mix));const projAmt=scenes[to].proj?mood.project:0;const wantArc=Boolean(vid)&&!calm&&(transit>.05||projAmt>.05);
+   // Film (flashes, the silver walk, the centre projector) belongs to the waiting screen only; elsewhere the footage
+   // may play quietly on side surfaces, and the centre stays clean behind the headline.
+   const transit=filmOn?Math.sin(Math.PI*ease(mix)):0;const sc=scenes[to];const projAmt=filmOn?(sc.proj?mood.project:0):(sc.side?mood.project*.8:0);const wantArc=Boolean(vid)&&!calm&&(transit>.05||projAmt>.05);
    if(vid){
     if(wantArc&&vid.paused&&!vid.src)nextClip(projAmt>.5?'wall':'flash');
     if(projAmt>.5&&now-clipAt>5200){clipAt=now;nextClip('wall');}
@@ -210,8 +216,11 @@ export function HallWorld({room,still,looking}:{room:Room;still:boolean;looking:
     if(wantArc&&arcReady&&vid.readyState>=2){gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,vid);}
    }
    const arcOn=wantArc&&arcReady?1:0;
-   bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),arcOn*.55);gl.uniform1f(u('uProj'),arcOn*projAmt*.85);
-   const pr=scenes[to].proj;gl.uniform4f(u('uProjRect'),...(pr||PROJECTION));gl.uniform1f(u('uFilm'),calm?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
+   bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),filmOn?arcOn*.55:0);
+   const rects:Rect[]=filmOn?(sc.proj?[sc.proj]:[]):(sc.side||[]);
+   gl.uniform1f(u('uProj'),rects[0]?arcOn*projAmt*.85:0);gl.uniform4f(u('uProjRect'),...(rects[0]||PROJECTION));
+   gl.uniform1f(u('uProj2'),rects[1]?arcOn*projAmt*.85:0);gl.uniform4f(u('uProjRect2'),...(rects[1]||PROJECTION));
+   gl.uniform1f(u('uFilmOn'),filmOn?1:0);gl.uniform1f(u('uFilm'),calm||!filmOn?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
    gl.drawArrays(gl.TRIANGLES,0,3);
    // Keep breathing while there is somewhere to go; stop entirely when still.
    const settling=mix<1||moodT<1||Math.abs(cam.tx+drift.x+orbit-cam.x)>.0005||Math.abs(orbit-(worldSignal.orbit||0))>.0005;
