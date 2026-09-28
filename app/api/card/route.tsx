@@ -6,6 +6,7 @@ import {topics,type Topic,type Work} from '@/lib/stories';
 import {crateDb} from '@/db/crate';
 import {resolveWork} from '@/lib/catalog';
 import {overLimit,tooMany} from '@/lib/limit';
+import {assertPublic} from '@/lib/page';
 export const runtime='nodejs';
 export const maxDuration=30;
 
@@ -38,6 +39,8 @@ async function coverOf(w:Work&{image?:string}):Promise<string|null>{
  try{
   const url=w.image||(await resolveWork({title:w.title,creator:w.creator,format:w.format}).catch(()=>null))?.image;
   if(!url||!url.startsWith('https://'))return null;
+  // Article covers can come from any site: only public addresses are fetched.
+  await assertPublic(new URL(url));
   const r=await fetch(url,{signal:AbortSignal.timeout(5000),headers:{'user-agent':'threeangle/1.0 (story card)'}});
   const type=(r.headers.get('content-type')||'').split(';')[0];
   if(!r.ok||!/^image\/(jpeg|jpg|png)$/.test(type))return null;
