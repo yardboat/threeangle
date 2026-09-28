@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- ImageResponse draws plain img elements */
 import {ImageResponse} from 'next/og';
+import sharp from 'sharp';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {topics,type Topic,type Work} from '@/lib/stories';
@@ -10,7 +11,7 @@ import {assertPublic} from '@/lib/page';
 export const runtime='nodejs';
 export const maxDuration=30;
 
-// GET /api/card?id=<topic id> -> a 1080×1920 PNG for Instagram (and any) stories:
+// GET /api/card?id=<topic id> -> a 1080×1920 JPEG for Instagram (and any) stories:
 // the threeangle's name, its three covers standing around the drawing, and where to make your own.
 // Instagram covers roughly the top 250 px and bottom 250 px with its own UI, so the content stays inside.
 
@@ -84,7 +85,7 @@ export async function GET(request:Request){
  const name=topic.name.replace(/\.$/,'');
  const nameSize=name.length>30?76:name.length>20?92:name.length>12?112:136;
  const host=new URL(request.url).host.replace(/^www\./,'');
- return new ImageResponse(
+ const drawn=new ImageResponse(
   <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:W,height:H,position:'relative',background:'#0d0b09',color:BONE}}>
    <img src={bg} width={W} height={H} style={{position:'absolute',left:0,top:0,width:W,height:H}} alt=""/>
    <div style={{display:'flex',position:'absolute',left:0,top:0,width:W,height:H,background:'linear-gradient(180deg,rgba(10,8,6,.72) 0%,rgba(10,8,6,.15) 30%,rgba(10,8,6,.2) 62%,rgba(10,8,6,.85) 100%)'}}/>
@@ -103,6 +104,9 @@ export async function GET(request:Request){
    </div>
    <div style={{display:'flex',position:'absolute',bottom:250,fontFamily:'Archivo',fontSize:20,letterSpacing:6,color:MUTE,textTransform:'uppercase'}}>Find yours · {host}</div>
   </div>,
-  {width:W,height:H,fonts:await font,headers:{'Cache-Control':'public, max-age=3600, s-maxage=86400'}}
+  {width:W,height:H,fonts:await font}
  );
+ // Stories take a JPEG: full-resolution colour (4:4:4) so the gilt lines and small type stay crisp.
+ const jpeg=await sharp(Buffer.from(await drawn.arrayBuffer())).jpeg({quality:90,mozjpeg:true,chromaSubsampling:'4:4:4'}).toBuffer();
+ return new Response(new Uint8Array(jpeg),{headers:{'Content-Type':'image/jpeg','Content-Disposition':'inline; filename="threeangle-story.jpg"','Cache-Control':'public, max-age=3600, s-maxage=86400'}});
 }

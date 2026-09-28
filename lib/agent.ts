@@ -30,7 +30,7 @@ const normUrl=(u:string)=>{try{const x=new URL(u);return x.hostname.replace(/^ww
 const hostOf=(u:string)=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch{return u}};
 // Every https URL that appeared in tool results during a run. A recommended link must be one of these.
 const urlsSeen=(steps:{content:unknown}[])=>new Set((JSON.stringify(steps.map(s=>s.content))||'').match(/https:\/\/[^\s"'\\<>)\]]+/g)?.map(normUrl).filter(Boolean)||[]);
-const search=()=>direct()?anthropic.tools.webSearch_20250305({maxUses:3}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
+const search=(maxUses=3)=>direct()?anthropic.tools.webSearch_20250305({maxUses}):gateway.tools.exaSearch({type:'fast',numResults:6,contents:{highlights:true}});
 const TOOL_RULES='TOOLS: web_search finds candidates and official pages; read exact titles, creators and episode names from its results. Only URLs you actually retrieved with these tools may appear in your answer. Never invent works, episodes, quotes or URLs.';
 
 // ---------- helpers ----------
@@ -246,10 +246,11 @@ Write a smart, approachable, enthusiastic culture-critic pitch. Avoid vague wond
 }
 
 // ---------- 3. notable quotes, shown while the triangle is being built ----------
-const quotesOut=z.object({quotes:z.array(z.object({text:z.string().min(3).max(240),speaker:z.string().max(120).optional(),url:httpsUrl})).max(3)});
+const quotesOut=z.object({quotes:z.array(z.object({text:z.string().min(3).max(240),speaker:z.string().max(120).optional(),url:httpsUrl})).max(8)});
 export type Quote={text:string;speaker?:string;url:string};
 const wordCount=(s:string)=>s.trim().split(/\s+/).length;
-const quoteKey=(s:{title:string;creator:string;format:string})=>[s.format,s.title,s.creator].map(x=>x.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim()).join('|');
+// v2: six or seven lines per work (the waiting screen never repeats one); v1 entries held three.
+const quoteKey=(s:{title:string;creator:string;format:string})=>'v2|'+[s.format,s.title,s.creator].map(x=>x.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim()).join('|');
 // The same work never searches twice: verified lines are kept for 90 days, an empty answer for a day.
 export async function notableQuotes(seed:{title:string;creator:string;format:string;year?:string}):Promise<Quote[]>{
  const key=quoteKey(seed);
@@ -266,14 +267,15 @@ async function findQuotes(seed:{title:string;creator:string;format:string;year?:
  let result;
  try{
   result=await generateText({
-   model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:{web_search:search()},stopWhen:isStepCount(4),abortSignal:AbortSignal.timeout(45000),providerOptions:noThinking,
+   model:languageModel(),system:EDITORIAL_SYSTEM+'\n\n'+TOOL_RULES,tools:{web_search:search(5)},stopWhen:isStepCount(6),abortSignal:AbortSignal.timeout(60000),providerOptions:noThinking,
    output:Output.object({schema:quotesOut}),
    prompt:`WORK: ${JSON.stringify(seed)}
-Find two or three of the most notable, widely quoted short lines ${album?'ABOUT this album: things the artist said about making it, or a famous critic\'s line about it. NEVER quote song lyrics':'FROM this work: a famous line of text or dialogue, or a memorable line spoken in the episode'}. Search for them, and return only quotes whose exact wording appears in a page you retrieved, with that page's https URL. Each quote at most 25 words, verbatim, no ellipses in the middle. Speaker: the character or person who says it, if known. If you cannot verify any, return an empty list. Never invent or paraphrase a quote.`
+Find six or seven different, notable, widely quoted short lines (no two alike) ${album?'ABOUT this album: things the artist said about making it, or a famous critic\'s line about it. NEVER quote song lyrics':'FROM this work: a famous line of text or dialogue, or a memorable line spoken in the episode'}. Search for them, and return only quotes whose exact wording appears in a page you retrieved, with that page's https URL. Each quote at most 25 words, verbatim, no ellipses in the middle. Speaker: the character or person who says it, if known. If you cannot verify any, return an empty list. Never invent or paraphrase a quote.`
   });
  }catch(e){await recordRun(model,'error',{phase:'quotes',title:seed.title,error:e instanceof Error?e.message:'unknown',ms:Date.now()-started});return []}
  const seen=urlsSeen(result.steps);
- const quotes=result.output.quotes.filter(q=>seen.has(normUrl(q.url))&&wordCount(q.text)<=28).map(q=>({text:q.text.trim().replace(/^["“”']+|["“”']+$/g,''),speaker:q.speaker?.trim()||undefined,url:q.url}));
+ const said=new Set<string>();
+ const quotes=result.output.quotes.filter(q=>{const k=q.text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();if(said.has(k))return false;said.add(k);return true;}).filter(q=>seen.has(normUrl(q.url))&&wordCount(q.text)<=28).map(q=>({text:q.text.trim().replace(/^["“”']+|["“”']+$/g,''),speaker:q.speaker?.trim()||undefined,url:q.url}));
  await recordRun(model,'ok',{phase:'quotes',title:seed.title,returned:result.output.quotes.length,kept:quotes.length,ms:Date.now()-started,usage:result.usage});
  return quotes;
 }

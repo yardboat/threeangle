@@ -20,22 +20,22 @@ function WorkLink({work,children}:{work:Work;children:ReactNode}){
  return <a className="hall-quiet" href={safeUrl(workUrl(work))} target="_blank" rel="noopener noreferrer">{children} <ArrowUpRight size={14}/><span className="hall-sr"> (opens in a new tab)</span></a>;
 }
 
-// The story card (/api/card): shared straight to Instagram or anywhere through the phone's share sheet,
-// downloaded where a browser can't share files.
+// The story card (/api/card): a 1080×1920 JPEG. On a phone it goes to the share sheet as an image alone (so
+// Instagram Stories is offered); on a computer it simply downloads, ready to AirDrop or post.
 function StoryButton({topic}:{topic:Topic}){
  const [state,setState]=useState<'idle'|'making'|'saved'|'failed'>('idle');
  const make=async()=>{
   if(state==='making')return;setState('making');
   try{
    const res=await fetch('/api/card?id='+encodeURIComponent(topic.id));if(!res.ok)throw new Error('card');
-   const file=new File([await res.blob()],`threeangle-${topic.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.png`,{type:'image/png'});
-   const url=location.origin+'/?triangle='+encodeURIComponent(topic.id);
-   if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:topic.name+' · threeangle',url});}catch(e){if(!(e instanceof Error&&e.name==='AbortError'))throw e;}setState('idle');return;}
+   const file=new File([await res.blob()],`threeangle-${topic.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.jpg`,{type:'image/jpeg'});
+   const phone=matchMedia('(pointer: coarse)').matches;
+   if(phone&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file]});}catch(e){if(!(e instanceof Error&&e.name==='AbortError'))throw e;}setState('idle');return;}
    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);setState('saved');
   }catch{setState('failed');}
  };
  return <button className="hall-cta hall-cta-light rw-story" onClick={()=>void make()} disabled={state==='making'} aria-live="polite">
-  <Share size={16}/> {state==='making'?'Making your card…':state==='saved'?'Card saved. Add it to your story':state==='failed'?'Try that again':'Share to your story'}
+  <Share size={16}/> {state==='making'?'Making your card…':state==='saved'?'Saved. Post it to your story':state==='failed'?'Try that again':'Share to your story'}
  </button>;
 }
 

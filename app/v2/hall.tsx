@@ -236,7 +236,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  async function share(){
   if(!topic)return;const url=location.origin+'/?triangle='+encodeURIComponent(topic.id);
   try{
-   if(typeof navigator.share==='function'){await navigator.share({title:topic.name+' · threeangle',text:topic.hook,url});return;}
+   // The link is copied, not sent through a share sheet: sharing is the story card's job.
    await navigator.clipboard.writeText(url);setNotice('Link copied. Anyone with it can open this threeangle.');
   }catch(e){if(!(e instanceof Error&&e.name==='AbortError'))setNotice('Copy this link to share: '+url);}
  }
@@ -350,7 +350,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    {stage==='reveal'&&topic&&<section className="hall-reveal" key={topic.id}>
     <Reveal topic={topic} still={still} onRoom={setRevealRoom} footer={<>
      <Sources topic={topic}/>
-     <section className="rv-next"><p className="hall-kicker">There’s always another way in</p><h2 className="hall-mega hall-mega-s">What else<br/>might it open?</h2><p className="hall-sub">Keep {topic.seedTitle||topic.works[0].title} as your starting point, or bring something new.</p><div className="hall-actions"><button className="hall-cta hall-cta-light" onClick={()=>void generate(true)} disabled={busy||ready!==true}>Find another angle <RotateCcw size={16}/></button><button className="hall-quiet" onClick={save} disabled={saving}>{isSaved?<Check size={14}/>:<Bookmark size={14}/>} {saving?'Saving…':isSaved?'Kept in your collection':'Keep this threeangle'}</button><button className="hall-quiet" onClick={()=>void share()}><Share2 size={14}/> Share</button><button className="hall-quiet" onClick={freshStart}>Start with a different work <ArrowRight size={14}/></button>{previous&&<button className="hall-quiet hall-return" onClick={()=>revisit(previous)}>Return to {previous.name}</button>}</div></section>
+     <section className="rv-next"><p className="hall-kicker">There’s always another way in</p><h2 className="hall-mega hall-mega-s">What else<br/>might it open?</h2><p className="hall-sub">Keep {topic.seedTitle||topic.works[0].title} as your starting point, or bring something new.</p><div className="hall-actions"><button className="hall-cta hall-cta-light" onClick={()=>void generate(true)} disabled={busy||ready!==true}>Find another angle <RotateCcw size={16}/></button><button className="hall-quiet" onClick={save} disabled={saving}>{isSaved?<Check size={14}/>:<Bookmark size={14}/>} {saving?'Saving…':isSaved?'Kept in your collection':'Keep this threeangle'}</button><button className="hall-quiet" onClick={()=>void share()}><Share2 size={14}/> Copy link</button><button className="hall-quiet" onClick={freshStart}>Start with a different work <ArrowRight size={14}/></button>{previous&&<button className="hall-quiet hall-return" onClick={()=>revisit(previous)}>Return to {previous.name}</button>}</div></section>
     </>}/>
    </section>}
   </main>
