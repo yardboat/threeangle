@@ -105,10 +105,13 @@ export function Reveal({topic,still,onRoom,footer}:{topic:Topic;still:boolean;on
     <h1 className={`hall-mega rv-name ${sizeOf(topic.name)}`}>{topic.name}</h1>
     <p className="rv-hook">{topic.hook}</p>
    </header>
+   {/* The drawing holds the centre; the three works stand at its corners on a grid, so nothing ever sits on it. */}
    <div className="rw-constellation">
-    <div className="rv-shaft" aria-hidden="true"/>
-    <Figure faces={faces} view={REST} idle still={still} lit={{corners:new Set([0,1,2]),sides:new Set([0,1,2])}} orbitWorld label={`Your threeangle: ${main.map((w,i)=>`${MODES[i]}, ${w.title}`).join('; ')}`}/>
-    {main.map((w,i)=><a key={i} className={`rw-orbit rw-orbit-${letters[i]}`} href={`#rw-work-${i}`}><Cover work={w} size="m"/><span className="hall-kicker">{MODES[i]}</span><span className="rw-orbit-title">{w.title}</span></a>)}
+    <div className="rw-figure">
+     <div className="rv-shaft" aria-hidden="true"/>
+     <Figure faces={faces} view={REST} idle still={still} lit={{corners:new Set([0,1,2]),sides:new Set([0,1,2])}} orbitWorld label={`Your threeangle: ${main.map((w,i)=>`${MODES[i]}, ${w.title}`).join('; ')}`}/>
+    </div>
+    {main.map((w,i)=><a key={i} className={`rw-orbit rw-orbit-${letters[i]}`} href={`#rw-work-${i}`}><Cover work={w} size="m"/><span className="rw-orbit-text"><span className="hall-kicker">{MODES[i]}</span><span className="rw-orbit-title">{w.title}</span></span></a>)}
    </div>
    <StoryButton topic={topic}/>
    <button className="hall-quiet rw-down" onClick={()=>document.getElementById('rw-together')?.scrollIntoView({behavior:still?'instant':'smooth'})}>How they connect <ArrowDown size={14}/></button>

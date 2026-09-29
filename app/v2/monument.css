@@ -369,14 +369,6 @@
 /* Thinking: lines from the work, written into the room. */
 .hall-thinking{gap:18px}
 .hall-thinking .fig{width:clamp(200px,18vw,260px);margin:0}
-.hq{max-width:min(900px,92vw);margin:1vh auto 0;display:flex;flex-direction:column;align-items:center;gap:18px;perspective:900px}
-.hq-line{font:italic 400 clamp(28px,3.4vw,54px)/1.14 var(--hall-display);letter-spacing:-.005em;text-wrap:balance;color:#f6ead3;text-shadow:0 0 22px rgba(232,196,128,.35),0 2px 40px rgba(8,6,4,.6);transform:rotateX(8deg)}
-.hq-line::before{content:'“';color:var(--gilt);margin-right:.06em}.hq-line::after{content:'”';color:var(--gilt);margin-left:.04em}
-.hq-ch{display:inline;white-space:pre-wrap;animation:hq-ink 1.1s var(--ease) both}
-@keyframes hq-ink{from{opacity:0;filter:blur(6px);color:var(--gilt)}40%{color:#ffe6b4}}
-.hq-by{display:flex;gap:18px;align-items:center;font:600 10px/1.4 var(--hall-ui);font-stretch:112%;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);animation:rv-in 1s var(--ease) both}
-.hq-by em{font:italic 400 16px/1 var(--hall-display);letter-spacing:0;text-transform:none;color:var(--fg)}
-.hq-by a{text-underline-offset:4px;color:var(--mute)}
 .hall-phase-small{font:italic 400 17px/1.2 var(--hall-display);color:var(--mute)}
 
 /* The reveal walk. */
@@ -409,18 +401,6 @@
 /* The finished triangle: covers stand around it like works on easels. */
 .rw-triangle{gap:14px}
 .rw-final-head{display:flex;flex-direction:column;align-items:center;gap:16px}
-.rw-constellation{position:relative;width:min(1000px,100%);min-height:clamp(420px,58vh,620px);display:grid;place-items:center;margin-top:1vh}
-.rw-constellation .fig{width:clamp(280px,min(30vw,calc((100svh - 380px) * 1.2)),460px);position:relative;z-index:2}
-.rw-constellation .rv-shaft{bottom:0;height:140%}
-.rw-orbit{position:absolute;z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;width:clamp(130px,13vw,180px);animation:rv-in 1.2s var(--ease) both}
-.rw-orbit .hall-kicker{font-size:9.5px}
-.rw-orbit-title{font:500 17px/1.1 var(--hall-display);text-wrap:balance}
-.rw-orbit .wk-cover{transition:transform .6s var(--ease)}.rw-orbit:hover .wk-cover{transform:translateY(-6px) rotate(0)!important}
-.rw-orbit-a{left:2%;top:8%;animation-delay:.5s}.rw-orbit-a .wk-cover{transform:rotate(-4deg)}
-.rw-orbit-b{right:2%;top:8%;animation-delay:.8s}.rw-orbit-b .wk-cover{transform:rotate(4deg)}
-.rw-orbit-c{left:50%;bottom:-2%;transform:translateX(-50%);animation-delay:1.1s;flex-direction:row;gap:16px;width:auto;text-align:left}
-.rw-orbit-c .wk-cover{width:84px}
-.rw-orbit-c>.hall-kicker{display:none}
 .rw-down{margin-top:3vh;color:var(--mute)}
 .rw-together{position:relative;z-index:2;max-width:1000px;margin:10vh auto 0;padding:0 var(--pad);display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;scroll-margin-top:30px}
 .rw-together>.hall-kicker{justify-content:center;color:var(--accent)}
@@ -454,18 +434,12 @@
  .rw-work-stage .fig{width:min(72vw,280px)}
  .rw-title{font-size:clamp(40px,12vw,60px)}.rw-title.is-mid{font-size:clamp(32px,9.5vw,46px)}.rw-title.is-long{font-size:clamp(26px,7.5vw,36px)}
  .rw-nav{flex-direction:column-reverse;gap:10px}
- .rw-constellation{min-height:auto;display:flex;flex-direction:column;gap:20px}
- .rw-orbit{position:static;transform:none!important;flex-direction:row;width:100%;gap:16px;text-align:left}
- .rw-orbit .wk-cover{width:72px}
- .rw-orbit-c>.hall-kicker{display:flex}
- .rw-constellation .fig{order:-1;width:min(70vw,280px);margin:0 auto}
  .rw-works li{grid-template-columns:1fr;gap:16px}
  .rw-bonus-work{grid-template-columns:1fr;justify-items:center;text-align:center}
  .rw-bonus-work .hall-kicker{justify-content:center}
  .hall-matches li button{grid-template-columns:auto 1fr;grid-template-areas:"i k" "i t" "i c" "d d" "a a"}
  .hall-match-cover{margin-right:16px}
  .hall-confirm-cover{margin-left:-30px}
- .hq-line{font-size:clamp(24px,7vw,34px)}
 }
 
 /* 14 ─ Round four: quiet screens, the work first, covers with depth ─────────────────── */
@@ -473,7 +447,6 @@
 .hall-thinking{justify-content:center;gap:3vh;padding-top:2vh}
 .hall-thinking .fig{width:clamp(220px,20vw,300px)}
 .hall-thinking .hall-phase{font:italic 400 clamp(22px,2.2vw,32px)/1.2 var(--hall-display);color:var(--mute)}
-.hq{margin-top:0}
 /* Covers that sit in the room: a lit edge, a spine, weight on the floor and a faint reflection. */
 .rw-orbit .wk-cover,.rw-callout-cover{
  box-shadow:inset 0 1px 0 rgba(255,236,200,.28),-5px 0 0 -1px #1b130c,-6px 0 0 -1px rgba(212,176,108,.35),0 26px 30px -16px rgba(0,0,0,.85),0 52px 70px -28px rgba(0,0,0,.6);
@@ -488,19 +461,84 @@
 .rw-why{border-top:0;padding-top:4px}
 .rw-why-text{font-size:clamp(22px,1.9vw,28px);max-width:34ch}
 /* The finished triangle: the works drawn in close around it. */
-.rw-constellation{width:min(820px,100%);min-height:clamp(440px,60vh,640px)}
-.rw-orbit{width:clamp(128px,11.5vw,160px)}
-.rw-orbit-a{left:9%;top:16%}.rw-orbit-a .wk-cover{transform:perspective(900px) rotateY(20deg) rotate(-2deg)}
-.rw-orbit-b{right:9%;top:16%}.rw-orbit-b .wk-cover{transform:perspective(900px) rotateY(-20deg) rotate(2deg)}
-.rw-orbit-c{bottom:-1%;flex-direction:column;gap:8px;width:clamp(128px,11.5vw,160px);text-align:center}
-.rw-orbit-c .wk-cover{width:100%;transform:perspective(900px) rotateX(8deg)}
-.rw-orbit-c>.hall-kicker{display:flex}
-.rw-orbit:hover .wk-cover{transform:perspective(900px) translateY(-6px)!important}
 @media (max-width:640px){
- .rw-orbit .wk-cover,.rw-orbit-a .wk-cover,.rw-orbit-b .wk-cover,.rw-orbit-c .wk-cover{transform:none;-webkit-box-reflect:unset;width:72px}
- .rw-orbit,.rw-orbit-c{flex-direction:row;width:100%;text-align:left}
  .rw-cover-inline{box-shadow:0 26px 30px -16px rgba(0,0,0,.85)}
 }
 .rw-why-text,.rw-title,.rw-by,.rw-work-head .hall-kicker{text-shadow:0 2px 24px rgba(8,6,4,.75),0 0 2px rgba(8,6,4,.5)}
 .rw-story{margin-top:3vh;gap:14px}.rw-story svg{flex:none}
 .rw-down{margin-top:18px}
+
+/* 15 ─ Cleanup pass: sharper type, legible quotes, a drawing nothing sits on ─────────────── */
+/* The drawing is the centre of every screen it is on. It gets a pool of shade of its own, so film, light and
+   painted rooms behind it never swallow the ink. */
+.hall-dark :where(.hall-thinking,.rw-figure,.rw-work-stage,.rw-intro) .fig::before{content:'';position:absolute;inset:-18% -22%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(10,8,6,.62),rgba(10,8,6,.34) 55%,rgba(10,8,6,0))}
+.hall-dark .fig svg{filter:drop-shadow(0 0 1px rgba(8,6,4,.9)) drop-shadow(0 0 6px rgba(232,196,128,.3))}
+
+/* Waiting: the drawing above, one line from the work below it. */
+.hall-thinking{gap:clamp(18px,3.5vh,40px)}
+.hall-thinking .fig{width:clamp(200px,17vw,260px)}
+
+/* Pull quotes. A pool of shade behind the words (they are set over living rooms and moving film), a gilt
+   opening mark, words that rise out of the dark and cool from gilt to bone, the speaker, and a hairline that
+   keeps time until the next line. */
+.hq{position:relative;max-width:min(980px,92vw);margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:clamp(14px,2vh,22px);padding:26px clamp(10px,3vw,48px) 6px;transition:opacity .6s var(--ease),filter .6s var(--ease),transform .6s var(--ease)}
+.hq::before{content:'';position:absolute;inset:-26% -14%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(10,8,6,.74),rgba(10,8,6,.5) 50%,rgba(10,8,6,0));filter:blur(4px)}
+.hq.is-leaving{opacity:0;filter:blur(8px);transform:translateY(-10px)}
+.hq-mark{display:block;height:.42em;margin-bottom:-.02em;font:italic 500 clamp(72px,7vw,112px)/1 var(--hall-display);color:var(--gilt);opacity:.9;animation:rv-in .9s var(--ease) both}
+.hq-line{max-width:26ch;font:italic 500 clamp(26px,3vw,46px)/1.16 var(--hall-display);letter-spacing:-.008em;text-wrap:balance;color:#fbf3e4;text-shadow:0 1px 2px rgba(8,6,4,.85),0 0 28px rgba(8,6,4,.75)}
+.hq.is-short .hq-line{max-width:20ch;font-size:clamp(34px,4.4vw,68px);line-height:1.06;letter-spacing:-.014em}
+.hq.is-long .hq-line{max-width:34ch;font-size:clamp(22px,2.3vw,34px);line-height:1.24}
+.hq-w{display:inline;white-space:pre-wrap;animation:hq-rise 1.2s var(--ease) both}
+@keyframes hq-rise{from{opacity:0;filter:blur(7px);color:var(--gilt)}35%{opacity:1;color:#ffe2a8}}
+.hq-by{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;font:600 10.5px/1.4 var(--hall-ui);font-stretch:112%;letter-spacing:.24em;text-transform:uppercase;color:var(--gilt);text-shadow:0 1px 10px rgba(8,6,4,.9);animation:rv-in 1s var(--ease) both;animation-delay:var(--hq-set)}
+.hq-by em{font:italic 500 17px/1 var(--hall-display);letter-spacing:.01em;text-transform:none;color:#efe4cf}
+.hq-dot{width:5px;height:5px;background:currentColor;transform:rotate(45deg);opacity:.7}
+.hq-time{display:flex;align-items:center;gap:14px;margin-top:4px;font:600 9.5px/1 var(--hall-ui);font-stretch:112%;letter-spacing:.24em;color:var(--mute);animation:rv-in 1s var(--ease) both;animation-delay:var(--hq-set)}
+.hq-rule{position:relative;width:88px;height:1px;background:rgba(243,238,229,.2);overflow:hidden}
+.hq-rule::after{content:'';position:absolute;inset:0;background:var(--gilt);transform-origin:left;animation:hq-time var(--hq-dwell) linear both;animation-delay:var(--hq-set)}
+@keyframes hq-time{from{transform:scaleX(0)}}
+
+/* The finished triangle. A grid, not absolute positions: Read and Watch flank the drawing, Listen stands
+   under it, and the drawing is never covered, at any width. */
+.rw-constellation{position:relative;width:min(980px,100%);display:grid;grid-template-columns:1fr auto 1fr;grid-template-areas:"a fig b" ". c .";align-items:center;column-gap:clamp(20px,4vw,64px);row-gap:clamp(8px,2vh,22px);margin-top:1vh}
+.rw-figure{grid-area:fig;position:relative;display:grid;place-items:center}
+.rw-figure .fig{width:clamp(260px,min(28vw,calc((100svh - 470px) * 1.25)),420px);position:relative;z-index:2}
+.rw-figure .rv-shaft{bottom:6%;height:calc(100% + 50vh)}
+.rw-orbit{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:12px;text-decoration:none;text-align:center;width:clamp(120px,11vw,156px);animation:rv-in 1.2s var(--ease) both}
+.rw-orbit-a{grid-area:a;justify-self:end;animation-delay:.5s}
+.rw-orbit-b{grid-area:b;justify-self:start;animation-delay:.8s}
+.rw-orbit-c{grid-area:c;justify-self:center;flex-direction:row;align-items:center;gap:18px;width:auto;text-align:left;animation-delay:1.1s}
+.rw-orbit-c .wk-cover{width:clamp(84px,7vw,104px)}
+.rw-orbit .wk-cover{transition:transform .6s var(--ease)}
+.rw-orbit-a .wk-cover{transform:perspective(900px) rotateY(18deg)}
+.rw-orbit-b .wk-cover{transform:perspective(900px) rotateY(-18deg)}
+.rw-orbit:hover .wk-cover{transform:perspective(900px) translateY(-6px)}
+.rw-orbit-text{display:flex;flex-direction:column;align-items:inherit;gap:6px}
+.rw-orbit-c .rw-orbit-text{align-items:flex-start}
+.rw-orbit .hall-kicker{font-size:9.5px;justify-content:inherit}
+.rw-orbit-title{font:500 18px/1.1 var(--hall-display);text-wrap:balance;max-width:16ch}
+.rw-orbit-c .wk-cover{-webkit-box-reflect:unset}
+@media (max-width:640px){
+ .rw-constellation{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+ .rw-figure{margin:0 auto 6px}.rw-figure .fig{width:min(70vw,280px)}
+ .rw-orbit,.rw-orbit-c{flex-direction:row;align-items:center;gap:16px;width:100%;text-align:left}
+ .rw-orbit .rw-orbit-text{align-items:flex-start}
+ .rw-orbit .wk-cover,.rw-orbit-a .wk-cover,.rw-orbit-b .wk-cover,.rw-orbit-c .wk-cover{width:64px;transform:none;-webkit-box-reflect:unset}
+ .hq-mark{font-size:64px}
+ .hq.is-short .hq-line{font-size:clamp(30px,9vw,40px)}.hq-line{font-size:clamp(23px,6.6vw,30px)}.hq.is-long .hq-line{font-size:clamp(20px,5.6vw,25px)}
+}
+
+/* The reason each work belongs sits in the same pool of shade as the quotes, whatever room is behind it. */
+.rw-why{position:relative}
+.hall-dark .rw-why::before{content:'';position:absolute;inset:-30% -18%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(10,8,6,.66),rgba(10,8,6,.4) 55%,rgba(10,8,6,0));filter:blur(4px)}
+.rw-why-text{font-weight:500}
+/* Confirm: the cover stands beside the drawing, not on its table; the prompt in the field is readable. */
+.hall-confirm-cover{margin-left:clamp(10px,1.5vw,24px)}
+.hall-love textarea::placeholder{opacity:.9}
+@media (max-width:640px){.hall-confirm-cover{margin-left:8px}}
+.rw-final-head .hall-kicker{flex-wrap:wrap;row-gap:6px;text-align:center}
+@media (max-width:980px){.hall-confirm-body{grid-template-columns:minmax(0,1fr)}.hall-confirm-visual{max-width:100%;justify-content:center}}
+@media (max-width:640px){
+ .hall-confirm-body .fig{width:min(54vw,230px)}
+ .hall-confirm-cover.wk-cover-m{width:92px}
+}

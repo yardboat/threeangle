@@ -15,7 +15,7 @@ import stairs from '@/public/hall/stairs.webp';
 import mapRoomDepth from '@/public/hall/depth/map-room.webp';
 import framesDepth from '@/public/hall/depth/frames.webp';
 import stairsDepth from '@/public/hall/depth/stairs.webp';
-import {clips,PROJECTION} from './archive';
+import {clips} from './archive';
 
 // The library is a character, not wallpaper.
 // Each room is a painting plus a depth map (MiDaS, see docs/gilded-hall-v2.md). A single fragment shader
@@ -27,17 +27,23 @@ import {clips,PROJECTION} from './archive';
 export type Room='arrival'|'reading'|'study'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
 export const roomNames:Record<Room,string>={arrival:'The Gilded Hall',reading:'The Reading Room',study:'The Reading Alcove',gallery:'The Sunlit Gallery',maproom:'The Map Room',frames:'The Gallery of Frames',stairs:'The Stair Hall',rotunda:'The Rotunda'};
 type Scene='arrival'|'reading'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
-// proj: where the archive projector lands in painting space (x0, y0, x1, y1): a blank wall, canvas or niche.
-// side: two quieter surfaces off to the sides, used outside the waiting screen so the centre stays clean behind the headline.
+// proj: the one surface in a room built to take a projection (a blank canvas, a lit niche), as a rectangle in
+// painting space (x0, y0, x1, y1), measured on the painting itself. arch: the top of the surface is a round arch,
+// this fraction of its height. The film keeps its own 4:3 proportions: it is cropped to the surface, never stretched.
+// Rooms without such a surface (the open colonnade, the gallery of paintings) take no projection at all.
 type Rect=[number,number,number,number];
-type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:Rect;side?:[Rect,Rect]};
+type Surface={rect:Rect;arch?:number};
+type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:Surface};
 const scenes:Record<Scene,SceneDef>={
  arrival:{image:arrival,depth:arrivalDepth,pos:[.5,.46]},
  reading:{image:reading,depth:readingDepth,pos:[.5,.5]},
- gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5],proj:PROJECTION},
- maproom:{image:mapRoom,depth:mapRoomDepth,pos:[.5,.5],proj:[.425,.23,.655,.515]},
- frames:{image:frames,depth:framesDepth,pos:[.5,.55],proj:[.475,.53,.582,.772],side:[[.224,.49,.264,.77],[.736,.49,.776,.77]]},
- stairs:{image:stairs,depth:stairsDepth,pos:[.5,.5],proj:[.472,.36,.56,.655]},
+ gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5]},
+ // The map room's great empty canvas, inside its gilt frame.
+ maproom:{image:mapRoom,depth:mapRoomDepth,pos:[.5,.5],proj:{rect:[.4195,.2255,.6595,.5265]}},
+ // The Gallery of Frames is hung with the great works (see docs/gilded-hall-v2.md): nothing is projected over them.
+ frames:{image:frames,depth:framesDepth,pos:[.5,.55]},
+ // The lit niche between the two stairs, arch and all.
+ stairs:{image:stairs,depth:stairsDepth,pos:[.5,.5],proj:{rect:[.4735,.3165,.5615,.6575],arch:.235}},
  rotunda:{image:rotunda,depth:rotundaDepth,pos:[.5,.62]},
 };
 // The time of day moves with the journey: morning at the door, dusk in the rotunda.
@@ -67,7 +73,7 @@ const VERT=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 const FRAG=`precision highp float;
 uniform vec2 uRes;uniform sampler2D uColA,uDepA,uColB,uDepB,uArc;uniform vec2 uSizeA,uSizeB,uPosA,uPosB,uArcSize;
 uniform float uMix,uAmp,uTilt,uTime,uDolly,uFrame;uniform vec2 uCam,uLight;
-uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uFilmOn,uArcAmt,uProj,uProj2;uniform vec4 uProjRect,uProjRect2;
+uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uFilmOn,uArcAmt,uProjA,uProjB,uArchA,uArchB;uniform vec4 uRectA,uRectB;uniform vec2 uCropA,uCropB;
 float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 vec2 cover(vec2 f,vec2 size,vec2 pos){float s=max(uRes.x/size.x,uRes.y/size.y)*1.1;vec2 d=size*s;return(f-(uRes-d)*pos)/d;}
 vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,float blur,out float depth,out vec2 uv){
@@ -83,12 +89,19 @@ vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,floa
  return c;
 }
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
-vec3 project(vec3 c,vec2 pB,float dB,vec4 rect,float amt){
- vec2 r=(pB-rect.xy)/(rect.zw-rect.xy);
- float inside=smoothstep(0.,.08,r.x)*smoothstep(1.,.92,r.x)*smoothstep(0.,.08,r.y)*smoothstep(1.,.92,r.y);
- float lf=luma(texture2D(uArc,clamp(r,0.,1.)).rgb);
- float wall=smoothstep(.55,.25,dB);
- return mix(c,c*.55+vec3(lf)*vec3(1.,.95,.84)*.95,amt*inside*wall);
+// The projector: film thrown onto one surface of a room, in painting space so it stays on the wall as the camera moves.
+// crop keeps the film's proportions (cover), arch rounds the top of the surface, and the light falls off at the edges.
+vec3 project(vec3 c,vec2 p,vec4 rect,vec2 crop,float arch,float amt){
+ vec2 r=(p-rect.xy)/(rect.zw-rect.xy);
+ float e=.02;
+ float inside=smoothstep(0.,e,r.x)*smoothstep(1.,1.-e,r.x)*smoothstep(0.,e*.7,r.y)*smoothstep(1.,1.-e*.7,r.y);
+ if(arch>.001&&r.y<arch){vec2 q=vec2((r.x-.5)/.5,(r.y-arch)/arch);inside*=smoothstep(1.,.93,length(q));}
+ vec2 fu=.5+(r-.5)*crop;
+ float lf=luma(texture2D(uArc,clamp(fu,0.,1.)).rgb);
+ // A warm bulb, a little hotter at the centre, the room's own light still under it.
+ float hot=1.-.35*length((r-.5)*vec2(1.,.8));
+ vec3 film=vec3(lf)*vec3(1.,.95,.84)*(.35+.75*hot);
+ return mix(c,c*.35+film,amt*inside);
 }
 void main(){
  float T=sin(3.14159*uMix);
@@ -98,6 +111,9 @@ void main(){
  float dA,dB;vec2 pA,pB;
  vec3 a=room(uColA,uDepA,uSizeA,uPosA,f,uDolly+uMix*.78,.022*T,dA,pA);
  vec3 b=room(uColB,uDepB,uSizeB,uPosB,f,uDolly-(1.-uMix)*.3,.022*T,dB,pB);
+ // Each room carries its own projection, so the film never lands on the wrong room mid-walk.
+ if(uProjA>.001)a=project(a,pA,uRectA,uCropA,uArchA,uProjA);
+ if(uProjB>.001)b=project(b,pB,uRectB,uCropB,uArchB,uProjB);
  // Walking forward: the nearest architecture passes you first.
  float k=smoothstep(0.,1.,clamp((uMix-(1.-dA)*.38)/.62,0.,1.));
  vec3 c=mix(a,b,k);vec2 p=mix(pA,pB,k);float d=mix(dA,dB,k);
@@ -110,9 +126,6 @@ void main(){
  // Golden-hour light crossing the gallery, slowly.
  float band=exp(-pow((p.x+p.y*.45-fract(uTime*.018)*2.2+.5)*4.,2.));
  c+=c*uSweep*band*.8;
- // The archive, projected onto the far wall of the room: black-and-white film thrown by an unseen projector.
- if(uProj>.001)c=project(c,pB,dB,uProjRect,uProj);
- if(uProj2>.001)c=project(c,pB,dB,uProjRect2,uProj2);
  // The visitor carries a little light.
  vec2 q=(sv-uLight)*vec2(uRes.x/uRes.y,1.);c+=c*uLightAmt*exp(-dot(q,q)*5.)*(.4+.6*d);
  c*=mix(vec3(1.),vec3(1.1,1.,.82),uWarm);
@@ -205,21 +218,31 @@ export function HallWorld({room,still,looking,film=false}:{room:Room;still:boole
    gl.uniform1f(u('uMix'),ease(mix));gl.uniform1f(u('uAmp'),look?.075:.036);gl.uniform1f(u('uTilt'),tilt);gl.uniform1f(u('uTime'),idle);gl.uniform1f(u('uDolly'),mood.dolly);
    gl.uniform2f(u('uCam'),cam.x,cam.y);gl.uniform2f(u('uLight'),lightPos.x,lightPos.y);
    gl.uniform1f(u('uExposure'),mood.exposure+beam*.05);gl.uniform1f(u('uContrast'),mood.contrast);gl.uniform1f(u('uWarm'),mood.warm);gl.uniform1f(u('uCool'),mood.cool);gl.uniform1f(u('uVignette'),mood.vignette);gl.uniform1f(u('uBeam'),mood.beam*(1+beam*.9));gl.uniform1f(u('uSweep'),mood.sweep);gl.uniform1f(u('uLift'),look?0:mood.lift);gl.uniform1f(u('uLightAmt'),mood.light);gl.uniform1f(u('uGrain'),calm?.02:.035);
-   // Archive footage: flashes through each journey, and plays on the gallery wall while the library works.
-   // Film (flashes, the silver walk, the centre projector) belongs to the waiting screen only; elsewhere the footage
-   // may play quietly on side surfaces, and the centre stays clean behind the headline.
-   const transit=filmOn?Math.sin(Math.PI*ease(mix)):0;const sc=scenes[to];const projAmt=filmOn?(sc.proj?mood.project:0):(sc.side?mood.project*.8:0);const wantArc=Boolean(vid)&&!calm&&(transit>.05||projAmt>.05);
+   // Archive footage belongs to the waiting screen only: it flashes through each walk between rooms, and a room
+   // with a projection surface holds a longer shot on it. Everywhere else the rooms are film-free.
+   const transit=filmOn?Math.sin(Math.PI*ease(mix)):0;
+   const surf=(sc:Scene)=>filmOn?scenes[sc].proj:undefined;
+   const sA=from===to?undefined:surf(from),sB=surf(to);const projAmt=sB?mood.project:0;
+   const wantArc=Boolean(vid)&&!calm&&(transit>.05||projAmt>.05||Boolean(sA&&mix<1));
    if(vid){
     if(wantArc&&vid.paused&&!vid.src)nextClip(projAmt>.5?'wall':'flash');
-    if(projAmt>.5&&now-clipAt>5200){clipAt=now;nextClip('wall');}
-    if(!wantArc&&!vid.paused&&projAmt<.05&&mix>=1)vid.pause();
+    if(projAmt>.5&&mix>=1&&now-clipAt>5200){clipAt=now;nextClip('wall');}
+    if(!wantArc&&!vid.paused&&mix>=1)vid.pause();
     if(wantArc&&arcReady&&vid.readyState>=2){gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,arcTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,vid);}
    }
    const arcOn=wantArc&&arcReady?1:0;
    bind(4,arcTex,'uArc');gl.uniform2f(u('uArcSize'),...arcSize);gl.uniform1f(u('uArcAmt'),filmOn?arcOn*.55:0);
-   const rects:Rect[]=filmOn?(sc.proj?[sc.proj]:[]):(sc.side||[]);
-   gl.uniform1f(u('uProj'),rects[0]?arcOn*projAmt*.85:0);gl.uniform4f(u('uProjRect'),...(rects[0]||PROJECTION));
-   gl.uniform1f(u('uProj2'),rects[1]?arcOn*projAmt*.85:0);gl.uniform4f(u('uProjRect2'),...(rects[1]||PROJECTION));
+   // The room being left lets its projection go as the walk begins; the new room lights its surface as you arrive.
+   const e2=ease(mix);
+   const setSurface=(k:'A'|'B',sc:Scene,sf:Surface|undefined,amt:number)=>{
+    const t=tex[sc];const [x0,y0,x1,y1]=sf?.rect||[0,0,1,1];
+    // Cover-crop the 4:3 film to the surface's real proportions, measured in painting pixels.
+    const aspect=t?((x1-x0)*t.size[0])/((y1-y0)*t.size[1]):4/3,film=arcSize[0]/arcSize[1];
+    gl.uniform1f(u('uProj'+k),sf?arcOn*amt*.9:0);gl.uniform4f(u('uRect'+k),x0,y0,x1,y1);gl.uniform1f(u('uArch'+k),sf?.arch||0);
+    gl.uniform2f(u('uCrop'+k),aspect<film?aspect/film:1,aspect<film?1:film/aspect);
+   };
+   setSurface('A',from,sA,(1-e2)*moodFrom.project);
+   setSurface('B',to,sB,projAmt*(sA||from!==to?e2:1));
    gl.uniform1f(u('uFilmOn'),filmOn?1:0);gl.uniform1f(u('uFilm'),calm||!filmOn?0:mood.film);gl.uniform1f(u('uFrame'),calm?0:Math.floor(now/1000*18));
    gl.drawArrays(gl.TRIANGLES,0,3);
    // Keep breathing while there is somewhere to go; stop entirely when still.

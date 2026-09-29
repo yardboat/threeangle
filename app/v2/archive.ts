@@ -29,5 +29,4 @@ export const clips:Clip[]=[
  {src:"/archive/archive-24",w:640,h:480,dur:3.4,subject:"Universal Newsreel Volume 38, Release 29"},
  {src:"/archive/archive-25",w:640,h:480,dur:1.8,subject:"WAR CRIMES TRIALS, TOKYO, JAPAN 41"},
 ];
-// Where the gallery's projector lands, in painting space (x0, y0, x1, y1) of gallery.webp: the far arch.
-export const PROJECTION:[number,number,number,number]=[.38,.22,.62,.62];
+

@@ -127,3 +127,20 @@ Checkpoint before this round: commit `53c9721` (git tags can't be pushed from th
 - **Limits.** Per-address rate limits on search, art, img, pick and quotes (`lib/limit.ts`). No daily quota (removed at Randall's request).
 - **Podcast episodes** also come from Spotify when `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set (search, then one batch read for the show names).
 
+
+## The Gallery of Frames: the great works (Sept 2026)
+
+The frames in `public/hall/frames.webp` were blank canvases. They now hang public-domain paintings, warped into each
+canvas in perspective and lit by the canvas's own shading (script: measured quads, OpenCV perspective warp):
+centre, Van Gogh, *Self-Portrait with a Straw Hat* (1887); left wall, near to far, Munch, *The Scream* (1893);
+Van Gogh, *Thatched Cottages at Cordeville* (1890); Van Gogh, *The Starry Night* (1889, the cypress);
+Monet, *Water Lilies* (1919); right wall, near to far, Matisse, *Woman with a Hat* (1905); Hokusai,
+*The Great Wave off Kanagawa* (c. 1831); Turner, *The Wreck of a Transport Ship* (c. 1810); Van Gogh,
+*Wheat Field with Cypresses* (1889). No film is projected in this room any more.
+
+## Projection surfaces
+
+The archive projector only uses surfaces that exist in the paintings, measured on the paintings themselves: the map
+room's framed canvas and the lit, arched niche between the stairs. The film is cover-cropped to each surface's real
+proportions (never stretched), each room carries its own projection through a walk (so film never lands on the wrong
+room mid-transition), and the open colonnade (`gallery`) takes none.
