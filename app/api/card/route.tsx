@@ -101,8 +101,8 @@ export async function GET(request:Request){
    {/* the name */}
    <div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'absolute',left:0,top:250,width:W}}>
     <div style={{display:'flex',alignItems:'center',fontFamily:'Archivo Expanded',fontSize:24,letterSpacing:10,color:BONE}}>THREEANGLE</div>
-    <div style={{display:'flex',marginTop:14,width:64,height:2,background:GILT,opacity:.8}}/>
-    <div style={{display:'flex',marginTop:40,padding:'0 70px',fontFamily:'Archivo Expanded',fontSize:nameSize,lineHeight:.9,letterSpacing:-1,textAlign:'center',justifyContent:'center',textTransform:'uppercase',color:BONE}}>{name}</div>
+    <div style={{display:'flex',alignItems:'center',marginTop:30,fontFamily:'Archivo',fontSize:19,letterSpacing:7,color:GILT,textTransform:'uppercase'}}>Read<span style={{margin:'0 18px',opacity:.6}}>·</span>Watch<span style={{margin:'0 18px',opacity:.6}}>·</span>Listen</div>
+    <div style={{display:'flex',marginTop:26,padding:'0 70px',fontFamily:'Archivo Expanded',fontSize:nameSize,lineHeight:.9,letterSpacing:-1,textAlign:'center',justifyContent:'center',textTransform:'uppercase',color:BONE}}>{name}</div>
     {topic.hook&&<div style={{display:'flex',marginTop:30,padding:'0 120px',fontFamily:'Cormorant',fontStyle:'italic',fontSize:40,lineHeight:1.15,color:MUTE,textAlign:'center',justifyContent:'center'}}>{clip(topic.hook,110)}</div>}
    </div>
    {/* the drawing, alone at the centre */}

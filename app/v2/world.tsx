@@ -29,10 +29,11 @@ export const roomNames:Record<Room,string>={arrival:'The Gilded Hall',reading:'T
 type Scene='arrival'|'reading'|'gallery'|'maproom'|'frames'|'stairs'|'rotunda';
 // proj: the one surface in a room built to take a projection (a blank canvas, a lit niche), as a rectangle in
 // painting space (x0, y0, x1, y1), measured on the painting itself. arch: the top of the surface is a round arch,
-// this fraction of its height. The film keeps its own 4:3 proportions: it is cropped to the surface, never stretched.
+// this fraction of its height. The film keeps its own 4:3 proportions: cropped to the surface (cover), or, on a
+// painting, thrown full-width with the canvas dimmed around it (contain). under: how much of the surface still shows.
 // Rooms without such a surface (the open colonnade, the gallery of paintings) take no projection at all.
 type Rect=[number,number,number,number];
-type Surface={rect:Rect;arch?:number};
+type Surface={rect:Rect;arch?:number;fit?:'cover'|'contain';under?:number};
 type SceneDef={image:StaticImageData;depth:StaticImageData;pos:[number,number];proj?:Surface};
 const scenes:Record<Scene,SceneDef>={
  arrival:{image:arrival,depth:arrivalDepth,pos:[.5,.46]},
@@ -40,8 +41,9 @@ const scenes:Record<Scene,SceneDef>={
  gallery:{image:gallery,depth:galleryDepth,pos:[.5,.5]},
  // The map room's great empty canvas, inside its gilt frame.
  maproom:{image:mapRoom,depth:mapRoomDepth,pos:[.5,.5],proj:{rect:[.4195,.2255,.6595,.5265]}},
- // The Gallery of Frames is hung with the great works (see docs/gilded-hall-v2.md): nothing is projected over them.
- frames:{image:frames,depth:framesDepth,pos:[.5,.55]},
+ // The Gallery of Frames is hung with the great works (see docs/gilded-hall-v2.md). While the library works, the
+ // projector takes over the centre frame, the painting dimmed behind the film; the side walls keep their paintings.
+ frames:{image:frames,depth:framesDepth,pos:[.5,.55],proj:{rect:[.4746,.5216,.5864,.7746],fit:'contain',under:.1}},
  // The lit niche between the two stairs, arch and all.
  stairs:{image:stairs,depth:stairsDepth,pos:[.5,.5],proj:{rect:[.4735,.3165,.5615,.6575],arch:.235}},
  rotunda:{image:rotunda,depth:rotundaDepth,pos:[.5,.62]},
@@ -73,7 +75,7 @@ const VERT=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 const FRAG=`precision highp float;
 uniform vec2 uRes;uniform sampler2D uColA,uDepA,uColB,uDepB,uArc;uniform vec2 uSizeA,uSizeB,uPosA,uPosB,uArcSize;
 uniform float uMix,uAmp,uTilt,uTime,uDolly,uFrame;uniform vec2 uCam,uLight;
-uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uFilmOn,uArcAmt,uProjA,uProjB,uArchA,uArchB;uniform vec4 uRectA,uRectB;uniform vec2 uCropA,uCropB;
+uniform float uExposure,uContrast,uWarm,uCool,uVignette,uBeam,uSweep,uLift,uLightAmt,uGrain,uFilm,uFilmOn,uArcAmt,uProjA,uProjB,uArchA,uArchB;uniform vec4 uRectA,uRectB;uniform vec2 uCropA,uCropB;uniform float uUnderA,uUnderB;
 float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 vec2 cover(vec2 f,vec2 size,vec2 pos){float s=max(uRes.x/size.x,uRes.y/size.y)*1.1;vec2 d=size*s;return(f-(uRes-d)*pos)/d;}
 vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,float blur,out float depth,out vec2 uv){
@@ -91,7 +93,7 @@ vec3 room(sampler2D col,sampler2D dep,vec2 size,vec2 pos,vec2 f,float dolly,floa
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
 // The projector: film thrown onto one surface of a room, in painting space so it stays on the wall as the camera moves.
 // crop keeps the film's proportions (cover), arch rounds the top of the surface, and the light falls off at the edges.
-vec3 project(vec3 c,vec2 p,vec4 rect,vec2 crop,float arch,float amt){
+vec3 project(vec3 c,vec2 p,vec4 rect,vec2 crop,float arch,float under,float amt){
  vec2 r=(p-rect.xy)/(rect.zw-rect.xy);
  float e=.02;
  float inside=smoothstep(0.,e,r.x)*smoothstep(1.,1.-e,r.x)*smoothstep(0.,e*.7,r.y)*smoothstep(1.,1.-e*.7,r.y);
@@ -101,7 +103,9 @@ vec3 project(vec3 c,vec2 p,vec4 rect,vec2 crop,float arch,float amt){
  // A warm bulb, a little hotter at the centre, the room's own light still under it.
  float hot=1.-.35*length((r-.5)*vec2(1.,.8));
  vec3 film=vec3(lf)*vec3(1.,.95,.84)*(.35+.75*hot);
- return mix(c,c*.35+film,amt*inside);
+ // Outside the frame of the film (contain), the surface is only dimmed, like a screen between reels.
+ float inFilm=smoothstep(-.004,.004,fu.x)*smoothstep(1.004,.996,fu.x)*smoothstep(-.004,.004,fu.y)*smoothstep(1.004,.996,fu.y);
+ return mix(c,c*under+film*inFilm,amt*inside);
 }
 void main(){
  float T=sin(3.14159*uMix);
@@ -112,8 +116,8 @@ void main(){
  vec3 a=room(uColA,uDepA,uSizeA,uPosA,f,uDolly+uMix*.78,.022*T,dA,pA);
  vec3 b=room(uColB,uDepB,uSizeB,uPosB,f,uDolly-(1.-uMix)*.3,.022*T,dB,pB);
  // Each room carries its own projection, so the film never lands on the wrong room mid-walk.
- if(uProjA>.001)a=project(a,pA,uRectA,uCropA,uArchA,uProjA);
- if(uProjB>.001)b=project(b,pB,uRectB,uCropB,uArchB,uProjB);
+ if(uProjA>.001)a=project(a,pA,uRectA,uCropA,uArchA,uUnderA,uProjA);
+ if(uProjB>.001)b=project(b,pB,uRectB,uCropB,uArchB,uUnderB,uProjB);
  // Walking forward: the nearest architecture passes you first.
  float k=smoothstep(0.,1.,clamp((uMix-(1.-dA)*.38)/.62,0.,1.));
  vec3 c=mix(a,b,k);vec2 p=mix(pA,pB,k);float d=mix(dA,dB,k);
@@ -239,7 +243,10 @@ export function HallWorld({room,still,looking,film=false}:{room:Room;still:boole
     // Cover-crop the 4:3 film to the surface's real proportions, measured in painting pixels.
     const aspect=t?((x1-x0)*t.size[0])/((y1-y0)*t.size[1]):4/3,film=arcSize[0]/arcSize[1];
     gl.uniform1f(u('uProj'+k),sf?arcOn*amt*.9:0);gl.uniform4f(u('uRect'+k),x0,y0,x1,y1);gl.uniform1f(u('uArch'+k),sf?.arch||0);
-    gl.uniform2f(u('uCrop'+k),aspect<film?aspect/film:1,aspect<film?1:film/aspect);
+    const wide=aspect<film;
+    if(sf?.fit==='contain')gl.uniform2f(u('uCrop'+k),wide?1:aspect/film,wide?film/aspect:1);
+    else gl.uniform2f(u('uCrop'+k),wide?aspect/film:1,wide?1:film/aspect);
+    gl.uniform1f(u('uUnder'+k),sf?.under??.35);
    };
    setSurface('A',from,sA,(1-e2)*moodFrom.project);
    setSurface('B',to,sB,projAmt*(sA||from!==to?e2:1));

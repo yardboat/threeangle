@@ -136,11 +136,12 @@ centre, Van Gogh, *Self-Portrait with a Straw Hat* (1887); left wall, near to fa
 Van Gogh, *Thatched Cottages at Cordeville* (1890); Van Gogh, *The Starry Night* (1889, the cypress);
 Monet, *Water Lilies* (1919); right wall, near to far, Matisse, *Woman with a Hat* (1905); Hokusai,
 *The Great Wave off Kanagawa* (c. 1831); Turner, *The Wreck of a Transport Ship* (c. 1810); Van Gogh,
-*Wheat Field with Cypresses* (1889). No film is projected in this room any more.
+*Wheat Field with Cypresses* (1889). While the library works, the projector takes over the centre frame (the film
+thrown full-width, the painting dimmed behind it); the side walls always keep their paintings.
 
 ## Projection surfaces
 
 The archive projector only uses surfaces that exist in the paintings, measured on the paintings themselves: the map
-room's framed canvas and the lit, arched niche between the stairs. The film is cover-cropped to each surface's real
+room's framed canvas, the centre frame of the Gallery of Frames, and the lit, arched niche between the stairs. The film is cover-cropped to each surface's real
 proportions (never stretched), each room carries its own projection through a walk (so film never lands on the wrong
 room mid-transition), and the open colonnade (`gallery`) takes none.

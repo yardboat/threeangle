@@ -12,6 +12,7 @@ import {Reveal} from './reveal';
 import {Cover} from './cover';
 import {WrittenQuotes,type Quote} from './quotes';
 import {HallWorld,type Room} from './world';
+import {Waiting} from './wait';
 
 // While the library works it walks: a new room every few seconds, repeating as needed.
 const WAIT_ROOMS:Room[]=['gallery','maproom','frames','stairs'];
@@ -42,7 +43,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  const [topic,setTopic]=useState<Topic|null>(first.topic),[previous,setPrevious]=useState<Topic|null>(null);
  const [ready,setReady]=useState<boolean|null>(null),[busy,setBusy]=useState(false),[phase,setPhase]=useState('Following the thread.'),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [quotes,setQuotes]=useState<{key:string;list:Quote[]}>({key:'',list:[]}),[revealRoom,setRevealRoom]=useState<Room>('stairs'),[wander,setWander]=useState(0);
- const [paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[saved,setSaved]=useState<Saved[]>([]),[saving,setSaving]=useState(false),[shelfLoading,setShelfLoading]=useState(false),[shelfError,setShelfError]=useState('');
+ const [paused,setPaused]=useState(false),[statuses,setStatuses]=useState<string[]>([]),[reduced,setReduced]=useState(false),[saved,setSaved]=useState<Saved[]>([]),[saving,setSaving]=useState(false),[shelfLoading,setShelfLoading]=useState(false),[shelfError,setShelfError]=useState('');
  const [restoring,setRestoring]=useState(Boolean(first.id&&!first.topic));
  const [refine,setRefine]=useState<Refine>({open:false,creator:'',year:'',format:''}),[clarify,setClarify]=useState(false);
  const [suggest,setSuggest]=useState<{q:string;list:Suggestion[];loading:boolean}>({q:'',list:[],loading:false}),[active,setActive]=useState(-1),[listOpen,setListOpen]=useState(false),[busyText,setBusyText]=useState('Finding your work…');
@@ -243,7 +244,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
  async function generate(another=false){
   if(busy)return;const currentTopic=topic;
   if(!another&&(!lookup||choice===null))return;
-  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setError('');setNotice('');setPhase(another?'Finding another way in.':'Following the thread.');
+  const token=++requestId.current;controller.current=new AbortController();setBusy(true);setError('');setNotice('');setPhase(another?'Finding another way in.':'Following the thread.');setStatuses([]);
   origin.current=another&&currentTopic?{s:'reveal',id:currentTopic.id}:{s:'confirm',c:choice as number};
   setWander(0);go({s:'thinking'});
   try{
@@ -266,7 +267,7 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
    for(let tries=0,waits=0;!result&&tries<3&&waits<16;){
     const res=await fetch('/api/corner',{method:'POST',headers:{'Content-Type':'application/json'},body,signal});
     if(res.status===409){waits++;await pause(12000);continue;}
-    try{result=await readTriangleResponse(res,text=>{if(token===requestId.current)setPhase(text);});}
+    try{result=await readTriangleResponse(res,text=>{if(token===requestId.current){setPhase(text);setStatuses(x=>[...x,text]);}});}
     catch(e){if(signal.aborted||res.status===429)throw e;lastError=e;tries++;if(token!==requestId.current)return;await pause(1500);}
    }
    if(!result)throw lastError||new Error('The library couldn’t finish this connection. Please try again.');
@@ -343,9 +344,9 @@ export default function Hall({initialId,startWithTitle=false}:{initialId?:string
     </div>}
    </section>}
    {stage==='thinking'&&<section className="hall-thinking hall-enter" aria-label="Building your threeangle">
-    <Figure variant="hero" faces={[{title:seed?.title||topic?.seedTitle||topic?.works[0].title},{unknown:true},{unknown:true}]} labels={['a','?','?']} view={null} idle building still={still} label="Your threeangle, taking shape"/>
-    {quotes.key===quoteKey&&quotes.list.length>0&&seed?<WrittenQuotes quotes={quotes.list} title={seed.title} still={still}/>:<p className="hall-phase" aria-hidden="true">{phase}</p>}
-    <p className="hall-sr" role="status">{phase}</p>
+    {seed||topic?<Waiting seed={seed||{title:topic!.seedTitle||topic!.works[0].title,format:topic!.works.find(w=>w.title===topic!.seedTitle)?.format||topic!.works[0].format}} statuses={statuses} still={still}>
+     {quotes.key===quoteKey&&quotes.list.length>0&&seed?<WrittenQuotes quotes={quotes.list} title={seed.title} still={still}/>:<p className="hall-phase" aria-hidden="true">{phase}</p>}
+    </Waiting>:<p className="hall-phase">{phase}</p>}
    </section>}
    {stage==='reveal'&&topic&&<section className="hall-reveal" key={topic.id}>
     <Reveal topic={topic} still={still} onRoom={setRevealRoom} footer={<>
