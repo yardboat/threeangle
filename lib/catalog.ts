@@ -12,7 +12,7 @@ import {openPage,assertPublic} from './page';
 export type Candidate={title:string;creator:string;format:Format;year:string;description:string;url:string;image?:string;from:string;alt?:string[];score?:number};
 export type WorkQuery={title:string;creator?:string;format:string;url?:string};
 
-const UA='threeangle/1.0 (https://threeangle.vercel.app; catalog lookup)';
+const UA='threeangle/1.0 (https://threeangle.app; catalog lookup)';
 const DAY=86400000;
 
 // ---------- fetching, with a small in-memory cache per server instance ----------

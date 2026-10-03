@@ -9,7 +9,7 @@ export async function GET(request:Request){
  const u=new URL(request.url).searchParams.get('u')||'';
  if(!proxiable(u))return new Response('Not allowed',{status:400});
  try{
-  const r=await fetch(u,{signal:AbortSignal.timeout(9000),headers:{'user-agent':'threeangle/1.0 (https://threeangle.vercel.app; cover proxy)',accept:'image/avif,image/webp,image/*'}});
+  const r=await fetch(u,{signal:AbortSignal.timeout(9000),headers:{'user-agent':'threeangle/1.0 (https://threeangle.app; cover proxy)',accept:'image/avif,image/webp,image/*'}});
   const type=r.headers.get('content-type')||'';
   if(!r.ok||!type.startsWith('image/')||Number(r.headers.get('content-length')||0)>MAX)return new Response('No image',{status:404,headers:{'Cache-Control':'public, max-age=3600, s-maxage=86400'}});
   const body=await r.arrayBuffer();if(body.byteLength>MAX)return new Response('Too large',{status:404});
